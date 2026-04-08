@@ -5163,20 +5163,20 @@ if (!authChecked || showSplash) {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    padding: "28px 20px",
+    padding: "20px 16px",
   }}
 >
   <div
     style={{
       display: "grid",
       justifyItems: "center",
-      gap: 18,
+      gap: 14,
       width: "100%",
     }}
   >
     <div
       style={{
-        width: "min(92vw, 1200px)",
+        width: "min(74vw, 960px)",
         borderRadius: 28,
         overflow: "hidden",
         animation: "bmwGlowCycle 4s ease-in-out infinite",
@@ -5201,7 +5201,7 @@ if (!authChecked || showSplash) {
         display: "grid",
         gap: 10,
         justifyItems: "center",
-        width: "min(92vw, 900px)",
+        width: "min(74vw, 720px)",
       }}
     >
       <div
