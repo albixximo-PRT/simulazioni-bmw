@@ -5174,44 +5174,26 @@ if (!authChecked || showSplash) {
   }}
 >
   <div
-    style={{
-      width: "min(92vw, 1200px)",
-      borderRadius: 28,
-      overflow: "hidden",
-
-      /* 🔥 GLOW QUI (NON SULL'IMG) */
-      animation: "bmwGlowCycle 4s ease-in-out infinite",
-
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      background: "#000",
-    }}
-  >
-    <img
-  src="/bmw-splash.png"
-  alt="BMW M2 TEAM CUP"
   style={{
-    width: "100%",
-    height: "auto",
-    maxHeight: "85vh",
-    objectFit: "contain",
-    objectPosition: "center top",
-    display: "block",
-
-    /* 🔥 QUESTO È IL FIX VERO */
-    WebkitMaskImage: "radial-gradient(white, white)",
-    WebkitMaskRepeat: "no-repeat",
-
-    maskImage: "radial-gradient(white, white)",
-    maskRepeat: "no-repeat",
-
+    width: "min(92vw, 1200px)",
     borderRadius: 28,
-
-    background: "#000",
+    overflow: "hidden",
+    animation: "bmwGlowCycle 4s ease-in-out infinite",
+    display: "block",
+    lineHeight: 0,
   }}
-/>
-  </div>
+>
+  <img
+    src="/bmw-splash.png"
+    alt="BMW M2 TEAM CUP"
+    style={{
+      display: "block",
+      width: "100%",
+      height: "auto",
+      borderRadius: 28,
+    }}
+  />
+</div>
 </div>
 </div>
 
