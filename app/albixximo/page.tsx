@@ -5163,122 +5163,103 @@ if (!authChecked || showSplash) {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
+    padding: "28px 20px",
   }}
 >
   <div
-  style={{
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 10,
-  }}
->
-  <div
-  style={{
-    width: "min(92vw, 1200px)",
-    borderRadius: 28,
-    overflow: "hidden",
-    animation: "bmwGlowCycle 4s ease-in-out infinite",
-    display: "block",
-    lineHeight: 0,
-  }}
->
-  <img
-    src="/bmw-splash.png"
-    alt="BMW M2 TEAM CUP"
     style={{
-      display: "block",
+      display: "grid",
+      justifyItems: "center",
+      gap: 18,
       width: "100%",
-      height: "auto",
-      borderRadius: 28,
     }}
-  />
+  >
+    <div
+      style={{
+        width: "min(92vw, 1200px)",
+        borderRadius: 28,
+        overflow: "hidden",
+        animation: "bmwGlowCycle 4s ease-in-out infinite",
+        display: "block",
+        lineHeight: 0,
+      }}
+    >
+      <img
+        src="/bmw-splash.png"
+        alt="BMW M2 TEAM CUP"
+        style={{
+          display: "block",
+          width: "100%",
+          height: "auto",
+          borderRadius: 28,
+        }}
+      />
+    </div>
+
+    <div
+      style={{
+        display: "grid",
+        gap: 10,
+        justifyItems: "center",
+        width: "min(92vw, 900px)",
+      }}
+    >
+      <div
+        style={{
+          padding: "6px 14px",
+          borderRadius: 999,
+          fontSize: 13,
+          fontWeight: 900,
+          letterSpacing: 1.2,
+          textTransform: "uppercase",
+          color: "#ffffff",
+          background: "rgba(255,255,255,0.06)",
+          border: "1px solid rgba(255,255,255,0.18)",
+          animation: "bmwTextGlow 3s ease-in-out infinite",
+          boxShadow: "0 0 20px rgba(0,0,0,0.35)",
+        }}
+      >
+        Caricamento
+      </div>
+
+      <div
+        style={{
+          display: "flex",
+          flexWrap: "nowrap",
+          justifyContent: "center",
+          gap: 6,
+          overflow: "hidden",
+        }}
+      >
+        {Array.from({ length: 24 }).map((_, i) => {
+          const color =
+            i % 3 === 0
+              ? "#6fd3ff"
+              : i % 3 === 1
+                ? "#6a3dff"
+                : "#ff3b3b"
+
+          return (
+            <span
+              key={i}
+              style={{
+                fontSize: 18,
+                fontWeight: 900,
+                letterSpacing: -1,
+                color,
+                textShadow: `0 0 10px ${color}55`,
+                animation: `bmwSlashPulse 1.15s ease-in-out infinite`,
+                animationDelay: `${i * 0.07}s`,
+              }}
+            >
+              ///
+            </span>
+          )
+        })}
+      </div>
+    </div>
+  </div>
 </div>
-</div>
-</div>
-
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            background:
-              "linear-gradient(180deg, rgba(0,0,0,0.18) 0%, rgba(0,0,0,0.28) 55%, rgba(0,0,0,0.52) 100%)",
-          }}
-        />
-
-        <div
-          style={{
-            position: "absolute",
-            left: "50%",
-            bottom: 42,
-            transform: "translateX(-50%)",
-            display: "grid",
-            gap: 10,
-            justifyItems: "center",
-            width: "min(92vw, 900px)",
-          }}
-        >
-          <div
-  style={{
-    padding: "6px 14px",
-    borderRadius: 999,
-    fontSize: 13,
-    fontWeight: 900,
-    letterSpacing: 1.2,
-    textTransform: "uppercase",
-
-    color: "#ffffff",
-
-    /* 🔥 base pill */
-    background: "rgba(255,255,255,0.06)",
-    border: "1px solid rgba(255,255,255,0.18)",
-
-    /* 🔥 glow BMW */
-    animation: "bmwTextGlow 3s ease-in-out infinite",
-
-    /* 🔥 profondità */
-    boxShadow: "0 0 20px rgba(0,0,0,0.35)",
-  }}
->
-  Caricamento
-</div>
-
-          <div
-            style={{
-              display: "flex",
-              flexWrap: "nowrap",
-              justifyContent: "center",
-              gap: 6,
-              overflow: "hidden",
-            }}
-          >
-            {Array.from({ length: 24 }).map((_, i) => {
-              const color =
-                i % 3 === 0
-                  ? "#6fd3ff"
-                  : i % 3 === 1
-                    ? "#6a3dff"
-                    : "#ff3b3b"
-
-              return (
-                <span
-                  key={i}
-                  style={{
-                    fontSize: 18,
-                    fontWeight: 900,
-                    letterSpacing: -1,
-                    color,
-                    textShadow: `0 0 10px ${color}55`,
-                    animation: `bmwSlashPulse 1.15s ease-in-out infinite`,
-                    animationDelay: `${i * 0.07}s`,
-                  }}
-                >
-                  ///
-                </span>
-              )
-            })}
-          </div>
-        </div>
       </div>
     </div>
   )
