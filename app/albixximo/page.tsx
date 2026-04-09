@@ -5154,7 +5154,8 @@ async function downloadExtendedHtmlExport() {
       color: #f59e0b;
     }
 
-    .points-pill {
+        .points-pill {
+      position: relative;
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -5167,11 +5168,28 @@ async function downloadExtendedHtmlExport() {
       line-height: 1;
     }
 
-    .points-pill.podium {
+    .points-p1 {
       background: linear-gradient(180deg, rgba(255,215,0,1), rgba(255,200,0,0.95));
       border: 1px solid rgba(255,215,0,0.55);
-      box-shadow: 0 0 14px rgba(255,215,0,0.28);
+      box-shadow: 0 0 18px rgba(255,215,0,0.35);
       color: rgba(0,0,0,0.95);
+      font-size: 12px;
+    }
+
+    .points-p2 {
+      background: linear-gradient(180deg, rgba(220,220,220,0.96), rgba(185,185,185,0.96));
+      border: 1px solid rgba(220,220,220,0.42);
+      box-shadow: 0 0 14px rgba(220,220,220,0.22);
+      color: rgba(0,0,0,0.95);
+      font-size: 12px;
+    }
+
+    .points-p3 {
+      background: linear-gradient(180deg, rgba(205,127,50,0.96), rgba(168,102,38,0.96));
+      border: 1px solid rgba(205,127,50,0.45);
+      box-shadow: 0 0 14px rgba(205,127,50,0.22);
+      color: rgba(0,0,0,0.95);
+      font-size: 12px;
     }
 
     .points-pill.normal {
@@ -5180,6 +5198,31 @@ async function downloadExtendedHtmlExport() {
       color: #ffffff;
       box-shadow: none;
       font-size: 15px;
+      text-shadow: 0 0 8px rgba(255,255,255,0.10);
+    }
+
+    .points-stars {
+      position: absolute;
+      top: -6px;
+      right: -9px;
+      display: flex;
+      gap: 1px;
+      font-size: 10px;
+      line-height: 1;
+    }
+
+    .points-stars.double {
+      right: -14px;
+    }
+
+    .star-gold {
+      color: #ffd700;
+      text-shadow: 0 0 6px rgba(255,215,0,0.45);
+    }
+
+    .star-violet {
+      color: #b67cff;
+      text-shadow: 0 0 6px rgba(160,90,255,0.45);
     }
 
     .footer-note {
@@ -5291,11 +5334,61 @@ function renderPointsHtmlForExport(row: DisplayRow, bestRaceLap: string) {
   const bonus = (isPole ? 1 : 0) + (isBestLap ? 1 : 0)
   const points = isZero ? bonus : getPointsForPrtRow(row, bestRaceLap)
 
-  if (row.posGara <= 3) {
-    return `<span class="points-pill podium">${points}</span>`
+  const title = isZero
+    ? "Punti gara: 0"
+    : isPole && isBestLap
+      ? "Bonus: POLE + BEST LAP"
+      : isPole
+        ? "Bonus: POLE"
+        : isBestLap
+          ? "Bonus: BEST LAP"
+          : "Punti gara"
+
+    const starsClass =
+    isPole && isBestLap ? "points-stars double" : "points-stars"
+
+  const starsHtml = (isPole || isBestLap)
+    ? `
+      <span class="${starsClass}">
+        ${isPole ? `<span class="star-gold">★</span>` : ""}
+        ${isBestLap ? `<span class="star-violet">★</span>` : ""}
+      </span>
+    `
+    : ""
+
+  if (row.posGara === 1) {
+    return `
+      <span class="points-pill points-p1" title="${escapeHtml(title)}">
+        <span>${points}</span>
+        ${starsHtml}
+      </span>
+    `
   }
 
-  return `<span class="points-pill normal">${points}</span>`
+  if (row.posGara === 2) {
+    return `
+      <span class="points-pill points-p2" title="${escapeHtml(title)}">
+        <span>${points}</span>
+        ${starsHtml}
+      </span>
+    `
+  }
+
+  if (row.posGara === 3) {
+    return `
+      <span class="points-pill points-p3" title="${escapeHtml(title)}">
+        <span>${points}</span>
+        ${starsHtml}
+      </span>
+    `
+  }
+
+  return `
+    <span class="points-pill normal" title="${escapeHtml(title)}">
+      <span>${points}</span>
+      ${starsHtml}
+    </span>
+  `
 }
 
   function openExportModal() {
