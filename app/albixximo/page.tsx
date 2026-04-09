@@ -2822,6 +2822,7 @@ const [loginError, setLoginError] = useState("")
   const [exporting, setExporting] = useState(false)
   const [exportingGeneralTeamsPng, setExportingGeneralTeamsPng] = useState(false)
   const [exportingHtml, setExportingHtml] = useState(false)
+  const [exportingGeneralTeamsHtml, setExportingGeneralTeamsHtml] = useState(false)
   const [error, setError] = useState("")
   const [showTable, setShowTable] = useState(true)
   const [showReq, setShowReq] = useState(false)
@@ -5297,6 +5298,676 @@ async function downloadExtendedHtmlExport() {
     setError("Errore export HTML: " + String(e?.message || e))
   } finally {
     setExportingHtml(false)
+  }
+}
+
+async function downloadGeneralTeamsHtmlExport() {
+  if (championshipTeams.length === 0) return
+
+  try {
+    setExportingGeneralTeamsHtml(true)
+
+    const logoUrl = `${window.location.origin}/bmw-m2-team-cup.png`
+
+    let logoDataUrl = ""
+    try {
+      logoDataUrl = await urlToDataUrl(logoUrl)
+    } catch {
+      logoDataUrl = ""
+    }
+
+    const currentLeader = championshipTeams[0]?.team || "-"
+    const currentLeaderPoints = String(championshipTeams[0]?.total ?? 0)
+
+    const headerLogoHtml = logoDataUrl
+      ? `
+        <div class="header-right">
+          <div class="header-logo-link" title="BMW M2 TEAM CUP">
+            <div class="header-logo-frame">
+              <img class="header-logo" src="${escapeHtml(logoDataUrl)}" alt="BMW M2 TEAM CUP" />
+            </div>
+          </div>
+        </div>
+      `
+      : ""
+
+    const summaryHtml = [
+      renderHeaderBadgeHtml(
+        "ROUND ATTUALE",
+        `Dati aggiornati dopo Round ${currentRound}`,
+        "gold"
+      ),
+      `<span class="separator"></span>`,
+      renderHeaderBadgeHtml("TEAM LEADER", currentLeader, "silver"),
+      `<span class="separator"></span>`,
+      renderHeaderBadgeHtml("PUNTI LEADER", currentLeaderPoints, "violet"),
+    ].join("")
+
+    const rowsHtml = championshipTeams
+      .map((team, idx) => {
+        const pos = idx + 1
+        const isP1 = pos === 1
+        const isP2 = pos === 2
+        const isP3 = pos === 3
+
+        const rowClass = isP1
+          ? "row-p1"
+          : isP2
+            ? "row-p2"
+            : isP3
+              ? "row-p3"
+              : idx % 2 === 0
+                ? "row-even"
+                : "row-odd"
+
+        const posBadge =
+          pos === 1 ? "🥇" : pos === 2 ? "🥈" : pos === 3 ? "🥉" : escapeHtml(String(pos))
+
+        const totalClass = isP1
+          ? "team-total team-total-p1"
+          : isP2
+            ? "team-total team-total-p2"
+            : isP3
+              ? "team-total team-total-p3"
+              : "team-total team-total-normal"
+
+        return `
+          <tr class="${rowClass}">
+            <td class="col-pos pos-cell">
+              <span class="pos-badge">${posBadge}</span>
+            </td>
+
+            <td class="col-team team-cell">
+              <div class="team-wrap">
+                <div class="bmw-stripes">
+                  <span class="stripe blue"></span>
+                  <span class="stripe violet"></span>
+                  <span class="stripe red"></span>
+                </div>
+                <span class="team-name">${escapeHtml(team.team)}</span>
+              </div>
+            </td>
+
+            <td class="col-round round-cell">${team.rounds.r1 || 0}</td>
+            <td class="col-round round-cell">${team.rounds.r2 || 0}</td>
+            <td class="col-round round-cell">${team.rounds.r3 || 0}</td>
+            <td class="col-round round-cell">${team.rounds.r4 || 0}</td>
+
+            <td class="col-total total-cell">
+              <span class="${totalClass}">${team.total}</span>
+            </td>
+          </tr>
+        `
+      })
+      .join("")
+
+    const html = `<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BMW M2 TEAM CUP - Classifica Generale TEAM</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+
+    body {
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color: white;
+      background:
+        radial-gradient(1200px 600px at 15% 10%, rgba(255,215,0,0.14), transparent 50%),
+        radial-gradient(900px 500px at 85% 20%, rgba(160,90,255,0.16), transparent 50%),
+        linear-gradient(180deg, #0b0d12 0%, #07080c 100%);
+      min-height: 100vh;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    .page {
+      width: 100%;
+      max-width: 1700px;
+      margin: 0 auto;
+      padding: 24px;
+      display: grid;
+      gap: 18px;
+    }
+
+    .card {
+      border-radius: 22px;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(255,255,255,0.05);
+      box-shadow: 0 14px 60px rgba(0,0,0,0.45);
+      overflow: hidden;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      flex-wrap: nowrap;
+      padding: 16px;
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
+    }
+
+    .header::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(900px 220px at 10% 10%, rgba(255,215,0,0.18), transparent 60%),
+        radial-gradient(700px 220px at 90% 0%, rgba(160,90,255,0.18), transparent 55%);
+      opacity: 0.9;
+    }
+
+    .header-left {
+      position: relative;
+      min-width: 0;
+      flex: 1 1 auto;
+      z-index: 1;
+    }
+
+    .header-right {
+      position: relative;
+      z-index: 1;
+      flex: 0 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .header-logo-link {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      flex-shrink: 0;
+      border-radius: 20px;
+      padding: 2px;
+      background: linear-gradient(90deg, #00A0FF, #4C4CFF, #FF1E1E);
+      box-shadow:
+        0 8px 24px rgba(0,0,0,0.4),
+        0 0 14px rgba(0,163,255,0.12),
+        0 0 14px rgba(123,97,255,0.10),
+        0 0 14px rgba(255,59,59,0.10);
+    }
+
+    .header-logo-frame {
+      border-radius: 18px;
+      padding: 6px;
+      background: #07080c;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .header-logo {
+      height: 110px;
+      width: auto;
+      border-radius: 14px;
+      display: block;
+    }
+
+    .title-line {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: nowrap;
+      white-space: nowrap;
+      min-width: 0;
+    }
+
+    .main-title {
+      font-size: 34px;
+      font-weight: 900;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      line-height: 1.05;
+      text-shadow: 0 0 18px rgba(255,215,0,0.22);
+      white-space: nowrap;
+      min-width: 0;
+    }
+
+    .side-label {
+      font-size: 14px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(255,255,255,0.06);
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .subtitle {
+      margin-top: 5px;
+      font-size: 13px;
+      opacity: 0.9;
+      white-space: nowrap;
+    }
+
+    .title-bar {
+      margin-top: 8px;
+      height: 7px;
+      border-radius: 999px;
+      background:
+        linear-gradient(
+          90deg,
+          rgba(255,215,0,0.0) 0%,
+          rgba(255,215,0,0.35) 18%,
+          rgba(255,255,255,0.14) 50%,
+          rgba(160,90,255,0.30) 82%,
+          rgba(160,90,255,0.0) 100%
+        );
+      box-shadow: 0 0 18px rgba(255,215,0,0.14);
+      opacity: 0.9;
+    }
+
+    .summary {
+      padding: 18px 20px;
+      border-radius: 20px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.05);
+      box-shadow: 0 10px 40px rgba(0,0,0,0.35);
+      display: flex;
+      flex-wrap: nowrap;
+      gap: 14px;
+      align-items: center;
+      overflow-x: auto;
+      overflow-y: hidden;
+    }
+
+    .header-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: nowrap;
+      white-space: nowrap;
+      flex: 0 0 auto;
+    }
+
+    .header-badge-label {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 34px;
+      padding: 9px 14px;
+      border-radius: 999px;
+      font-weight: 900;
+      font-size: 12px;
+      line-height: 1;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+      background: rgba(0,0,0,0.20);
+      color: white;
+      flex-shrink: 0;
+    }
+
+    .header-badge-value-wrap {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: white;
+      white-space: nowrap;
+      flex-shrink: 0;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    .header-badge-main {
+      display: inline-flex;
+      align-items: center;
+      min-height: 34px;
+      font-weight: 900;
+      font-size: 16px;
+      line-height: 1;
+      letter-spacing: 0.2px;
+    }
+
+    .header-badge-secondary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 28px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-weight: 800;
+      font-size: 13px;
+      line-height: 1;
+      letter-spacing: 0.15px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .separator {
+      width: 2px;
+      height: 32px;
+      border-radius: 2px;
+      background: linear-gradient(to bottom, transparent, rgba(210,215,225,0.9), transparent);
+      box-shadow: 0 0 6px rgba(210,215,225,0.35);
+      flex-shrink: 0;
+    }
+
+    .table-card {
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(0,0,0,0.22);
+      overflow: hidden;
+    }
+
+    .table-head {
+      padding: 14px 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.10);
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+      background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+    }
+
+    .table-head-title {
+      font-weight: 900;
+      font-size: 16px;
+      letter-spacing: 0.3px;
+    }
+
+    .table-head-pill {
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.05);
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      opacity: 0.9;
+      white-space: nowrap;
+    }
+
+    .table-wrap {
+      width: 100%;
+      overflow-x: hidden;
+      overflow-y: visible;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+
+    thead th {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      background: rgba(10,12,18,0.96);
+      backdrop-filter: blur(10px);
+      padding: 14px 10px;
+      text-align: left;
+      font-size: 12px;
+      opacity: 0.82;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    tbody td {
+      padding: 14px 10px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      vertical-align: middle;
+      font-size: 13px;
+    }
+
+    .col-pos { width: 56px; }
+    .col-team { width: 58%; }
+    .col-round { width: 7%; }
+    .col-total { width: 10%; }
+
+    .row-p1 {
+      background: linear-gradient(90deg, rgba(255,215,0,0.12) 0%, rgba(255,215,0,0.05) 28%, rgba(255,255,255,0.02) 70%);
+    }
+
+    .row-p2 {
+      background: linear-gradient(90deg, rgba(220,220,220,0.10) 0%, rgba(220,220,220,0.04) 28%, rgba(255,255,255,0.02) 70%);
+    }
+
+    .row-p3 {
+      background: linear-gradient(90deg, rgba(205,127,50,0.12) 0%, rgba(205,127,50,0.05) 28%, rgba(255,255,255,0.02) 70%);
+    }
+
+    .row-even { background: rgba(255,255,255,0.02); }
+    .row-odd { background: rgba(0,0,0,0.10); }
+
+    .pos-cell {
+      text-align: center;
+    }
+
+    .pos-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 30px;
+      height: 28px;
+      padding: 0 10px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(0,0,0,0.22);
+      font-weight: 900;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      line-height: 1;
+    }
+
+    .team-cell {
+      min-width: 0;
+    }
+
+    .team-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .bmw-stripes {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      flex-shrink: 0;
+      transform: skewX(-16deg);
+      transform-origin: center;
+    }
+
+    .stripe {
+      width: 6px;
+      height: 24px;
+      border-radius: 2px;
+      display: inline-block;
+    }
+
+    .stripe.blue {
+      background: linear-gradient(180deg, #6fd3ff 0%, #3bb4e6 100%);
+      box-shadow: 0 0 6px rgba(91,192,255,0.4);
+    }
+
+    .stripe.violet {
+      background: linear-gradient(180deg, #8b5dff 0%, #6a3dff 100%);
+      box-shadow: 0 0 6px rgba(124,77,255,0.4);
+    }
+
+    .stripe.red {
+      background: linear-gradient(180deg, #ff6666 0%, #ff2f2f 100%);
+      box-shadow: 0 0 6px rgba(255,59,59,0.4);
+    }
+
+    .team-name {
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: 0.03em;
+      color: rgba(255,255,255,0.92);
+      white-space: normal;
+      line-height: 1.2;
+      word-break: break-word;
+    }
+
+    .round-cell {
+      text-align: center;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 14px;
+      font-weight: 900;
+      line-height: 1;
+      color: #ffffff;
+    }
+
+    .total-cell {
+      text-align: center;
+    }
+
+    .team-total {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 54px;
+      height: 30px;
+      padding: 0 12px;
+      border-radius: 999px;
+      font-weight: 900;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 15px;
+      line-height: 1;
+    }
+
+    .team-total-p1 {
+      background: linear-gradient(180deg, rgba(255,215,0,1), rgba(255,200,0,0.95));
+      border: 1px solid rgba(255,215,0,0.55);
+      box-shadow: 0 0 14px rgba(255,215,0,0.28);
+      color: rgba(0,0,0,0.95);
+    }
+
+    .team-total-p2 {
+      background: linear-gradient(180deg, rgba(220,220,220,0.96), rgba(185,185,185,0.96));
+      border: 1px solid rgba(220,220,220,0.42);
+      box-shadow: 0 0 11px rgba(220,220,220,0.18);
+      color: rgba(0,0,0,0.95);
+    }
+
+    .team-total-p3 {
+      background: linear-gradient(180deg, rgba(205,127,50,0.96), rgba(168,102,38,0.96));
+      border: 1px solid rgba(205,127,50,0.45);
+      box-shadow: 0 0 11px rgba(205,127,50,0.18);
+      color: rgba(0,0,0,0.95);
+    }
+
+    .team-total-normal {
+      background: linear-gradient(180deg, rgba(255,255,255,0.14), rgba(255,255,255,0.06));
+      border: 1px solid rgba(255,255,255,0.14);
+      box-shadow: 0 0 8px rgba(255,255,255,0.05);
+      color: #ffffff;
+    }
+
+    .footer-note {
+      font-size: 12px;
+      opacity: 0.72;
+      padding: 0 4px;
+    }
+
+    @media (max-width: 1100px) {
+      .main-title {
+        font-size: 28px;
+      }
+
+      .header-logo {
+        height: 84px;
+      }
+
+      .col-team {
+        width: 52%;
+      }
+
+      .col-round {
+        width: 8%;
+      }
+
+      .col-total {
+        width: 12%;
+      }
+
+      .team-name {
+        font-size: 16px;
+      }
+
+      .round-cell {
+        font-size: 13px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="card header">
+      <div class="header-left">
+        <div class="title-line">
+          <div class="main-title">BMW M2 TEAM CUP</div>
+          <span class="side-label">Classifica Generale</span>
+        </div>
+        <div class="subtitle">Powered by Albixximo</div>
+        <div class="title-bar"></div>
+      </div>
+      ${headerLogoHtml}
+    </div>
+
+    <div class="summary">
+      ${summaryHtml}
+    </div>
+
+    <div class="table-card">
+      <div class="table-head">
+        <div class="table-head-title">Classifica Generale TEAM BMW CUP</div>
+        <div class="table-head-pill">Team classificati: ${escapeHtml(String(championshipTeams.length))}</div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th class="col-pos">Pos</th>
+              <th class="col-team">Team</th>
+              <th class="col-round" style="text-align:center;">R1</th>
+              <th class="col-round" style="text-align:center;">R2</th>
+              <th class="col-round" style="text-align:center;">R3</th>
+              <th class="col-round" style="text-align:center;">R4</th>
+              <th class="col-total" style="text-align:center;">TOT</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rowsHtml}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="footer-note">
+      Export HTML Classifica Generale TEAM BMW CUP • scroll verticale
+    </div>
+  </div>
+</body>
+</html>`
+
+    const blob = new Blob([html], { type: "text/html;charset=utf-8" })
+    const url = URL.createObjectURL(blob)
+
+    const link = document.createElement("a")
+    link.href = url
+    link.download = `bmw_m2_team_cup_classifica_generale_r${currentRound}.html`
+    link.click()
+
+    URL.revokeObjectURL(url)
+  } catch (e: any) {
+    setError("Errore export HTML classifica generale team: " + String(e?.message || e))
+  } finally {
+    setExportingGeneralTeamsHtml(false)
   }
 }
 
@@ -8173,6 +8844,32 @@ if (!authorized) {
             ? "Esportazione PNG..."
             : "Esporta PNG Classifica Definitiva Round"}
         </button>
+
+        <button
+  onClick={downloadGeneralTeamsHtmlExport}
+  disabled={exportingGeneralTeamsHtml}
+  style={{
+    padding: "10px 14px",
+    borderRadius: 12,
+    border: "1px solid rgba(96,165,250,0.30)",
+    background: exportingGeneralTeamsHtml
+      ? "rgba(255,255,255,0.08)"
+      : "rgba(96,165,250,0.18)",
+    color: "white",
+    cursor: exportingGeneralTeamsHtml ? "not-allowed" : "pointer",
+    fontWeight: 900,
+    letterSpacing: 0.4,
+    textTransform: "uppercase",
+    fontSize: 11,
+    boxShadow: exportingGeneralTeamsHtml
+      ? "none"
+      : "0 0 18px rgba(96,165,250,0.12)",
+  }}
+>
+  {exportingGeneralTeamsHtml
+    ? "Esportazione HTML..."
+    : "Esporta HTML Classifica Generale"}
+</button>
 
         <button
           onClick={() => setShowGeneralRoundDetails((v) => !v)}
