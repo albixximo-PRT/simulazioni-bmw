@@ -280,6 +280,9 @@ type BmwRoundLeagueSnapshot = {
   standings: BmwTeamStandingRow[]
 }
 
+const BMW_APP_PASSWORD = "Gabus"
+const BMW_AUTH_STORAGE_KEY = "albixximo_bmw_authorized"
+
 function statusBadge(status: MatchFieldStatus) {
   if (status === "ok") return "✅"
   if (status === "warn") return "⚠️"
@@ -2560,7 +2563,7 @@ function TeamChampionshipTable({
             <tr>
               <th
                 style={{
-                  padding: exporting ? "9x 10px" : "12px 10px",
+                  padding: exporting ? "9px 10px" : "12px 10px",
                   textAlign: "center",
                   fontSize: exporting ? 13 : 12,
                   opacity: 0.82,
@@ -2806,6 +2809,11 @@ function TeamChampionshipTable({
 }
 
 export default function Page() {
+  const [showSplash, setShowSplash] = useState(true)
+const [authorized, setAuthorized] = useState(false)
+const [authChecked, setAuthChecked] = useState(false)
+const [inputPassword, setInputPassword] = useState("")
+const [loginError, setLoginError] = useState("")
   const [files, setFiles] = useState<File[]>([])
   const [csv, setCsv] = useState("")
   const [rows, setRows] = useState<ExtractRow[]>([])
@@ -3575,26 +3583,114 @@ const normalizedGaraForOutput = useMemo(() => {
   )
 
   useEffect(() => {
-    const style = document.createElement("style")
-    style.innerHTML = `
-      @keyframes unionLoadSlide {
-        0% { left: -35%; }
-        50% { left: 100%; }
-        100% { left: -35%; }
-      }
+  const savedAuth = sessionStorage.getItem(BMW_AUTH_STORAGE_KEY)
 
-      @keyframes unionLoadShine {
-        0% { left: -20%; }
-        50% { left: 100%; }
-        100% { left: -20%; }
-      }
-    `
-    document.head.appendChild(style)
+  if (savedAuth === "true") {
+    setAuthorized(true)
+  }
 
-    return () => {
-      document.head.removeChild(style)
+  setAuthChecked(true)
+
+  const timer = setTimeout(() => {
+    setShowSplash(false)
+  }, 10000)
+
+  return () => clearTimeout(timer)
+}, [])
+  
+  useEffect(() => {
+  const style = document.createElement("style")
+  style.innerHTML = `
+    @keyframes unionLoadSlide {
+      0% { left: -35%; }
+      50% { left: 100%; }
+      100% { left: -35%; }
     }
-  }, [])
+
+    @keyframes unionLoadShine {
+      0% { left: -20%; }
+      50% { left: 100%; }
+      100% { left: -20%; }
+    }
+
+    @keyframes bmwSlashPulse {
+      0% {
+        opacity: 0.22;
+        transform: translateY(0px) scale(0.96);
+      }
+      50% {
+        opacity: 1;
+        transform: translateY(-1px) scale(1);
+      }
+      100% {
+        opacity: 0.22;
+        transform: translateY(0px) scale(0.96);
+      }
+    }
+
+    @keyframes bmwSplashFade {
+      0% { opacity: 0; transform: scale(1.02); }
+      10% { opacity: 1; transform: scale(1); }
+      90% { opacity: 1; transform: scale(1); }
+      100% { opacity: 0; transform: scale(0.995); }
+    }
+
+    @keyframes bmwGlowCycle {
+  0% {
+    box-shadow:
+      0 0 40px rgba(111, 211, 255, 0.35),
+      0 0 80px rgba(111, 211, 255, 0.18);
+  }
+  33% {
+    box-shadow:
+      0 0 40px rgba(106, 61, 255, 0.35),
+      0 0 80px rgba(106, 61, 255, 0.18);
+  }
+  66% {
+    box-shadow:
+      0 0 40px rgba(255, 59, 59, 0.35),
+      0 0 80px rgba(255, 59, 59, 0.18);
+  }
+  100% {
+    box-shadow:
+      0 0 40px rgba(111, 211, 255, 0.35),
+      0 0 80px rgba(111, 211, 255, 0.18);
+  }
+}
+
+@keyframes bmwTextGlow {
+  0% {
+    text-shadow:
+      0 0 6px rgba(111, 211, 255, 0.6),
+      0 0 12px rgba(111, 211, 255, 0.3);
+    opacity: 0.85;
+  }
+  33% {
+    text-shadow:
+      0 0 6px rgba(106, 61, 255, 0.6),
+      0 0 12px rgba(106, 61, 255, 0.3);
+    opacity: 1;
+  }
+  66% {
+    text-shadow:
+      0 0 6px rgba(255, 59, 59, 0.6),
+      0 0 12px rgba(255, 59, 59, 0.3);
+    opacity: 0.9;
+  }
+  100% {
+    text-shadow:
+      0 0 6px rgba(111, 211, 255, 0.6),
+      0 0 12px rgba(111, 211, 255, 0.3);
+    opacity: 0.85;
+  }
+}
+  `
+  document.head.appendChild(style)
+
+  return () => {
+    document.head.removeChild(style)
+  }
+}, [])
 
   const previewRows = useMemo<DisplayRow[]>(() => {
     const csvRows = parseCsvRows(csv)
@@ -4402,6 +4498,24 @@ setShowDistaccoModal(false)
     }
   }
 
+  function handleLogin() {
+  if (inputPassword === BMW_APP_PASSWORD) {
+    setAuthorized(true)
+    sessionStorage.setItem(BMW_AUTH_STORAGE_KEY, "true")
+    setLoginError("")
+    return
+  }
+
+  setLoginError("Password errata")
+}
+
+function handleLogout() {
+  sessionStorage.removeItem(BMW_AUTH_STORAGE_KEY)
+  setAuthorized(false)
+  setInputPassword("")
+  setLoginError("")
+}
+  
   function resetAll() {
     window.location.reload()
   }
@@ -5025,6 +5139,246 @@ function resetAllManualCorrections() {
   const showTeamInsteadOfAutoInSprintTables = true
 const hideQualifyingColumnInCurrentSprint = false
 
+if (!authChecked || showSplash) {
+  return (
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        background: "#05070b",
+        overflow: "hidden",
+      }}
+    >
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          animation: "bmwSplashFade 10s ease forwards",
+        }}
+      >
+        <div
+  style={{
+    position: "absolute",
+    inset: 0,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: "20px 16px",
+  }}
+>
+  <div
+    style={{
+      display: "grid",
+      justifyItems: "center",
+      gap: 14,
+      width: "100%",
+    }}
+  >
+    <div
+      style={{
+        width: "min(74vw, 960px)",
+        borderRadius: 28,
+        overflow: "hidden",
+        animation: "bmwGlowCycle 4s ease-in-out infinite",
+        display: "block",
+        lineHeight: 0,
+      }}
+    >
+      <img
+        src="/bmw-splash.png"
+        alt="BMW M2 TEAM CUP"
+        style={{
+          display: "block",
+          width: "100%",
+          height: "auto",
+          borderRadius: 28,
+        }}
+      />
+    </div>
+
+    <div
+      style={{
+        display: "grid",
+        gap: 10,
+        justifyItems: "center",
+        width: "min(74vw, 720px)",
+      }}
+    >
+      <div
+        style={{
+          padding: "6px 14px",
+          borderRadius: 999,
+          fontSize: 13,
+          fontWeight: 900,
+          letterSpacing: 1.2,
+          textTransform: "uppercase",
+          color: "#ffffff",
+          background: "rgba(255,255,255,0.06)",
+          border: "1px solid rgba(255,255,255,0.18)",
+          animation: "bmwTextGlow 3s ease-in-out infinite",
+          boxShadow: "0 0 20px rgba(0,0,0,0.35)",
+        }}
+      >
+        Caricamento
+      </div>
+
+      <div
+        style={{
+          display: "flex",
+          flexWrap: "nowrap",
+          justifyContent: "center",
+          gap: 6,
+          overflow: "hidden",
+        }}
+      >
+        {Array.from({ length: 24 }).map((_, i) => {
+          const color =
+            i % 3 === 0
+              ? "#6fd3ff"
+              : i % 3 === 1
+                ? "#6a3dff"
+                : "#ff3b3b"
+
+          return (
+            <span
+              key={i}
+              style={{
+                fontSize: 18,
+                fontWeight: 900,
+                letterSpacing: -1,
+                color,
+                textShadow: `0 0 10px ${color}55`,
+                animation: `bmwSlashPulse 1.15s ease-in-out infinite`,
+                animationDelay: `${i * 0.07}s`,
+              }}
+            >
+              ///
+            </span>
+          )
+        })}
+      </div>
+    </div>
+  </div>
+</div>
+      </div>
+    </div>
+  )
+}
+if (!authorized) {
+  return (
+    <div
+      style={{
+        minHeight: "100vh",
+        padding: 24,
+        color: "white",
+        fontFamily: "ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial",
+        background:
+          "radial-gradient(1200px 600px at 15% 10%, rgba(255,215,0,0.14), transparent 50%)," +
+          "radial-gradient(900px 500px at 85% 20%, rgba(160,90,255,0.16), transparent 50%)," +
+          "linear-gradient(180deg, #0b0d12 0%, #07080c 100%)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <div
+        style={{
+          width: "100%",
+          maxWidth: 560,
+          borderRadius: 24,
+          padding: "30px 26px",
+          background: "rgba(14,18,32,0.88)",
+          border: "1px solid rgba(255,255,255,0.12)",
+          boxShadow: "0 0 60px rgba(0,0,0,0.35)",
+          display: "grid",
+          gap: 16,
+        }}
+      >
+        <div style={{ textAlign: "center", display: "grid", gap: 10 }}>
+          <div
+            style={{
+              fontSize: 34,
+              fontWeight: 900,
+              letterSpacing: 1,
+              textTransform: "uppercase",
+            }}
+          >
+            BMW M2 TEAM CUP
+          </div>
+
+          <div
+            style={{
+              fontSize: 14,
+              opacity: 0.74,
+            }}
+          >
+            Accesso riservato
+          </div>
+        </div>
+
+        <input
+          type="password"
+          value={inputPassword}
+          onChange={(e) => setInputPassword(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") handleLogin()
+          }}
+          placeholder="Inserisci password"
+          autoFocus
+          style={{
+            width: "100%",
+            height: 58,
+            borderRadius: 14,
+            border: "1px solid rgba(255,255,255,0.16)",
+            background: "rgba(255,255,255,0.05)",
+            color: "#ffffff",
+            padding: "0 18px",
+            fontSize: 16,
+            outline: "none",
+            boxSizing: "border-box",
+          }}
+        />
+
+        {loginError && (
+          <div
+            style={{
+              fontSize: 13,
+              color: "#ff9c9c",
+              background: "rgba(255,80,80,0.08)",
+              border: "1px solid rgba(255,80,80,0.22)",
+              borderRadius: 12,
+              padding: "10px 12px",
+            }}
+          >
+            {loginError}
+          </div>
+        )}
+
+        <button
+          onClick={handleLogin}
+          disabled={!inputPassword.trim()}
+          style={{
+            width: "100%",
+            height: 58,
+            borderRadius: 14,
+            border: "1px solid rgba(255,215,0,0.35)",
+            background: !inputPassword.trim()
+              ? "rgba(255,255,255,0.08)"
+              : "linear-gradient(135deg, rgba(255,215,0,0.96), rgba(255,190,40,0.94))",
+            color: "#111522",
+            fontSize: 16,
+            fontWeight: 900,
+            cursor: !inputPassword.trim() ? "not-allowed" : "pointer",
+            textTransform: "uppercase",
+            letterSpacing: 0.6,
+          }}
+        >
+          Accedi
+        </button>
+      </div>
+    </div>
+  )
+}
   return (
     <div
       style={{
@@ -5318,6 +5672,26 @@ const hideQualifyingColumnInCurrentSprint = false
   >
     Reset
   </button>
+
+  <button
+  onClick={handleLogout}
+  style={{
+    padding: "12px 14px",
+    borderRadius: 14,
+    border: "1px solid rgba(255,80,80,0.35)",
+    background: "rgba(255,80,80,0.18)",
+    color: "white",
+    cursor: "pointer",
+    opacity: 0.95,
+    textTransform: "uppercase",
+    fontWeight: 900,
+    letterSpacing: 0.4,
+    fontSize: 12,
+    boxShadow: "0 0 18px rgba(255,80,80,0.12)",
+  }}
+>
+  Logout
+</button>
 
   <button
     onClick={exportPortableBackup}
