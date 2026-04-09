@@ -4544,11 +4544,17 @@ async function urlToDataUrl(url: string): Promise<string> {
   })
 }
 
-async function downloadExtendedHtmlExport() {
+async function downloadExtendedHtmlExport(customTexts?: {
+  mainTitle: string
+  sideLabel: string
+  subtitle: string
+}) {
   if (finalRows.length === 0) return
 
   try {
     setExportingHtml(true)
+
+    const texts = customTexts ?? exportTexts
 
     const logoUrl = `${window.location.origin}/bmw-m2-team-cup.png`
 
@@ -5239,10 +5245,10 @@ async function downloadExtendedHtmlExport() {
     <div class="card header">
       <div class="header-left">
         <div class="title-line">
-          <div class="main-title">${escapeHtml(exportTexts.mainTitle)}</div>
-          <span class="side-label">${escapeHtml(exportTexts.sideLabel)}</span>
+          <div class="main-title">${escapeHtml(texts.mainTitle)}</div>
+<span class="side-label">${escapeHtml(texts.sideLabel)}</span>
         </div>
-        <div class="subtitle">${escapeHtml(exportTexts.subtitle)}</div>
+        <div class="subtitle">${escapeHtml(texts.subtitle)}</div>
         <div class="title-bar"></div>
       </div>
       ${headerLogoHtml}
@@ -5302,11 +5308,17 @@ async function downloadExtendedHtmlExport() {
   }
 }
 
-async function downloadGeneralTeamsHtmlExport() {
+async function downloadGeneralTeamsHtmlExport(customTexts?: {
+  mainTitle: string
+  sideLabel: string
+  subtitle: string
+}) {
   if (championshipTeams.length === 0) return
 
   try {
     setExportingGeneralTeamsHtml(true)
+
+    const texts = customTexts ?? exportTexts
 
     const logoUrl = `${window.location.origin}/bmw-m2-team-cup.png`
 
@@ -5910,10 +5922,10 @@ async function downloadGeneralTeamsHtmlExport() {
     <div class="card header">
       <div class="header-left">
         <div class="title-line">
-          <div class="main-title">${escapeHtml(exportTexts.mainTitle)}</div>
-          <span class="side-label">${escapeHtml(exportTexts.sideLabel)}</span>
+          <div class="main-title">${escapeHtml(texts.mainTitle)}</div>
+<span class="side-label">${escapeHtml(texts.sideLabel)}</span>
         </div>
-        <div class="subtitle">${escapeHtml(exportTexts.subtitle)}</div>
+        <div class="subtitle">${escapeHtml(texts.subtitle)}</div>
         <div class="title-bar"></div>
       </div>
       ${headerLogoHtml}
@@ -6087,12 +6099,12 @@ function renderPointsHtmlForExport(row: DisplayRow, bestRaceLap: string) {
   }
 
   if (exportTarget === "html") {
-    await downloadExtendedHtmlExport()
+    await downloadExtendedHtmlExport(nextTexts)
     return
   }
 
   if (exportTarget === "html-teams") {
-    await downloadGeneralTeamsHtmlExport()
+    await downloadGeneralTeamsHtmlExport(nextTexts)
     return
   }
 }
