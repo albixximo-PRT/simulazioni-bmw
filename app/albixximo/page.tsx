@@ -2821,6 +2821,7 @@ const [loginError, setLoginError] = useState("")
   const [loading, setLoading] = useState(false)
   const [exporting, setExporting] = useState(false)
   const [exportingGeneralTeamsPng, setExportingGeneralTeamsPng] = useState(false)
+  const [exportingHtml, setExportingHtml] = useState(false)
   const [error, setError] = useState("")
   const [showTable, setShowTable] = useState(true)
   const [showReq, setShowReq] = useState(false)
@@ -4429,6 +4430,548 @@ async function performExportTablePng() {
   }
 }
 
+function escapeHtml(value: string) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;")
+}
+
+function renderTempoHtml(tempo: string) {
+  const t = String(tempo || "").trim()
+  const upper = t.toUpperCase()
+
+  if (!t || t === "-") return `<span class="tempo-text">-</span>`
+  if (upper === "DNF") return `<span class="pill teal">DNF</span>`
+  if (upper === "DNFV") return `<span class="pill teal">DNFV</span>`
+  if (upper === "BOX") return `<span class="pill fuchsia">BOX</span>`
+  if (/^\d+giro$/i.test(t) || upper === "DOPPIATO") return `<span class="pill orange">DOPPIATO</span>`
+  if (upper === "DSQ") return `<span class="pill dsq">DSQ</span>`
+
+  return `<span class="tempo-text">${escapeHtml(t)}</span>`
+}
+
+function downloadExtendedHtmlExport() {
+  if (finalRows.length === 0) return
+
+  try {
+    setExportingHtml(true)
+
+    const rowsHtml = finalRows
+      .map((r, i) => {
+        const tempo = tempoLikeGt7(r)
+        const isPole = (r.pole || "").trim().toUpperCase() === "POLE"
+        const bestLapTime = (bestRaceLap.split("  ").pop() || "").trim()
+        const isBestLap = !!bestLapTime && (r.migliorGiroGara || "").trim() === bestLapTime
+        const resolvedTeamName = findTeamByPilot(r.pilota)?.team || "-"
+
+        let rowClass = "row-even"
+        if (r.posGara === 1) rowClass = "row-p1"
+        else if (r.posGara === 2) rowClass = "row-p2"
+        else if (r.posGara === 3) rowClass = "row-p3"
+        else if (i % 2 !== 0) rowClass = "row-odd"
+
+        let qualiHtml = `<span>${escapeHtml(r.tempoQualifica || "-")}</span>`
+        if (currentSprint === 2) {
+          qualiHtml = `<span class="grid-reverse">Griglia invertita</span>`
+        } else if (isPole) {
+          qualiHtml =
+            `<span class="pill gold">POLE <span class="pill-right">` +
+            escapeHtml(r.tempoQualifica || "-") +
+            `</span></span>`
+        }
+
+        let bestLapHtml = `<span>${escapeHtml(r.migliorGiroGara || "-")}</span>`
+        if (isBestLap && r.migliorGiroGara) {
+          bestLapHtml =
+            `<span class="pill violet">BEST LAP <span class="pill-right">` +
+            escapeHtml(r.migliorGiroGara) +
+            `</span></span>`
+        }
+
+        let posBadge = escapeHtml(String(r.posGara))
+        if (r.posGara === 1) posBadge = "🥇"
+        else if (r.posGara === 2) posBadge = "🥈"
+        else if (r.posGara === 3) posBadge = "🥉"
+
+        const lobbyCell = unionMode
+          ? `<td class="center mono">` + escapeHtml(unionMeta.lobby || "-") + `</td>`
+          : ""
+
+        return (
+          `<tr class="` + rowClass + `">` +
+            `<td class="pos-cell"><span class="pos-badge">` + posBadge + `</span></td>` +
+            `<td class="pilot-cell">` + escapeHtml(r.pilota) + `</td>` +
+            `<td class="team-cell">` +
+              `<div class="team-wrap">` +
+                `<div class="bmw-stripes">` +
+                  `<span class="stripe blue"></span>` +
+                  `<span class="stripe violet"></span>` +
+                  `<span class="stripe red"></span>` +
+                `</div>` +
+                `<span class="team-name">` + escapeHtml(resolvedTeamName) + `</span>` +
+              `</div>` +
+            `</td>` +
+            `<td class="right mono">` + qualiHtml + `</td>` +
+            `<td class="right mono">` + renderTempoHtml(tempo) + `</td>` +
+            `<td class="right mono">` + bestLapHtml + `</td>` +
+            `<td class="center mono">` + escapeHtml(normalizedGaraForOutput || "-") + `</td>` +
+            `<td class="center mono">` + escapeHtml(effectiveLega || "-") + `</td>` +
+            lobbyCell +
+          `</tr>`
+        )
+      })
+      .join("")
+
+    const lobbyHeader = unionMode
+      ? `<th style="min-width:95px; text-align:center;">Lobby</th>`
+      : ""
+
+    const html =
+`<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BMW M2 TEAM CUP - Export HTML</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color: white;
+      background:
+        radial-gradient(1200px 600px at 15% 10%, rgba(255,215,0,0.14), transparent 50%),
+        radial-gradient(900px 500px at 85% 20%, rgba(160,90,255,0.16), transparent 50%),
+        linear-gradient(180deg, #0b0d12 0%, #07080c 100%);
+      min-height: 100vh;
+      overflow-y: auto;
+    }
+    .page {
+      max-width: 1600px;
+      margin: 0 auto;
+      padding: 24px;
+      display: grid;
+      gap: 16px;
+    }
+    .card {
+      border-radius: 22px;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(255,255,255,0.05);
+      box-shadow: 0 14px 60px rgba(0,0,0,0.45);
+      overflow: hidden;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+      padding: 16px;
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
+    }
+    .header::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(900px 220px at 10% 10%, rgba(255,215,0,0.18), transparent 60%),
+        radial-gradient(700px 220px at 90% 0%, rgba(160,90,255,0.18), transparent 55%);
+      opacity: 0.9;
+    }
+    .header-left {
+      position: relative;
+      min-width: 0;
+      flex: 1;
+    }
+    .title-line {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .main-title {
+      font-size: 34px;
+      font-weight: 900;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      line-height: 1.05;
+      text-shadow: 0 0 18px rgba(255,215,0,0.22);
+    }
+    .side-label {
+      font-size: 14px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(255,255,255,0.06);
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    .subtitle {
+      margin-top: 5px;
+      font-size: 13px;
+      opacity: 0.9;
+    }
+    .title-bar {
+      margin-top: 8px;
+      height: 7px;
+      border-radius: 999px;
+      background:
+        linear-gradient(90deg, rgba(255,215,0,0.0) 0%, rgba(255,215,0,0.35) 18%, rgba(255,255,255,0.14) 50%, rgba(160,90,255,0.30) 82%, rgba(160,90,255,0.0) 100%);
+      box-shadow: 0 0 18px rgba(255,215,0,0.14);
+      opacity: 0.9;
+    }
+    .summary {
+      padding: 18px 20px;
+      border-radius: 20px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.05);
+      box-shadow: 0 10px 40px rgba(0,0,0,0.35);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      align-items: center;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      white-space: nowrap;
+      flex-wrap: wrap;
+    }
+    .badge-label {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-weight: 900;
+      font-size: 12px;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+      background: rgba(0,0,0,0.20);
+      color: white;
+    }
+    .badge.gold .badge-label {
+      border: 1px solid rgba(255,215,0,0.70);
+      box-shadow: 0 0 22px rgba(255,215,0,0.16);
+    }
+    .badge.violet .badge-label {
+      border: 1px solid rgba(160,90,255,0.70);
+      box-shadow: 0 0 22px rgba(160,90,255,0.14);
+    }
+    .badge.silver .badge-label {
+      border: 1px solid rgba(210,215,225,0.72);
+      box-shadow: 0 0 22px rgba(210,215,225,0.18);
+    }
+    .badge-value {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-weight: 900;
+      font-size: 15px;
+    }
+    .separator {
+      width: 2px;
+      height: 30px;
+      border-radius: 2px;
+      background: linear-gradient(to bottom, transparent, rgba(210,215,225,0.9), transparent);
+      box-shadow: 0 0 6px rgba(210,215,225,0.35);
+      flex-shrink: 0;
+    }
+    .table-card {
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(0,0,0,0.22);
+      overflow: hidden;
+    }
+    .table-head {
+      padding: 14px 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.10);
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      font-weight: 900;
+    }
+    .table-wrap {
+      overflow-x: auto;
+      overflow-y: visible;
+    }
+    table {
+      width: 100%;
+      min-width: 1320px;
+      border-collapse: collapse;
+      table-layout: auto;
+    }
+    thead th {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      background: rgba(10,12,18,0.96);
+      backdrop-filter: blur(10px);
+      padding: 18px 14px;
+      text-align: left;
+      font-size: 13px;
+      opacity: 0.82;
+      white-space: nowrap;
+    }
+    tbody td {
+      padding: 18px 12px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      vertical-align: middle;
+      font-size: 14px;
+    }
+    .row-p1 {
+      background: linear-gradient(90deg, rgba(255,215,0,0.11) 0%, rgba(255,215,0,0.05) 28%, rgba(255,255,255,0.02) 70%);
+    }
+    .row-p2 {
+      background: linear-gradient(90deg, rgba(220,220,220,0.10) 0%, rgba(220,220,220,0.04) 28%, rgba(255,255,255,0.02) 70%);
+    }
+    .row-p3 {
+      background: linear-gradient(90deg, rgba(205,127,50,0.12) 0%, rgba(205,127,50,0.05) 28%, rgba(255,255,255,0.02) 70%);
+    }
+    .row-even { background: rgba(255,255,255,0.02); }
+    .row-odd { background: rgba(0,0,0,0.10); }
+    .pos-cell { text-align: center; width: 64px; }
+    .pos-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 34px;
+      height: 28px;
+      padding: 0 10px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(0,0,0,0.22);
+      font-weight: 900;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+    .pilot-cell {
+      font-size: 21px;
+      font-weight: 800;
+      letter-spacing: 0.03em;
+      color: #ffffff;
+    }
+    .team-cell { max-width: 360px; }
+    .team-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+    .bmw-stripes {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      flex-shrink: 0;
+      transform: skewX(-16deg);
+      transform-origin: center;
+    }
+    .stripe {
+      width: 6px;
+      height: 24px;
+      border-radius: 2px;
+      display: inline-block;
+    }
+    .stripe.blue {
+      background: linear-gradient(180deg, #6fd3ff 0%, #3bb4e6 100%);
+      box-shadow: 0 0 6px rgba(91,192,255,0.4);
+    }
+    .stripe.violet {
+      background: linear-gradient(180deg, #8b5dff 0%, #6a3dff 100%);
+      box-shadow: 0 0 6px rgba(124,77,255,0.4);
+    }
+    .stripe.red {
+      background: linear-gradient(180deg, #ff6666 0%, #ff2f2f 100%);
+      box-shadow: 0 0 6px rgba(255,59,59,0.4);
+    }
+    .team-name {
+      font-size: 19px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      color: rgba(255,255,255,0.92);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .right { text-align: right; }
+    .center { text-align: center; }
+    .mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 16px;
+      border-radius: 14px;
+      font-size: 14px;
+      font-weight: 900;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+      white-space: nowrap;
+      color: rgba(0,0,0,0.92);
+    }
+    .pill-right {
+      padding-left: 10px;
+      border-left: 1px solid rgba(0,0,0,0.22);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      letter-spacing: 0.2px;
+      text-transform: none;
+      font-size: 15px;
+    }
+    .gold {
+      background: rgba(255,215,0,0.92);
+      border: 1px solid rgba(255,215,0,0.55);
+      box-shadow: 0 0 22px rgba(255,215,0,0.20);
+    }
+    .violet {
+      background: rgba(160,90,255,0.92);
+      border: 1px solid rgba(160,90,255,0.55);
+      box-shadow: 0 0 22px rgba(160,90,255,0.18);
+    }
+    .orange {
+      background: rgba(255,165,0,0.92);
+      border: 1px solid rgba(255,165,0,0.55);
+      box-shadow: 0 0 22px rgba(255,165,0,0.16);
+    }
+    .teal {
+      background: rgba(64,224,208,0.92);
+      border: 1px solid rgba(64,224,208,0.55);
+      box-shadow: 0 0 22px rgba(64,224,208,0.14);
+    }
+    .fuchsia {
+      background: rgba(255,0,128,0.92);
+      border: 1px solid rgba(255,0,128,0.55);
+      box-shadow: 0 0 22px rgba(255,0,128,0.18);
+    }
+    .dsq {
+      background: rgba(255,0,255,0.92);
+      border: 1px solid rgba(255,0,255,0.60);
+      box-shadow: 0 0 22px rgba(255,0,255,0.30);
+    }
+    .tempo-text {
+      font-size: 18px;
+    }
+    .grid-reverse {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 13px;
+      border-radius: 999px;
+      border: 1px solid rgba(96,165,250,0.25);
+      background: linear-gradient(180deg, rgba(96,165,250,0.14), rgba(59,130,246,0.06));
+      box-shadow: 0 0 10px rgba(96,165,250,0.08);
+      color: rgba(219,234,254,0.85);
+      font-weight: 800;
+      font-size: 13px;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    .footer-note {
+      font-size: 12px;
+      opacity: 0.72;
+      padding: 0 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="card header">
+      <div class="header-left">
+        <div class="title-line">
+          <div class="main-title">` + escapeHtml(exportTexts.mainTitle) + `</div>
+          <span class="side-label">` + escapeHtml(exportTexts.sideLabel) + `</span>
+        </div>
+        <div class="subtitle">` + escapeHtml(exportTexts.subtitle) + `</div>
+        <div class="title-bar"></div>
+      </div>
+    </div>
+
+    <div class="summary">
+      <div class="badge silver">
+        <span class="badge-label">Winner</span>
+        <span class="badge-value">` + escapeHtml(winner || "-") + `</span>
+      </div>
+      <span class="separator"></span>
+      <div class="badge gold">
+        <span class="badge-label">Pole (Qualifica)</span>
+        <span class="badge-value">` + escapeHtml(bestQuali || "-") + `</span>
+      </div>
+      <span class="separator"></span>
+      <div class="badge violet">
+        <span class="badge-label">Best Lap (Gara)</span>
+        <span class="badge-value">` + escapeHtml(bestRaceLap || "-") + `</span>
+      </div>
+      <span class="separator"></span>
+      <div class="badge gold">
+        <span class="badge-label">Lega</span>
+        <span class="badge-value">` + escapeHtml(effectiveLega || "-") + `</span>
+      </div>
+      <span class="separator"></span>
+      <div class="badge violet">
+        <span class="badge-label">Gara</span>
+        <span class="badge-value">` + escapeHtml(normalizedGaraForOutput || "-") + `</span>
+      </div>
+    </div>
+
+    <div class="table-card">
+      <div class="table-head">
+        <div>Classifica Sprint ` + escapeHtml(String(currentSprint)) + ` estesa</div>
+        <div>` + escapeHtml(String(finalRows.length)) + ` partecipanti</div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:64px;">Pos</th>
+              <th style="min-width:220px;">Pilota</th>
+              <th style="min-width:280px;">Team</th>
+              <th style="min-width:180px; text-align:right;">Qualifica</th>
+              <th style="min-width:170px; text-align:right;">Tempi gara</th>
+              <th style="min-width:240px; text-align:right;">Miglior giro</th>
+              <th style="min-width:80px; text-align:center;">Gara</th>
+              <th style="min-width:110px; text-align:center;">Lega</th>
+              ` + lobbyHeader + `
+            </tr>
+          </thead>
+          <tbody>
+            ` + rowsHtml + `
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="footer-note">
+      Export HTML esteso • scroll verticale • PNG invariato
+    </div>
+  </div>
+</body>
+</html>`
+
+    const blob = new Blob([html], { type: "text/html;charset=utf-8" })
+    const url = URL.createObjectURL(blob)
+
+    const link = document.createElement("a")
+    link.href = url
+    link.download = "bmw_m2_team_cup_sprint_" + currentSprint + "_esteso.html"
+    link.click()
+
+    URL.revokeObjectURL(url)
+  } catch (e: any) {
+    setError("Errore export HTML: " + String(e?.message || e))
+  } finally {
+    setExportingHtml(false)
+  }
+}
+
   function openExportModal() {
     setExportTextsDraft(exportTexts)
     setShowExportModal(true)
@@ -5884,59 +6427,78 @@ if (!authorized) {
     </div>
 
     <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
-      <button
-        onClick={openExportModal}
-        disabled={exporting}
-        style={{
-          padding: "12px 16px",
-          borderRadius: 14,
-          border: "1px solid rgba(255,255,255,0.16)",
-          background: exporting ? "rgba(255,255,255,0.08)" : "rgba(160,90,255,0.18)",
-          color: "white",
-          fontWeight: 900,
-          letterSpacing: 0.6,
-          cursor: exporting ? "not-allowed" : "pointer",
-          boxShadow: exporting ? "none" : "0 0 22px rgba(160,90,255,0.12)",
-          textTransform: "uppercase",
-        }}
-      >
-        {exporting ? "Esportazione PNG..." : "Esporta PNG tabella"}
-      </button>
+  <button
+    onClick={openExportModal}
+    disabled={exporting}
+    style={{
+      padding: "12px 16px",
+      borderRadius: 14,
+      border: "1px solid rgba(255,255,255,0.16)",
+      background: exporting ? "rgba(255,255,255,0.08)" : "rgba(160,90,255,0.18)",
+      color: "white",
+      fontWeight: 900,
+      letterSpacing: 0.6,
+      cursor: exporting ? "not-allowed" : "pointer",
+      boxShadow: exporting ? "none" : "0 0 22px rgba(160,90,255,0.12)",
+      textTransform: "uppercase",
+    }}
+  >
+    {exporting ? "Esportazione PNG..." : "Esporta PNG tabella"}
+  </button>
 
-      <label
-        style={{
-          display: "inline-flex",
-          alignItems: "center",
-          gap: 10,
-          padding: "10px 12px",
-          borderRadius: 14,
-          border: "1px solid rgba(255,215,0,0.22)",
-          background: exportMetaInPng ? "rgba(255,215,0,0.14)" : "rgba(255,255,255,0.06)",
-          color: "white",
-          cursor: "pointer",
-          fontWeight: 900,
-          letterSpacing: 0.4,
-          textTransform: "uppercase",
-          fontSize: 12,
-          boxShadow: exportMetaInPng ? "0 0 18px rgba(255,215,0,0.10)" : "none",
-          userSelect: "none",
-        }}
-      >
-        <input
-          type="checkbox"
-          checked={exportMetaInPng}
-          onChange={(e) => setExportMetaInPng(e.target.checked)}
-          style={{ transform: "scale(1.1)" }}
-        />
-        Includi Lobby, Gara, Lega
-      </label>
+  <button
+    onClick={downloadExtendedHtmlExport}
+    disabled={exportingHtml}
+    style={{
+      padding: "12px 16px",
+      borderRadius: 14,
+      border: "1px solid rgba(96,165,250,0.30)",
+      background: exportingHtml ? "rgba(255,255,255,0.08)" : "rgba(96,165,250,0.18)",
+      color: "white",
+      fontWeight: 900,
+      letterSpacing: 0.6,
+      cursor: exportingHtml ? "not-allowed" : "pointer",
+      boxShadow: exportingHtml ? "none" : "0 0 22px rgba(96,165,250,0.12)",
+      textTransform: "uppercase",
+    }}
+  >
+    {exportingHtml ? "Esportazione HTML..." : "Scarica HTML esteso"}
+  </button>
 
-      {hasAnyPenalty && (
-        <div style={{ fontSize: 12, opacity: 0.82 }}>
-          PNG e CSV stanno usando la <b>classifica post-penalità</b>.
-        </div>
-      )}
+  <label
+    style={{
+      display: "inline-flex",
+      alignItems: "center",
+      gap: 10,
+      padding: "10px 12px",
+      borderRadius: 14,
+      border: "1px solid rgba(255,215,0,0.22)",
+      background: exportMetaInPng ? "rgba(255,215,0,0.14)" : "rgba(255,255,255,0.06)",
+      color: "white",
+      cursor: "pointer",
+      fontWeight: 900,
+      letterSpacing: 0.4,
+      textTransform: "uppercase",
+      fontSize: 12,
+      boxShadow: exportMetaInPng ? "0 0 18px rgba(255,215,0,0.10)" : "none",
+      userSelect: "none",
+    }}
+  >
+    <input
+      type="checkbox"
+      checked={exportMetaInPng}
+      onChange={(e) => setExportMetaInPng(e.target.checked)}
+      style={{ transform: "scale(1.1)" }}
+    />
+    Includi Lobby, Gara, Lega
+  </label>
+
+  {hasAnyPenalty && (
+    <div style={{ fontSize: 12, opacity: 0.82 }}>
+      PNG e CSV stanno usando la <b>classifica post-penalità</b>.
     </div>
+  )}
+</div>
   </div>
 )}
             </div>
