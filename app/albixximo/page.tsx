@@ -4453,11 +4453,89 @@ function renderTempoHtml(tempo: string) {
   return `<span class="tempo-text">${escapeHtml(t)}</span>`
 }
 
+function renderHeaderBadgeHtml(
+  label: string,
+  value: string,
+  variant: "gold" | "violet" | "silver"
+) {
+  const palette =
+    variant === "gold"
+      ? {
+          border: "rgba(255,215,0,0.70)",
+          glow: "rgba(255,215,0,0.16)",
+          tagBg: "rgba(255,215,0,0.10)",
+          tagBorder: "rgba(255,215,0,0.28)",
+          tagText: "#ffe58a",
+        }
+      : variant === "silver"
+        ? {
+            border: "rgba(210,215,225,0.72)",
+            glow: "rgba(210,215,225,0.18)",
+            tagBg: "rgba(210,215,225,0.10)",
+            tagBorder: "rgba(210,215,225,0.24)",
+            tagText: "#f3f6fb",
+          }
+        : {
+            border: "rgba(160,90,255,0.70)",
+            glow: "rgba(160,90,255,0.14)",
+            tagBg: "rgba(160,90,255,0.10)",
+            tagBorder: "rgba(160,90,255,0.28)",
+            tagText: "#dfc2ff",
+          }
+
+  const rawValue = String(value || "").trim()
+  const parts = rawValue.split(/\s{2,}/)
+  const mainValue = parts[0] || "-"
+  const secondaryValue = parts[1] || ""
+
+  return `
+    <div class="header-badge">
+      <span
+        class="header-badge-label"
+        style="
+          border: 1px solid ${palette.border};
+          box-shadow: 0 0 22px ${palette.glow};
+        "
+      >
+        ${escapeHtml(label)}
+      </span>
+
+      <span class="header-badge-value-wrap">
+        <span class="header-badge-main">
+          ${escapeHtml(mainValue)}
+        </span>
+        ${
+          secondaryValue
+            ? `
+          <span
+            class="header-badge-secondary"
+            style="
+              background: ${palette.tagBg};
+              border: 1px solid ${palette.tagBorder};
+              color: ${palette.tagText};
+              box-shadow: 0 0 12px ${palette.glow};
+            "
+          >
+            ${escapeHtml(secondaryValue)}
+          </span>
+        `
+            : ""
+        }
+      </span>
+    </div>
+  `
+}
+
 function downloadExtendedHtmlExport() {
   if (finalRows.length === 0) return
 
   try {
     setExportingHtml(true)
+
+    const logoUrl =
+      typeof window !== "undefined"
+        ? `${window.location.origin}/bmw-m2-team-cup.png`
+        : "/bmw-m2-team-cup.png"
 
     const rowsHtml = finalRows
       .map((r, i) => {
@@ -4497,14 +4575,14 @@ function downloadExtendedHtmlExport() {
         else if (r.posGara === 3) posBadge = "🥉"
 
         const lobbyCell = unionMode
-          ? `<td class="center mono">` + escapeHtml(unionMeta.lobby || "-") + `</td>`
+          ? `<td class="center mono col-lobby">` + escapeHtml(unionMeta.lobby || "-") + `</td>`
           : ""
 
         return (
-          `<tr class="` + rowClass + `">` +
-            `<td class="pos-cell"><span class="pos-badge">` + posBadge + `</span></td>` +
-            `<td class="pilot-cell">` + escapeHtml(r.pilota) + `</td>` +
-            `<td class="team-cell">` +
+          `<tr class="${rowClass}">` +
+            `<td class="pos-cell col-pos"><span class="pos-badge">${posBadge}</span></td>` +
+            `<td class="pilot-cell col-pilot">` + escapeHtml(r.pilota) + `</td>` +
+            `<td class="team-cell col-team">` +
               `<div class="team-wrap">` +
                 `<div class="bmw-stripes">` +
                   `<span class="stripe blue"></span>` +
@@ -4514,11 +4592,11 @@ function downloadExtendedHtmlExport() {
                 `<span class="team-name">` + escapeHtml(resolvedTeamName) + `</span>` +
               `</div>` +
             `</td>` +
-            `<td class="right mono">` + qualiHtml + `</td>` +
-            `<td class="right mono">` + renderTempoHtml(tempo) + `</td>` +
-            `<td class="right mono">` + bestLapHtml + `</td>` +
-            `<td class="center mono">` + escapeHtml(normalizedGaraForOutput || "-") + `</td>` +
-            `<td class="center mono">` + escapeHtml(effectiveLega || "-") + `</td>` +
+            `<td class="right mono col-quali">` + qualiHtml + `</td>` +
+            `<td class="right mono col-race">` + renderTempoHtml(tempo) + `</td>` +
+            `<td class="right mono col-bestlap">` + bestLapHtml + `</td>` +
+            `<td class="center mono col-gara">` + escapeHtml(normalizedGaraForOutput || "-") + `</td>` +
+            `<td class="center mono col-lega">` + escapeHtml(effectiveLega || "-") + `</td>` +
             lobbyCell +
           `</tr>`
         )
@@ -4526,8 +4604,26 @@ function downloadExtendedHtmlExport() {
       .join("")
 
     const lobbyHeader = unionMode
-      ? `<th style="min-width:95px; text-align:center;">Lobby</th>`
+      ? `<th class="col-lobby" style="text-align:center;">Lobby</th>`
       : ""
+
+    const summaryHtml = [
+      renderHeaderBadgeHtml("WINNER", winner || "-", "silver"),
+      `<span class="separator"></span>`,
+      renderHeaderBadgeHtml("POLE (QUALIFICA)", bestQuali || "-", "gold"),
+      `<span class="separator"></span>`,
+      renderHeaderBadgeHtml("BEST LAP (GARA)", bestRaceLap || "-", "violet"),
+      `<span class="separator"></span>`,
+      renderHeaderBadgeHtml("LEGA", effectiveLega || "-", "gold"),
+      `<span class="separator"></span>`,
+      renderHeaderBadgeHtml("GARA", normalizedGaraForOutput || "-", "violet"),
+      ...(unionMode
+        ? [
+            `<span class="separator"></span>`,
+            renderHeaderBadgeHtml("LOBBY", unionMeta.lobby || "-", "gold"),
+          ]
+        : []),
+    ].join("")
 
     const html =
 `<!DOCTYPE html>
@@ -4539,6 +4635,7 @@ function downloadExtendedHtmlExport() {
   <style>
     * { box-sizing: border-box; }
     html, body { margin: 0; padding: 0; }
+
     body {
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
       color: white;
@@ -4549,13 +4646,15 @@ function downloadExtendedHtmlExport() {
       min-height: 100vh;
       overflow-y: auto;
     }
+
     .page {
-      max-width: 1600px;
+      max-width: 1680px;
       margin: 0 auto;
       padding: 24px;
       display: grid;
       gap: 16px;
     }
+
     .card {
       border-radius: 22px;
       border: 1px solid rgba(255,255,255,0.10);
@@ -4563,17 +4662,19 @@ function downloadExtendedHtmlExport() {
       box-shadow: 0 14px 60px rgba(0,0,0,0.45);
       overflow: hidden;
     }
+
     .header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 16px;
-      flex-wrap: wrap;
+      gap: 18px;
+      flex-wrap: nowrap;
       padding: 16px;
       position: relative;
       overflow: hidden;
       background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
     }
+
     .header::before {
       content: "";
       position: absolute;
@@ -4584,17 +4685,64 @@ function downloadExtendedHtmlExport() {
         radial-gradient(700px 220px at 90% 0%, rgba(160,90,255,0.18), transparent 55%);
       opacity: 0.9;
     }
+
     .header-left {
       position: relative;
       min-width: 0;
-      flex: 1;
+      flex: 1 1 auto;
+      z-index: 1;
     }
+
+    .header-right {
+      position: relative;
+      z-index: 1;
+      flex: 0 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .header-logo-link {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      flex-shrink: 0;
+      border-radius: 20px;
+      padding: 2px;
+      background: linear-gradient(90deg, #00A0FF, #4C4CFF, #FF1E1E);
+      box-shadow:
+        0 8px 24px rgba(0,0,0,0.4),
+        0 0 14px rgba(0,163,255,0.12),
+        0 0 14px rgba(123,97,255,0.10),
+        0 0 14px rgba(255,59,59,0.10);
+    }
+
+    .header-logo-frame {
+      border-radius: 18px;
+      padding: 6px;
+      background: #07080c;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .header-logo {
+      height: 110px;
+      width: auto;
+      border-radius: 14px;
+      display: block;
+    }
+
     .title-line {
       display: flex;
       align-items: center;
       gap: 10px;
-      flex-wrap: wrap;
+      flex-wrap: nowrap;
+      white-space: nowrap;
+      min-width: 0;
     }
+
     .main-title {
       font-size: 34px;
       font-weight: 900;
@@ -4602,7 +4750,10 @@ function downloadExtendedHtmlExport() {
       text-transform: uppercase;
       line-height: 1.05;
       text-shadow: 0 0 18px rgba(255,215,0,0.22);
+      white-space: nowrap;
+      min-width: 0;
     }
+
     .side-label {
       font-size: 14px;
       padding: 6px 10px;
@@ -4612,21 +4763,33 @@ function downloadExtendedHtmlExport() {
       letter-spacing: 0.6px;
       text-transform: uppercase;
       white-space: nowrap;
+      flex-shrink: 0;
     }
+
     .subtitle {
       margin-top: 5px;
       font-size: 13px;
       opacity: 0.9;
+      white-space: nowrap;
     }
+
     .title-bar {
       margin-top: 8px;
       height: 7px;
       border-radius: 999px;
       background:
-        linear-gradient(90deg, rgba(255,215,0,0.0) 0%, rgba(255,215,0,0.35) 18%, rgba(255,255,255,0.14) 50%, rgba(160,90,255,0.30) 82%, rgba(160,90,255,0.0) 100%);
+        linear-gradient(
+          90deg,
+          rgba(255,215,0,0.0) 0%,
+          rgba(255,215,0,0.35) 18%,
+          rgba(255,255,255,0.14) 50%,
+          rgba(160,90,255,0.30) 82%,
+          rgba(160,90,255,0.0) 100%
+        );
       box-shadow: 0 0 18px rgba(255,215,0,0.14);
       opacity: 0.9;
     }
+
     .summary {
       padding: 18px 20px;
       border-radius: 20px;
@@ -4634,61 +4797,89 @@ function downloadExtendedHtmlExport() {
       background: rgba(255,255,255,0.05);
       box-shadow: 0 10px 40px rgba(0,0,0,0.35);
       display: flex;
-      flex-wrap: wrap;
+      flex-wrap: nowrap;
       gap: 14px;
       align-items: center;
+      overflow-x: auto;
+      overflow-y: hidden;
     }
-    .badge {
+
+    .header-badge {
       display: inline-flex;
       align-items: center;
       gap: 10px;
+      flex-wrap: nowrap;
       white-space: nowrap;
-      flex-wrap: wrap;
+      flex: 0 0 auto;
     }
-    .badge-label {
+
+    .header-badge-label {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      padding: 8px 12px;
+      min-height: 34px;
+      padding: 9px 14px;
       border-radius: 999px;
       font-weight: 900;
       font-size: 12px;
+      line-height: 1;
       letter-spacing: 0.6px;
       text-transform: uppercase;
       background: rgba(0,0,0,0.20);
       color: white;
+      flex-shrink: 0;
     }
-    .badge.gold .badge-label {
-      border: 1px solid rgba(255,215,0,0.70);
-      box-shadow: 0 0 22px rgba(255,215,0,0.16);
-    }
-    .badge.violet .badge-label {
-      border: 1px solid rgba(160,90,255,0.70);
-      box-shadow: 0 0 22px rgba(160,90,255,0.14);
-    }
-    .badge.silver .badge-label {
-      border: 1px solid rgba(210,215,225,0.72);
-      box-shadow: 0 0 22px rgba(210,215,225,0.18);
-    }
-    .badge-value {
+
+    .header-badge-value-wrap {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: white;
+      white-space: nowrap;
+      flex-shrink: 0;
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-      font-weight: 900;
-      font-size: 15px;
     }
+
+    .header-badge-main {
+      display: inline-flex;
+      align-items: center;
+      min-height: 34px;
+      font-weight: 900;
+      font-size: 16px;
+      line-height: 1;
+      letter-spacing: 0.2px;
+    }
+
+    .header-badge-secondary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 28px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-weight: 800;
+      font-size: 13px;
+      line-height: 1;
+      letter-spacing: 0.15px;
+      font-variant-numeric: tabular-nums;
+    }
+
     .separator {
       width: 2px;
-      height: 30px;
+      height: 32px;
       border-radius: 2px;
       background: linear-gradient(to bottom, transparent, rgba(210,215,225,0.9), transparent);
       box-shadow: 0 0 6px rgba(210,215,225,0.35);
       flex-shrink: 0;
     }
+
     .table-card {
       border-radius: 16px;
       border: 1px solid rgba(255,255,255,0.10);
       background: rgba(0,0,0,0.22);
       overflow: hidden;
     }
+
     .table-head {
       padding: 14px 16px;
       border-bottom: 1px solid rgba(255,255,255,0.10);
@@ -4698,16 +4889,19 @@ function downloadExtendedHtmlExport() {
       flex-wrap: wrap;
       font-weight: 900;
     }
+
     .table-wrap {
       overflow-x: auto;
       overflow-y: visible;
     }
+
     table {
       width: 100%;
-      min-width: 1320px;
+      min-width: ${unionMode ? "1580px" : "1480px"};
       border-collapse: collapse;
-      table-layout: auto;
+      table-layout: fixed;
     }
+
     thead th {
       position: sticky;
       top: 0;
@@ -4719,25 +4913,46 @@ function downloadExtendedHtmlExport() {
       font-size: 13px;
       opacity: 0.82;
       white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
+
     tbody td {
       padding: 18px 12px;
       border-bottom: 1px solid rgba(255,255,255,0.08);
       vertical-align: middle;
       font-size: 14px;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
+
+    .col-pos { width: 64px; }
+    .col-pilot { width: 240px; }
+    .col-team { width: 320px; }
+    .col-quali { width: 190px; }
+    .col-race { width: 180px; }
+    .col-bestlap { width: 250px; }
+    .col-gara { width: 90px; }
+    .col-lega { width: 120px; }
+    .col-lobby { width: 100px; }
+
     .row-p1 {
       background: linear-gradient(90deg, rgba(255,215,0,0.11) 0%, rgba(255,215,0,0.05) 28%, rgba(255,255,255,0.02) 70%);
     }
+
     .row-p2 {
       background: linear-gradient(90deg, rgba(220,220,220,0.10) 0%, rgba(220,220,220,0.04) 28%, rgba(255,255,255,0.02) 70%);
     }
+
     .row-p3 {
       background: linear-gradient(90deg, rgba(205,127,50,0.12) 0%, rgba(205,127,50,0.05) 28%, rgba(255,255,255,0.02) 70%);
     }
+
     .row-even { background: rgba(255,255,255,0.02); }
     .row-odd { background: rgba(0,0,0,0.10); }
-    .pos-cell { text-align: center; width: 64px; }
+
+    .pos-cell { text-align: center; }
+
     .pos-badge {
       display: inline-flex;
       align-items: center;
@@ -4751,19 +4966,23 @@ function downloadExtendedHtmlExport() {
       font-weight: 900;
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     }
+
     .pilot-cell {
       font-size: 21px;
       font-weight: 800;
       letter-spacing: 0.03em;
       color: #ffffff;
     }
+
     .team-cell { max-width: 360px; }
+
     .team-wrap {
       display: flex;
       align-items: center;
       gap: 10px;
       min-width: 0;
     }
+
     .bmw-stripes {
       display: flex;
       align-items: center;
@@ -4772,24 +4991,29 @@ function downloadExtendedHtmlExport() {
       transform: skewX(-16deg);
       transform-origin: center;
     }
+
     .stripe {
       width: 6px;
       height: 24px;
       border-radius: 2px;
       display: inline-block;
     }
+
     .stripe.blue {
       background: linear-gradient(180deg, #6fd3ff 0%, #3bb4e6 100%);
       box-shadow: 0 0 6px rgba(91,192,255,0.4);
     }
+
     .stripe.violet {
       background: linear-gradient(180deg, #8b5dff 0%, #6a3dff 100%);
       box-shadow: 0 0 6px rgba(124,77,255,0.4);
     }
+
     .stripe.red {
       background: linear-gradient(180deg, #ff6666 0%, #ff2f2f 100%);
       box-shadow: 0 0 6px rgba(255,59,59,0.4);
     }
+
     .team-name {
       font-size: 19px;
       font-weight: 800;
@@ -4799,16 +5023,20 @@ function downloadExtendedHtmlExport() {
       text-overflow: ellipsis;
       white-space: nowrap;
     }
+
     .right { text-align: right; }
     .center { text-align: center; }
+
     .mono {
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     }
+
     .pill {
       display: inline-flex;
       align-items: center;
       gap: 12px;
       padding: 10px 16px;
+      min-height: 40px;
       border-radius: 14px;
       font-size: 14px;
       font-weight: 900;
@@ -4816,52 +5044,67 @@ function downloadExtendedHtmlExport() {
       text-transform: uppercase;
       white-space: nowrap;
       color: rgba(0,0,0,0.92);
+      line-height: 1;
     }
+
     .pill-right {
+      display: inline-flex;
+      align-items: center;
+      min-height: 20px;
       padding-left: 10px;
       border-left: 1px solid rgba(0,0,0,0.22);
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
       letter-spacing: 0.2px;
       text-transform: none;
       font-size: 15px;
+      line-height: 1;
     }
+
     .gold {
       background: rgba(255,215,0,0.92);
       border: 1px solid rgba(255,215,0,0.55);
       box-shadow: 0 0 22px rgba(255,215,0,0.20);
     }
+
     .violet {
       background: rgba(160,90,255,0.92);
       border: 1px solid rgba(160,90,255,0.55);
       box-shadow: 0 0 22px rgba(160,90,255,0.18);
     }
+
     .orange {
       background: rgba(255,165,0,0.92);
       border: 1px solid rgba(255,165,0,0.55);
       box-shadow: 0 0 22px rgba(255,165,0,0.16);
     }
+
     .teal {
       background: rgba(64,224,208,0.92);
       border: 1px solid rgba(64,224,208,0.55);
       box-shadow: 0 0 22px rgba(64,224,208,0.14);
     }
+
     .fuchsia {
       background: rgba(255,0,128,0.92);
       border: 1px solid rgba(255,0,128,0.55);
       box-shadow: 0 0 22px rgba(255,0,128,0.18);
     }
+
     .dsq {
       background: rgba(255,0,255,0.92);
       border: 1px solid rgba(255,0,255,0.60);
       box-shadow: 0 0 22px rgba(255,0,255,0.30);
     }
+
     .tempo-text {
       font-size: 18px;
     }
+
     .grid-reverse {
       display: inline-flex;
       align-items: center;
       justify-content: center;
+      min-height: 34px;
       padding: 8px 13px;
       border-radius: 999px;
       border: 1px solid rgba(96,165,250,0.25);
@@ -4873,7 +5116,9 @@ function downloadExtendedHtmlExport() {
       letter-spacing: 0.4px;
       text-transform: uppercase;
       white-space: nowrap;
+      line-height: 1;
     }
+
     .footer-note {
       font-size: 12px;
       opacity: 0.72;
@@ -4886,64 +5131,59 @@ function downloadExtendedHtmlExport() {
     <div class="card header">
       <div class="header-left">
         <div class="title-line">
-          <div class="main-title">` + escapeHtml(exportTexts.mainTitle) + `</div>
-          <span class="side-label">` + escapeHtml(exportTexts.sideLabel) + `</span>
+          <div class="main-title">${escapeHtml(exportTexts.mainTitle)}</div>
+          <span class="side-label">${escapeHtml(exportTexts.sideLabel)}</span>
         </div>
-        <div class="subtitle">` + escapeHtml(exportTexts.subtitle) + `</div>
+        <div class="subtitle">${escapeHtml(exportTexts.subtitle)}</div>
         <div class="title-bar"></div>
+      </div>
+
+      <div class="header-right">
+        <a
+          class="header-logo-link"
+          href="${escapeHtml(logoUrl)}"
+          target="_blank"
+          rel="noreferrer"
+          title="BMW M2 TEAM CUP"
+        >
+          <div class="header-logo-frame">
+            <img
+              class="header-logo"
+              src="${escapeHtml(logoUrl)}"
+              alt="BMW M2 TEAM CUP"
+            />
+          </div>
+        </a>
       </div>
     </div>
 
     <div class="summary">
-      <div class="badge silver">
-        <span class="badge-label">Winner</span>
-        <span class="badge-value">` + escapeHtml(winner || "-") + `</span>
-      </div>
-      <span class="separator"></span>
-      <div class="badge gold">
-        <span class="badge-label">Pole (Qualifica)</span>
-        <span class="badge-value">` + escapeHtml(bestQuali || "-") + `</span>
-      </div>
-      <span class="separator"></span>
-      <div class="badge violet">
-        <span class="badge-label">Best Lap (Gara)</span>
-        <span class="badge-value">` + escapeHtml(bestRaceLap || "-") + `</span>
-      </div>
-      <span class="separator"></span>
-      <div class="badge gold">
-        <span class="badge-label">Lega</span>
-        <span class="badge-value">` + escapeHtml(effectiveLega || "-") + `</span>
-      </div>
-      <span class="separator"></span>
-      <div class="badge violet">
-        <span class="badge-label">Gara</span>
-        <span class="badge-value">` + escapeHtml(normalizedGaraForOutput || "-") + `</span>
-      </div>
+      ${summaryHtml}
     </div>
 
     <div class="table-card">
       <div class="table-head">
-        <div>Classifica Sprint ` + escapeHtml(String(currentSprint)) + ` estesa</div>
-        <div>` + escapeHtml(String(finalRows.length)) + ` partecipanti</div>
+        <div>Classifica Sprint ${escapeHtml(String(currentSprint))} estesa</div>
+        <div>${escapeHtml(String(finalRows.length))} partecipanti</div>
       </div>
 
       <div class="table-wrap">
         <table>
           <thead>
             <tr>
-              <th style="width:64px;">Pos</th>
-              <th style="min-width:220px;">Pilota</th>
-              <th style="min-width:280px;">Team</th>
-              <th style="min-width:180px; text-align:right;">Qualifica</th>
-              <th style="min-width:170px; text-align:right;">Tempi gara</th>
-              <th style="min-width:240px; text-align:right;">Miglior giro</th>
-              <th style="min-width:80px; text-align:center;">Gara</th>
-              <th style="min-width:110px; text-align:center;">Lega</th>
-              ` + lobbyHeader + `
+              <th class="col-pos">Pos</th>
+              <th class="col-pilot">Pilota</th>
+              <th class="col-team">Team</th>
+              <th class="col-quali" style="text-align:right;">Qualifica</th>
+              <th class="col-race" style="text-align:right;">Tempi gara</th>
+              <th class="col-bestlap" style="text-align:right;">Miglior giro</th>
+              <th class="col-gara" style="text-align:center;">Gara</th>
+              <th class="col-lega" style="text-align:center;">Lega</th>
+              ${lobbyHeader}
             </tr>
           </thead>
           <tbody>
-            ` + rowsHtml + `
+            ${rowsHtml}
           </tbody>
         </table>
       </div>
