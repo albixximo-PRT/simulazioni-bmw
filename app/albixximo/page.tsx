@@ -4526,7 +4526,23 @@ function renderHeaderBadgeHtml(
   `
 }
 
-function downloadExtendedHtmlExport() {
+async function urlToDataUrl(url: string): Promise<string> {
+  const res = await fetch(url)
+  if (!res.ok) {
+    throw new Error(`Impossibile caricare immagine: ${url}`)
+  }
+
+  const blob = await res.blob()
+
+  return await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onloadend = () => resolve(String(reader.result || ""))
+    reader.onerror = () => reject(new Error("Conversione immagine in base64 fallita"))
+    reader.readAsDataURL(blob)
+  })
+}
+
+async function downloadExtendedHtmlExport() {
   if (finalRows.length === 0) return
 
   try {
@@ -4536,6 +4552,13 @@ function downloadExtendedHtmlExport() {
       typeof window !== "undefined"
         ? `${window.location.origin}/bmw-m2-team-cup.png`
         : "/bmw-m2-team-cup.png"
+
+    let logoDataUrl = ""
+    try {
+      logoDataUrl = await urlToDataUrl(logoUrl)
+    } catch {
+      logoDataUrl = ""
+    }
 
     const rowsHtml = finalRows
       .map((r, i) => {
@@ -4624,6 +4647,22 @@ function downloadExtendedHtmlExport() {
           ]
         : []),
     ].join("")
+
+    const headerLogoHtml = logoDataUrl
+      ? `
+      <div class="header-right">
+        <div class="header-logo-link" title="BMW M2 TEAM CUP">
+          <div class="header-logo-frame">
+            <img
+              class="header-logo"
+              src="${escapeHtml(logoDataUrl)}"
+              alt="BMW M2 TEAM CUP"
+            />
+          </div>
+        </div>
+      </div>
+    `
+      : ""
 
     const html =
 `<!DOCTYPE html>
@@ -5138,23 +5177,7 @@ function downloadExtendedHtmlExport() {
         <div class="title-bar"></div>
       </div>
 
-      <div class="header-right">
-        <a
-          class="header-logo-link"
-          href="${escapeHtml(logoUrl)}"
-          target="_blank"
-          rel="noreferrer"
-          title="BMW M2 TEAM CUP"
-        >
-          <div class="header-logo-frame">
-            <img
-              class="header-logo"
-              src="${escapeHtml(logoUrl)}"
-              alt="BMW M2 TEAM CUP"
-            />
-          </div>
-        </a>
-      </div>
+      ${headerLogoHtml}
     </div>
 
     <div class="summary">
