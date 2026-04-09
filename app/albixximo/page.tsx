@@ -4920,11 +4920,10 @@ async function downloadExtendedHtmlExport() {
     }
 
     table {
-      width: 100%;
-      min-width: 1690px;
-      border-collapse: collapse;
-      table-layout: fixed;
-    }
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
 
     thead th {
       position: sticky;
@@ -4950,14 +4949,14 @@ async function downloadExtendedHtmlExport() {
       text-overflow: ellipsis;
     }
 
-    .col-pos { width: 64px; }
-    .col-pilot { width: 250px; }
-    .col-team { width: 280px; }
-    .col-quali { width: 200px; }
-    .col-race { width: 190px; }
-    .col-penalty { width: 260px; }
-    .col-bestlap { width: 260px; }
-    .col-points { width: 110px; }
+    .col-pos { width: 60px; }
+.col-pilot { width: 200px; }
+.col-team { width: 220px; }
+.col-quali { width: 160px; }
+.col-race { width: 160px; }
+.col-penalty { width: 200px; }
+.col-bestlap { width: 200px; }
+.col-points { width: 90px; }
 
     .row-p1 {
       background: linear-gradient(90deg, rgba(255,215,0,0.11) 0%, rgba(255,215,0,0.05) 28%, rgba(255,255,255,0.02) 70%);
