@@ -5910,11 +5910,10 @@ async function downloadGeneralTeamsHtmlExport() {
     <div class="card header">
       <div class="header-left">
         <div class="title-line">
-          <div class="title-line">
-  <div class="main-title">${escapeHtml(exportTexts.mainTitle)}</div>
-  <span class="side-label">${escapeHtml(exportTexts.sideLabel)}</span>
-</div>
-<div class="subtitle">${escapeHtml(exportTexts.subtitle)}</div>
+          <div class="main-title">${escapeHtml(exportTexts.mainTitle)}</div>
+          <span class="side-label">${escapeHtml(exportTexts.sideLabel)}</span>
+        </div>
+        <div class="subtitle">${escapeHtml(exportTexts.subtitle)}</div>
         <div class="title-bar"></div>
       </div>
       ${headerLogoHtml}
