@@ -2833,6 +2833,7 @@ const [loginError, setLoginError] = useState("")
   const [lapOverrides, setLapOverrides] = useState<Record<string, string>>({})
   const [dnfOverrides, setDnfOverrides] = useState<DnfOverrideMap>({})
   const [showExportModal, setShowExportModal] = useState(false)
+  const [exportTarget, setExportTarget] = useState<"png" | "html" | "html-teams" | null>(null)
   const [showSprintInfo, setShowSprintInfo] = useState(false)
   const [showMatchDetails, setShowMatchDetails] = useState(false)
   const [showGeneralRoundDetails, setShowGeneralRoundDetails] = useState(false)
@@ -5909,10 +5910,11 @@ async function downloadGeneralTeamsHtmlExport() {
     <div class="card header">
       <div class="header-left">
         <div class="title-line">
-          <div class="main-title">BMW M2 TEAM CUP</div>
-          <span class="side-label">Classifica Generale</span>
-        </div>
-        <div class="subtitle">Powered by Albixximo</div>
+          <div class="title-line">
+  <div class="main-title">${escapeHtml(exportTexts.mainTitle)}</div>
+  <span class="side-label">${escapeHtml(exportTexts.sideLabel)}</span>
+</div>
+<div class="subtitle">${escapeHtml(exportTexts.subtitle)}</div>
         <div class="title-bar"></div>
       </div>
       ${headerLogoHtml}
@@ -6063,22 +6065,38 @@ function renderPointsHtmlForExport(row: DisplayRow, bestRaceLap: string) {
 }
 
   function openExportModal() {
-    setExportTextsDraft(exportTexts)
-    setShowExportModal(true)
-  }
+  setExportTarget("png")
+  setExportTextsDraft(exportTexts)
+  setShowExportModal(true)
+}
 
   async function confirmExportPng() {
-    const nextTexts = {
-      mainTitle: (exportTextsDraft.mainTitle || "ALBIXXIMO RACE TOOL").trim(),
-      sideLabel: (exportTextsDraft.sideLabel || "RACE CSV EXTRACTOR").trim(),
-      subtitle: (exportTextsDraft.subtitle || "PRT Timing Assistant").trim(),
-    }
-
-    setExportTexts(nextTexts)
-    setShowExportModal(false)
-    await new Promise((resolve) => setTimeout(resolve, 80))
-    await performExportTablePng()
+  const nextTexts = {
+    mainTitle: (exportTextsDraft.mainTitle || "BMW M2 TEAM CUP").trim(),
+    sideLabel: (exportTextsDraft.sideLabel || "Official Timing System").trim(),
+    subtitle: (exportTextsDraft.subtitle || "Powered by Albixximo").trim(),
   }
+
+  setExportTexts(nextTexts)
+  setShowExportModal(false)
+
+  await new Promise((resolve) => setTimeout(resolve, 80))
+
+  if (exportTarget === "png") {
+    await performExportTablePng()
+    return
+  }
+
+  if (exportTarget === "html") {
+    await downloadExtendedHtmlExport()
+    return
+  }
+
+  if (exportTarget === "html-teams") {
+    await downloadGeneralTeamsHtmlExport()
+    return
+  }
+}
 
   async function run() {
     setSprint2Ready(false)
@@ -7537,24 +7555,27 @@ if (!authorized) {
   </button>
 
   <button
-    onClick={downloadExtendedHtmlExport}
-    disabled={exportingHtml}
-    style={{
-      padding: "12px 16px",
-      borderRadius: 14,
-      border: "1px solid rgba(96,165,250,0.30)",
-      background: exportingHtml ? "rgba(255,255,255,0.08)" : "rgba(96,165,250,0.18)",
-      color: "white",
-      fontWeight: 900,
-      letterSpacing: 0.6,
-      cursor: exportingHtml ? "not-allowed" : "pointer",
-      boxShadow: exportingHtml ? "none" : "0 0 22px rgba(96,165,250,0.12)",
-      textTransform: "uppercase",
-    }}
-  >
-    {exportingHtml ? "Esportazione HTML..." : "Scarica HTML esteso"}
-  </button>
-
+  onClick={() => {
+    setExportTarget("html")
+    setExportTextsDraft(exportTexts)
+    setShowExportModal(true)
+  }}
+  disabled={exportingHtml}
+  style={{
+    padding: "12px 16px",
+    borderRadius: 14,
+    border: "1px solid rgba(96,165,250,0.30)",
+    background: exportingHtml ? "rgba(255,255,255,0.08)" : "rgba(96,165,250,0.18)",
+    color: "white",
+    fontWeight: 900,
+    letterSpacing: 0.6,
+    cursor: exportingHtml ? "not-allowed" : "pointer",
+    boxShadow: exportingHtml ? "none" : "0 0 22px rgba(96,165,250,0.12)",
+    textTransform: "uppercase",
+  }}
+>
+  {exportingHtml ? "Esportazione HTML..." : "Scarica HTML esteso"}
+</button>
   <label
     style={{
       display: "inline-flex",
@@ -8846,7 +8867,11 @@ if (!authorized) {
         </button>
 
         <button
-  onClick={downloadGeneralTeamsHtmlExport}
+  onClick={() => {
+  setExportTarget("html-teams")
+  setExportTextsDraft(exportTexts)
+  setShowExportModal(true)
+}}
   disabled={exportingGeneralTeamsHtml}
   style={{
     padding: "10px 14px",
@@ -9013,10 +9038,20 @@ if (!authorized) {
             }}
           >
             <div>
-              <div style={{ fontSize: 20, fontWeight: 900 }}>Personalizza intestazione PNG</div>
+              <div style={{ fontSize: 20, fontWeight: 900 }}>
+  {exportTarget === "png"
+    ? "Personalizza intestazione PNG"
+    : exportTarget === "html-teams"
+      ? "Personalizza intestazione HTML Classifica Generale"
+      : "Personalizza intestazione HTML"}
+</div>
               <div style={{ marginTop: 6, fontSize: 13, opacity: 0.76 }}>
-                Modifichi solo il contenuto dei testi. Font, dimensioni e stile restano invariati.
-              </div>
+  {exportTarget === "png"
+    ? "Modifichi solo il contenuto dei testi. Font, dimensioni e stile restano invariati."
+    : exportTarget === "html-teams"
+      ? "Questi testi verranno applicati all'export HTML della Classifica Generale TEAM."
+      : "Questi testi verranno applicati all'export HTML esteso della tabella sprint."}
+</div>
             </div>
 
             <div style={{ display: "grid", gap: 12 }}>
@@ -9094,22 +9129,26 @@ if (!authorized) {
               </button>
 
               <button
-                onClick={confirmExportPng}
-                style={{
-                  padding: "12px 16px",
-                  borderRadius: 14,
-                  border: "1px solid rgba(160,90,255,0.30)",
-                  background: "rgba(160,90,255,0.20)",
-                  color: "white",
-                  cursor: "pointer",
-                  fontWeight: 900,
-                  textTransform: "uppercase",
-                  letterSpacing: 0.5,
-                  boxShadow: "0 0 22px rgba(160,90,255,0.12)",
-                }}
-              >
-                Esporta PNG
-              </button>
+  onClick={confirmExportPng}
+  style={{
+    padding: "12px 16px",
+    borderRadius: 14,
+    border: "1px solid rgba(160,90,255,0.30)",
+    background: "rgba(160,90,255,0.20)",
+    color: "white",
+    cursor: "pointer",
+    fontWeight: 900,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+    boxShadow: "0 0 22px rgba(160,90,255,0.12)",
+  }}
+>
+  {exportTarget === "png"
+    ? "Esporta PNG"
+    : exportTarget === "html-teams"
+      ? "Esporta HTML Classifica Generale"
+      : "Esporta HTML"}
+</button>
             </div>
           </div>
         </div>
