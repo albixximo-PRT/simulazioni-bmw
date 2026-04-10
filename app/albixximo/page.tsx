@@ -6842,25 +6842,41 @@ function applyPilotCorrections() {
 
   const nextAutoOverrides: Record<number, string> = {}
 
-  for (const baseRow of previewRows) {
+  for (const modalRow of pilotModalRows) {
+    const originalPreviewRow = previewRows.find(
+      (candidate) => candidate.sourcePosGara === modalRow.sourcePosGara
+    )
+
+    if (!originalPreviewRow) continue
+
     const finalPilotName = String(
-      cleaned[baseRow.sourcePosGara] ?? baseRow.pilota ?? ""
+      cleaned[modalRow.sourcePosGara] ?? modalRow.pilota ?? ""
     ).trim()
 
-    const originalAuto = String(baseRow.auto ?? "").trim()
+    const originalAuto = String(originalPreviewRow.auto ?? "").trim()
+    const currentModalAuto = String(modalRow.auto ?? "").trim()
 
-    if (!finalPilotName) continue
+    if (!finalPilotName) {
+      if (currentModalAuto !== originalAuto) {
+        nextAutoOverrides[modalRow.sourcePosGara] = currentModalAuto
+      }
+      continue
+    }
 
     const sourceRow = previewRows.find(
       (candidate) => normalizePilot(candidate.pilota) === normalizePilot(finalPilotName)
     )
 
-    if (!sourceRow) continue
+    if (sourceRow) {
+      const sourceAuto = String(sourceRow.auto ?? "").trim()
 
-    const sourceAuto = String(sourceRow.auto ?? "").trim()
-
-    if (sourceAuto !== originalAuto) {
-      nextAutoOverrides[baseRow.sourcePosGara] = sourceAuto
+      if (sourceAuto !== originalAuto) {
+        nextAutoOverrides[modalRow.sourcePosGara] = sourceAuto
+      }
+    } else {
+      if (currentModalAuto !== originalAuto) {
+        nextAutoOverrides[modalRow.sourcePosGara] = currentModalAuto
+      }
     }
   }
 
