@@ -3803,16 +3803,17 @@ const effectiveLegaResolved = useMemo(() => {
   const manual = String(manualLegaOverride || "").trim().toUpperCase()
   if (manual) return manual
 
+  // In BMW CUP la lega deve seguire prima il matching pilota -> team
+  if (bmwCupMode) {
+    const detectedFromTeams = String(detectedBmwLega || "").trim().toUpperCase()
+    if (detectedFromTeams) return detectedFromTeams
+  }
+
   const detectedMeta = String(unionMeta.lega || "").trim().toUpperCase()
   if (detectedMeta) return detectedMeta
 
-  // SOLO BMW CUP
-  if (bmwCupMode) {
-    return String(detectedBmwLega || "").trim().toUpperCase()
-  }
-
   return ""
-}, [manualLegaOverride, unionMeta.lega, detectedBmwLega, bmwCupMode])
+}, [manualLegaOverride, bmwCupMode, detectedBmwLega, unionMeta.lega])
 
 const effectiveLega = effectiveLegaResolved
 
@@ -7625,9 +7626,6 @@ if (!authorized) {
         {[
   ["#", matchSummary.fields.posizione],
   ["Pilota", matchSummary.fields.pilota],
-  ...(currentSprint === 1
-    ? ([["Auto", matchSummary.fields.auto]] as [string, MatchFieldStatus][])
-    : []),
   ["Distacchi", matchSummary.fields.distacchi],
   ...(currentSprint === 1
     ? ([["PP", matchSummary.fields.pp]] as [string, MatchFieldStatus][])
