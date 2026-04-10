@@ -2865,6 +2865,7 @@ const [loginError, setLoginError] = useState("")
   const [manualPilotOverrides, setManualPilotOverrides] = useState<Record<number, string>>({})
   const [manualAutoOverrides, setManualAutoOverrides] = useState<Record<number, string>>({})
   const [manualDistaccoOverrides, setManualDistaccoOverrides] = useState<Record<number, string>>({})
+  const [pilotModalRows, setPilotModalRows] = useState<DisplayRow[]>([])
 
   const [showPilotModal, setShowPilotModal] = useState(false)
 const [manualPilotDraft, setManualPilotDraft] = useState<Record<number, string>>({})
@@ -6815,10 +6816,14 @@ function resetEntireCurrentRound() {
   }
 
   function openPilotCorrectionModal() {
+  const snapshotRows = displayRows.map((row) => ({ ...row }))
+
   const nextDraft: Record<number, string> = {}
-  for (const row of displayRows) {
+  for (const row of snapshotRows) {
     nextDraft[row.sourcePosGara] = String(row.pilota ?? "").trim()
   }
+
+  setPilotModalRows(snapshotRows)
   setManualPilotDraft(nextDraft)
   setShowPilotModal(true)
 }
@@ -6826,7 +6831,7 @@ function resetEntireCurrentRound() {
 function applyPilotCorrections() {
   const cleaned: Record<number, string> = {}
 
-  for (const row of previewRows) {
+  for (const row of pilotModalRows) {
     const draftValue = String(manualPilotDraft[row.sourcePosGara] ?? "").trim()
     const originalValue = String(row.pilota ?? "").trim()
 
@@ -6861,6 +6866,8 @@ function applyPilotCorrections() {
 
   setManualPilotOverrides(cleaned)
   setManualAutoOverrides(nextAutoOverrides)
+  setManualPilotDraft({})
+  setPilotModalRows([])
   setShowPilotModal(false)
 }
 
@@ -6868,6 +6875,7 @@ function resetPilotCorrections() {
   setManualPilotOverrides({})
   setManualPilotDraft({})
   setManualAutoOverrides({})
+  setPilotModalRows([])
   setShowPilotModal(false)
 }
 
@@ -9377,173 +9385,171 @@ if (!authorized) {
             </thead>
 
             <tbody>
-  {previewRows.map((baseRow) => {
-    const appliedValue = String(
-      manualPilotOverrides[baseRow.sourcePosGara] ?? baseRow.pilota ?? ""
-    ).trim()
+              {pilotModalRows.map((baseRow) => {
+                const originalValue = String(baseRow.pilota ?? "").trim()
 
-    const currentValue = String(
-      manualPilotDraft[baseRow.sourcePosGara] ?? appliedValue
-    ).trim()
+                const currentValue = String(
+                  manualPilotDraft[baseRow.sourcePosGara] ?? originalValue
+                ).trim()
 
-    const originalValue = appliedValue
-    const changed = currentValue !== originalValue
+                const changed = currentValue !== originalValue
 
-    return (
-      <tr
-        key={`manual-pilot-${baseRow.sourcePosGara}`}
-        style={{
-          background: changed
-            ? "linear-gradient(90deg, rgba(160,90,255,0.10), rgba(255,255,255,0.02))"
-            : "transparent",
-        }}
-      >
-        <td
-          style={{
-            padding: "12px",
-            borderBottom: "1px solid rgba(255,255,255,0.08)",
-          }}
-        >
-          <PosBadge pos={baseRow.posGara} />
-        </td>
-
-        <td
-          style={{
-            padding: "12px",
-            borderBottom: "1px solid rgba(255,255,255,0.08)",
-            color: "rgba(255,255,255,0.86)",
-            fontWeight: 700,
-          }}
-        >
-          {appliedValue || "-"}
-        </td>
-
-        <td
-          style={{
-            padding: "12px",
-            borderBottom: "1px solid rgba(255,255,255,0.08)",
-          }}
-        >
-          <div style={{ display: "grid", gap: 8 }}>
-            <input
-              value={manualPilotDraft[baseRow.sourcePosGara] ?? appliedValue}
-              onChange={(e) =>
-                setManualPilotDraft((prev) => ({
-                  ...prev,
-                  [baseRow.sourcePosGara]: e.target.value,
-                }))
-              }
-              placeholder="Correggi nome pilota"
-              style={{
-                width: "100%",
-                padding: "10px 12px",
-                borderRadius: 10,
-                border: changed
-                  ? "1px solid rgba(160,90,255,0.30)"
-                  : "1px solid rgba(255,255,255,0.14)",
-                background: "rgba(0,0,0,0.24)",
-                color: "white",
-                boxSizing: "border-box",
-              }}
-            />
-
-            <select
-              defaultValue=""
-              onChange={(e) => {
-                const selected = e.target.value
-                if (!selected) return
-
-                const currentKey = baseRow.sourcePosGara
-
-                const otherRow = previewRows.find(
-                  (candidate) =>
-                    candidate.sourcePosGara !== currentKey &&
-                    String(
-                      manualPilotDraft[candidate.sourcePosGara] ??
-                        manualPilotOverrides[candidate.sourcePosGara] ??
-                        candidate.pilota ??
-                        ""
-                    ).trim() === selected
-                )
-
-                if (!otherRow) {
-                  e.currentTarget.value = ""
-                  return
-                }
-
-                const otherKey = otherRow.sourcePosGara
-
-                setManualPilotDraft((prev) => {
-                  const nextDraft: Record<number, string> = {}
-
-                  for (const r of previewRows) {
-                    nextDraft[r.sourcePosGara] = String(
-                      prev[r.sourcePosGara] ??
-                        manualPilotOverrides[r.sourcePosGara] ??
-                        r.pilota ??
-                        ""
-                    ).trim()
-                  }
-
-                  const currentPilot = nextDraft[currentKey]
-                  const otherPilot = nextDraft[otherKey]
-
-                  nextDraft[currentKey] = otherPilot
-                  nextDraft[otherKey] = currentPilot
-
-                  return nextDraft
-                })
-
-                e.currentTarget.value = ""
-              }}
-              style={{
-                width: "100%",
-                padding: "10px 12px",
-                borderRadius: 10,
-                border: "1px solid rgba(255,255,255,0.14)",
-                background: "rgba(0,0,0,0.24)",
-                color: "white",
-                boxSizing: "border-box",
-              }}
-            >
-              <option value="" style={{ background: "#11151d", color: "white" }}>
-                Scambia con...
-              </option>
-
-              {previewRows
-                .filter((candidate) => candidate.sourcePosGara !== baseRow.sourcePosGara)
-                .map((candidate) => {
-                  const candidateName = String(
-                    manualPilotDraft[candidate.sourcePosGara] ??
-                      manualPilotOverrides[candidate.sourcePosGara] ??
-                      candidate.pilota ??
-                      ""
-                  ).trim()
-
-                  return (
-                    <option
-                      key={`pilot-option-${baseRow.sourcePosGara}-${candidate.sourcePosGara}`}
-                      value={candidateName}
-                      style={{ background: "#11151d", color: "white" }}
+                return (
+                  <tr
+                    key={`manual-pilot-${baseRow.sourcePosGara}`}
+                    style={{
+                      background: changed
+                        ? "linear-gradient(90deg, rgba(160,90,255,0.10), rgba(255,255,255,0.02))"
+                        : "transparent",
+                    }}
+                  >
+                    <td
+                      style={{
+                        padding: "12px",
+                        borderBottom: "1px solid rgba(255,255,255,0.08)",
+                      }}
                     >
-                      {candidateName}
-                    </option>
-                  )
-                })}
-            </select>
-          </div>
-        </td>
-      </tr>
-    )
-  })}
-</tbody>
+                      <PosBadge pos={baseRow.posGara} />
+                    </td>
+
+                    <td
+                      style={{
+                        padding: "12px",
+                        borderBottom: "1px solid rgba(255,255,255,0.08)",
+                        color: "rgba(255,255,255,0.86)",
+                        fontWeight: 700,
+                      }}
+                    >
+                      {originalValue || "-"}
+                    </td>
+
+                    <td
+                      style={{
+                        padding: "12px",
+                        borderBottom: "1px solid rgba(255,255,255,0.08)",
+                      }}
+                    >
+                      <div style={{ display: "grid", gap: 8 }}>
+                        <input
+                          value={manualPilotDraft[baseRow.sourcePosGara] ?? originalValue}
+                          onChange={(e) =>
+                            setManualPilotDraft((prev) => ({
+                              ...prev,
+                              [baseRow.sourcePosGara]: e.target.value,
+                            }))
+                          }
+                          placeholder="Correggi nome pilota"
+                          style={{
+                            width: "100%",
+                            padding: "10px 12px",
+                            borderRadius: 10,
+                            border: changed
+                              ? "1px solid rgba(160,90,255,0.30)"
+                              : "1px solid rgba(255,255,255,0.14)",
+                            background: "rgba(0,0,0,0.24)",
+                            color: "white",
+                            boxSizing: "border-box",
+                          }}
+                        />
+
+                        <select
+                          defaultValue=""
+                          onChange={(e) => {
+                            const selected = e.target.value
+                            if (!selected) return
+
+                            const currentKey = baseRow.sourcePosGara
+
+                            const otherRow = pilotModalRows.find(
+                              (candidate) =>
+                                candidate.sourcePosGara !== currentKey &&
+                                String(
+                                  manualPilotDraft[candidate.sourcePosGara] ??
+                                    candidate.pilota ??
+                                    ""
+                                ).trim() === selected
+                            )
+
+                            if (!otherRow) {
+                              e.currentTarget.value = ""
+                              return
+                            }
+
+                            const otherKey = otherRow.sourcePosGara
+
+                            setManualPilotDraft((prev) => {
+                              const nextDraft: Record<number, string> = {}
+
+                              for (const r of pilotModalRows) {
+                                nextDraft[r.sourcePosGara] = String(
+                                  prev[r.sourcePosGara] ??
+                                    r.pilota ??
+                                    ""
+                                ).trim()
+                              }
+
+                              const currentPilot = nextDraft[currentKey]
+                              const otherPilot = nextDraft[otherKey]
+
+                              nextDraft[currentKey] = otherPilot
+                              nextDraft[otherKey] = currentPilot
+
+                              return nextDraft
+                            })
+
+                            e.currentTarget.value = ""
+                          }}
+                          style={{
+                            width: "100%",
+                            padding: "10px 12px",
+                            borderRadius: 10,
+                            border: "1px solid rgba(255,255,255,0.14)",
+                            background: "rgba(0,0,0,0.24)",
+                            color: "white",
+                            boxSizing: "border-box",
+                          }}
+                        >
+                          <option value="" style={{ background: "#11151d", color: "white" }}>
+                            Scambia con...
+                          </option>
+
+                          {pilotModalRows
+                            .filter((candidate) => candidate.sourcePosGara !== baseRow.sourcePosGara)
+                            .map((candidate) => {
+                              const candidateName = String(
+                                manualPilotDraft[candidate.sourcePosGara] ??
+                                  candidate.pilota ??
+                                  ""
+                              ).trim()
+
+                              return (
+                                <option
+                                  key={`pilot-option-${baseRow.sourcePosGara}-${candidate.sourcePosGara}`}
+                                  value={candidateName}
+                                  style={{ background: "#11151d", color: "white" }}
+                                >
+                                  {candidateName}
+                                </option>
+                              )
+                            })}
+                        </select>
+                      </div>
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
           </table>
         </div>
       </div>
 
       <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, flexWrap: "wrap" }}>
         <button
-          onClick={() => setShowPilotModal(false)}
+          onClick={() => {
+            setShowPilotModal(false)
+            setManualPilotDraft({})
+            setPilotModalRows([])
+          }}
           style={{
             padding: "12px 16px",
             borderRadius: 14,
@@ -9591,7 +9597,7 @@ if (!authorized) {
             boxShadow: "0 0 22px rgba(160,90,255,0.12)",
           }}
         >
-          APPLICA CORREZIONI TEST 999
+          Applica correzioni
         </button>
       </div>
     </div>

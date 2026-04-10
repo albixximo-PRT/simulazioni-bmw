@@ -1219,52 +1219,66 @@ function AppHeader({
 
       <div style={{ position: "relative", minWidth: 0, flex: 1 }}>
         <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 10,
-            flexWrap: "nowrap",
-            whiteSpace: "nowrap",
-            minWidth: 0,
-          }}
-        >
-          <div
   style={{
-    fontSize: 34,
-    fontWeight: 900,
-    letterSpacing: "1px",
-    textTransform: "uppercase",
-    lineHeight: 1.05,
-    textShadow: "0 0 18px rgba(255,215,0,0.22)",
-    whiteSpace: "nowrap",
-    flexShrink: 1,
+    display: "flex",
+    alignItems: "center",
+    gap: 10,
+    rowGap: 8,
+    flexWrap: "wrap",
+    whiteSpace: "normal",
     minWidth: 0,
   }}
 >
-  {mainTitle}
+  <div
+    style={{
+      fontSize: "clamp(26px, 3.2vw, 34px)",
+      fontWeight: 900,
+      letterSpacing: "1px",
+      textTransform: "uppercase",
+      lineHeight: 1.05,
+      textShadow: "0 0 18px rgba(255,215,0,0.22)",
+      whiteSpace: "normal",
+      overflowWrap: "anywhere",
+      wordBreak: "break-word",
+      flexShrink: 1,
+      minWidth: 0,
+      maxWidth: "100%",
+    }}
+  >
+    {mainTitle}
+  </div>
+
+  <span
+    style={{
+      fontSize: 14,
+      padding: "6px 10px",
+      borderRadius: 999,
+      border: "1px solid rgba(255,255,255,0.14)",
+      background: "rgba(255,255,255,0.06)",
+      opacity: 0.95,
+      letterSpacing: 0.6,
+      textTransform: "uppercase",
+      whiteSpace: "normal",
+      overflowWrap: "anywhere",
+      maxWidth: "100%",
+      flexShrink: 0,
+    }}
+  >
+    {sideLabel}
+  </span>
 </div>
 
-          <span
-            style={{
-              fontSize: 14,
-              padding: "6px 10px",
-              borderRadius: 999,
-              border: "1px solid rgba(255,255,255,0.14)",
-              background: "rgba(255,255,255,0.06)",
-              opacity: 0.95,
-              letterSpacing: 0.6,
-              textTransform: "uppercase",
-              whiteSpace: "nowrap",
-              flexShrink: 0,
-            }}
-          >
-            {sideLabel}
-          </span>
-        </div>
-
-        <div style={{ marginTop: 5, fontSize: 13, opacity: 0.9, whiteSpace: "nowrap" }}>
-          {subtitle}
-        </div>
+<div
+  style={{
+    marginTop: 5,
+    fontSize: 13,
+    opacity: 0.9,
+    whiteSpace: "normal",
+    overflowWrap: "anywhere",
+  }}
+>
+  {subtitle}
+</div>
 
         <div
           style={{
@@ -1311,15 +1325,16 @@ function AppHeader({
     }}
   >
     <img
-      src="/bmw-m2-team-cup.png"
-      alt="BMW M2 TEAM CUP"
-      style={{
-        height: 110,
-        width: "auto",
-        borderRadius: 14,
-        display: "block",
-      }}
-    />
+  src="/bmw-m2-team-cup.png"
+  alt="BMW M2 TEAM CUP"
+  style={{
+    height: "clamp(78px, 10vw, 110px)",
+    maxWidth: "100%",
+    width: "auto",
+    borderRadius: 14,
+    display: "block",
+  }}
+/>
   </div>
 </a>
     </div>
@@ -2828,6 +2843,7 @@ const [loginError, setLoginError] = useState("")
   const [showReq, setShowReq] = useState(false)
   const [prtMode, setPrtMode] = useState(true)
   const [unionMode, setUnionMode] = useState(false)
+  const [bmwCupMode, setBmwCupMode] = useState(true)
   const [penalties, setPenalties] = useState<PenaltyMap>({})
   const [exportMetaInPng, setExportMetaInPng] = useState(false)
   const [lapOverrides, setLapOverrides] = useState<Record<string, string>>({})
@@ -2849,6 +2865,7 @@ const [loginError, setLoginError] = useState("")
   const [manualPilotOverrides, setManualPilotOverrides] = useState<Record<number, string>>({})
   const [manualAutoOverrides, setManualAutoOverrides] = useState<Record<number, string>>({})
   const [manualDistaccoOverrides, setManualDistaccoOverrides] = useState<Record<number, string>>({})
+  const [pilotModalRows, setPilotModalRows] = useState<DisplayRow[]>([])
 
   const [showPilotModal, setShowPilotModal] = useState(false)
 const [manualPilotDraft, setManualPilotDraft] = useState<Record<number, string>>({})
@@ -3024,6 +3041,33 @@ useEffect(() => {
 
     return null
   }
+
+  function getBmwLeagueFromRows(rowsToCheck: DisplayRow[]): string {
+  const counts: Record<string, number> = {}
+
+  for (const row of rowsToCheck) {
+    const lega = String(findTeamByPilot(row.pilota)?.lega || "").trim().toUpperCase()
+    if (!lega) continue
+
+    if (lega === "PRO" || lega === "PRO-AMA" || lega === "AMA") {
+      counts[lega] = (counts[lega] || 0) + 1
+    }
+  }
+
+  const sorted = Object.entries(counts).sort((a, b) => {
+    if (b[1] !== a[1]) return b[1] - a[1]
+
+    const priority: Record<string, number> = {
+      PRO: 3,
+      "PRO-AMA": 2,
+      AMA: 1,
+    }
+
+    return (priority[b[0]] || 0) - (priority[a[0]] || 0)
+  })
+
+  return sorted[0]?.[0] || ""
+}
 
   /* =========================
    BMW HELPERS (NEW FOUNDATION)
@@ -3202,7 +3246,7 @@ function buildBmwLeagueDriversFromSprints(
 }
 
 function getCurrentBmwLeagueName(): BmwLeagueName | null {
-  const lega = String(effectiveLega || "").trim().toUpperCase()
+  const lega = String(effectiveLegaResolved || "").trim().toUpperCase()
 
   if (lega === "PRO") return "PRO"
   if (lega === "PRO-AMA") return "PRO-AMA"
@@ -3537,10 +3581,6 @@ const orderedRows = [...finishRows, ...dnfIRows, ...dnfVRows, ...dnpRows]
   return String(manualGaraOverride || detected || "").trim()
 }, [manualGaraOverride, unionMeta.gara])
 
-const effectiveLega = useMemo(() => {
-  const detected = String(unionMeta.lega || "").trim()
-  return String(manualLegaOverride || detected || "").trim()
-}, [manualLegaOverride, unionMeta.lega])
 
 const normalizedGaraForOutput = useMemo(() => {
   const raw = String(effectiveGara || "").trim()
@@ -3755,9 +3795,32 @@ const normalizedGaraForOutput = useMemo(() => {
       distaccoDalPrimo: (manualDistaccoOverrides[r.sourcePosGara] ?? r.distaccoDalPrimo ?? "").trim(),
     }))
   }, [previewRows, manualPilotOverrides, manualAutoOverrides, manualDistaccoOverrides])
-    const hasManualPilotOverrides = useMemo(() => {
-    return Object.keys(manualPilotOverrides).length > 0
-  }, [manualPilotOverrides])
+
+const detectedBmwLega = useMemo(() => {
+  return getBmwLeagueFromRows(displayRows)
+}, [displayRows])
+
+const effectiveLegaResolved = useMemo(() => {
+  const manual = String(manualLegaOverride || "").trim().toUpperCase()
+  if (manual) return manual
+
+  // In BMW CUP la lega deve seguire prima il matching pilota -> team
+  if (bmwCupMode) {
+    const detectedFromTeams = String(detectedBmwLega || "").trim().toUpperCase()
+    if (detectedFromTeams) return detectedFromTeams
+  }
+
+  const detectedMeta = String(unionMeta.lega || "").trim().toUpperCase()
+  if (detectedMeta) return detectedMeta
+
+  return ""
+}, [manualLegaOverride, bmwCupMode, detectedBmwLega, unionMeta.lega])
+
+const effectiveLega = effectiveLegaResolved
+
+const hasManualPilotOverrides = useMemo(() => {
+  return Object.keys(manualPilotOverrides).length > 0
+}, [manualPilotOverrides])
 
   const hasManualDistaccoOverrides = useMemo(() => {
     return Object.keys(manualDistaccoOverrides).length > 0
@@ -4031,6 +4094,8 @@ const normalizedGaraForOutput = useMemo(() => {
     return [...updatedComparable, ...updatedNonComparable, ...updatedDsq]
   }, [displayRows, penalties, lapOverrides, dnfOverrides, shouldSyncDgTableWithManualEdits])
 
+  
+
   const matchSummary = useMemo<PrtMatchSummary>(() => {
   if (finalRows.length === 0) {
     return {
@@ -4157,7 +4222,7 @@ const normalizedGaraForOutput = useMemo(() => {
   // ---------------- META ----------------
   const garaValue = String(effectiveGara || "").trim()
   const lobbyValue = String(unionMeta.lobby || "").trim()
-  const legaValue = String(effectiveLega || "").trim()
+  const legaValue = String(effectiveLegaResolved || "").trim()
 
   if (!garaValue || garaValue === "-") {
   gara = "warn"
@@ -4268,8 +4333,13 @@ const normalizedGaraForOutput = useMemo(() => {
   }, [dgTableRows, lapOverrides])
 
   const finalCsv = useMemo(
-  () => buildCsvFromRows(finalRows, { ...unionMeta, gara: normalizedGaraForOutput, lega: effectiveLega }),
-  [finalRows, unionMeta, normalizedGaraForOutput, effectiveLega]
+  () =>
+    buildCsvFromRows(finalRows, {
+      ...unionMeta,
+      gara: normalizedGaraForOutput,
+      lega: effectiveLegaResolved,
+    }),
+  [finalRows, unionMeta, normalizedGaraForOutput, effectiveLegaResolved]
 )
 
   const hasAnyPenalty = useMemo(
@@ -4770,8 +4840,9 @@ async function downloadExtendedHtmlExport(customTexts?: {
       display: flex;
       align-items: center;
       gap: 10px;
-      flex-wrap: nowrap;
-      white-space: nowrap;
+      row-gap: 8px;
+      flex-wrap: wrap;
+      white-space: normal;
       min-width: 0;
     }
 
@@ -4928,10 +4999,10 @@ async function downloadExtendedHtmlExport(customTexts?: {
     }
 
     table {
-  width: 100%;
-  border-collapse: collapse;
-  table-layout: fixed;
-}
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
 
     thead th {
       position: sticky;
@@ -4958,13 +5029,13 @@ async function downloadExtendedHtmlExport(customTexts?: {
     }
 
     .col-pos { width: 60px; }
-.col-pilot { width: 200px; }
-.col-team { width: 220px; }
-.col-quali { width: 160px; }
-.col-race { width: 160px; }
-.col-penalty { width: 200px; }
-.col-bestlap { width: 200px; }
-.col-points { width: 90px; }
+    .col-pilot { width: 200px; }
+    .col-team { width: 220px; }
+    .col-quali { width: 160px; }
+    .col-race { width: 160px; }
+    .col-penalty { width: 200px; }
+    .col-bestlap { width: 200px; }
+    .col-points { width: 90px; }
 
     .row-p1 {
       background: linear-gradient(90deg, rgba(255,215,0,0.11) 0%, rgba(255,215,0,0.05) 28%, rgba(255,255,255,0.02) 70%);
@@ -5162,7 +5233,7 @@ async function downloadExtendedHtmlExport(customTexts?: {
       color: #f59e0b;
     }
 
-        .points-pill {
+    .points-pill {
       position: relative;
       display: inline-flex;
       align-items: center;
@@ -5238,6 +5309,27 @@ async function downloadExtendedHtmlExport(customTexts?: {
       opacity: 0.72;
       padding: 0 4px;
     }
+
+    @media (max-width: 980px) {
+      .header {
+        flex-wrap: wrap;
+        align-items: flex-start;
+      }
+
+      .header-right {
+        width: 100%;
+        justify-content: flex-start;
+      }
+
+      .header-logo {
+        height: 84px;
+        max-width: 100%;
+      }
+
+      .page {
+        padding: 16px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -5246,7 +5338,7 @@ async function downloadExtendedHtmlExport(customTexts?: {
       <div class="header-left">
         <div class="title-line">
           <div class="main-title">${escapeHtml(texts.mainTitle)}</div>
-<span class="side-label">${escapeHtml(texts.sideLabel)}</span>
+          <span class="side-label">${escapeHtml(texts.sideLabel)}</span>
         </div>
         <div class="subtitle">${escapeHtml(texts.subtitle)}</div>
         <div class="title-bar"></div>
@@ -5525,43 +5617,50 @@ async function downloadGeneralTeamsHtmlExport(customTexts?: {
     }
 
     .title-line {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      flex-wrap: nowrap;
-      white-space: nowrap;
-      min-width: 0;
-    }
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  row-gap: 8px;
+  flex-wrap: wrap;
+  white-space: normal;
+  min-width: 0;
+}
 
     .main-title {
-      font-size: 34px;
-      font-weight: 900;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      line-height: 1.05;
-      text-shadow: 0 0 18px rgba(255,215,0,0.22);
-      white-space: nowrap;
-      min-width: 0;
-    }
+  font-size: clamp(26px, 4vw, 34px);
+  font-weight: 900;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  line-height: 1.05;
+  text-shadow: 0 0 18px rgba(255,215,0,0.22);
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  min-width: 0;
+  max-width: 100%;
+}
 
     .side-label {
-      font-size: 14px;
-      padding: 6px 10px;
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,0.14);
-      background: rgba(255,255,255,0.06);
-      letter-spacing: 0.6px;
-      text-transform: uppercase;
-      white-space: nowrap;
-      flex-shrink: 0;
-    }
+  font-size: 14px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(255,255,255,0.06);
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  max-width: 100%;
+  flex-shrink: 0;
+}
 
     .subtitle {
-      margin-top: 5px;
-      font-size: 13px;
-      opacity: 0.9;
-      white-space: nowrap;
-    }
+  margin-top: 5px;
+  font-size: 13px;
+  opacity: 0.9;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
 
     .title-bar {
       margin-top: 8px;
@@ -5887,34 +5986,55 @@ async function downloadGeneralTeamsHtmlExport(customTexts?: {
     }
 
     @media (max-width: 1100px) {
-      .main-title {
-        font-size: 28px;
-      }
+  .main-title {
+    font-size: 28px;
+  }
 
-      .header-logo {
-        height: 84px;
-      }
+  .header-logo {
+    height: 84px;
+  }
 
-      .col-team {
-        width: 52%;
-      }
+  .col-team {
+    width: 52%;
+  }
 
-      .col-round {
-        width: 8%;
-      }
+  .col-round {
+    width: 8%;
+  }
 
-      .col-total {
-        width: 12%;
-      }
+  .col-total {
+    width: 12%;
+  }
 
-      .team-name {
-        font-size: 16px;
-      }
+  .team-name {
+    font-size: 16px;
+  }
 
-      .round-cell {
-        font-size: 13px;
-      }
-    }
+  .round-cell {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 980px) {
+  .header {
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+
+  .header-right {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .header-logo {
+    height: 84px;
+    max-width: 100%;
+  }
+
+  .page {
+    padding: 16px;
+  }
+}
   </style>
 </head>
 <body>
@@ -7091,7 +7211,7 @@ if (!authorized) {
       {showMeta && (
         <>
           <Separator />
-          <HeaderBadge label="LEGA" value={effectiveLega} variant="gold" />
+          <HeaderBadge label="LEGA" value={effectiveLegaResolved} variant="gold" />
         </>
       )}
 
@@ -7217,6 +7337,31 @@ if (!authorized) {
                     />
                     Modalità PRT
                   </label>
+                  <label
+  style={{
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 10,
+    padding: "10px 12px",
+    borderRadius: 14,
+    border: "1px solid rgba(255,255,255,0.12)",
+    background: bmwCupMode ? "rgba(34,197,94,0.16)" : "rgba(255,255,255,0.06)",
+    color: "white",
+    cursor: "pointer",
+    fontWeight: 800,
+    letterSpacing: 0.3,
+    fontSize: 12,
+    userSelect: "none",
+  }}
+>
+  <input
+    type="checkbox"
+    checked={bmwCupMode}
+    onChange={(e) => setBmwCupMode(e.target.checked)}
+    style={{ transform: "scale(1.1)" }}
+  />
+  Modalità BMW CUP
+</label>
                 </div>
               </div>
 
@@ -7456,14 +7601,7 @@ if (!authorized) {
         style={{
           position: "relative",
           display: "grid",
-          gridTemplateColumns:
-  currentSprint === 2
-    ? unionMode
-      ? "repeat(7, minmax(0, 1fr))"
-      : "repeat(6, minmax(0, 1fr))"
-    : unionMode
-      ? "repeat(9, minmax(0, 1fr))"
-      : "repeat(8, minmax(0, 1fr))",
+          gridTemplateColumns: "repeat(auto-fit, minmax(92px, 1fr))",
           gap: 8,
           padding: "8px 10px",
           overflow: "hidden",
@@ -7489,9 +7627,6 @@ if (!authorized) {
         {[
   ["#", matchSummary.fields.posizione],
   ["Pilota", matchSummary.fields.pilota],
-  ...(currentSprint === 1
-    ? ([["Auto", matchSummary.fields.auto]] as [string, MatchFieldStatus][])
-    : []),
   ["Distacchi", matchSummary.fields.distacchi],
   ...(currentSprint === 1
     ? ([["PP", matchSummary.fields.pp]] as [string, MatchFieldStatus][])
@@ -7777,7 +7912,7 @@ if (!authorized) {
     <ResultsTable
   previewRows={finalRows}
   bestRaceLap={bestRaceLap}
-  unionMeta={{ ...unionMeta, gara: normalizedGaraForOutput, lega: effectiveLega }}
+  unionMeta={{ ...unionMeta, gara: normalizedGaraForOutput, lega: effectiveLegaResolved }}
   prtMode={prtMode}
   unionMode={unionMode}
   currentSprint={currentSprint}
@@ -8631,7 +8766,7 @@ if (!authorized) {
             letterSpacing: 0.4,
           }}
         >
-          Round {currentRound} • Lega {effectiveLega || "-"}
+          Round {currentRound} • Lega {effectiveLegaResolved || "-"}
         </div>
 
         <button
@@ -8748,7 +8883,7 @@ if (!authorized) {
         Round attuale: <b>R{currentRound}</b>
       </div>
       <div>
-        Lega corrente: <b>{effectiveLega || "-"}</b>
+        Lega corrente: <b>{effectiveLegaResolved || "-"}</b>
       </div>
       <div>
         Sprint 1: <b>{savedSprintPreviews.sprint1 ? "salvata" : "non salvata"}</b>
@@ -9243,176 +9378,166 @@ if (!authorized) {
             </thead>
 
             <tbody>
-              {displayRows.map((row) => {
-                const currentValue = String(manualPilotDraft[row.sourcePosGara] ?? "").trim()
-                const originalValue = String(row.pilota ?? "").trim()
-                const changed = currentValue !== originalValue
+  {previewRows.map((baseRow) => {
+    const appliedValue = String(
+      manualPilotOverrides[baseRow.sourcePosGara] ?? baseRow.pilota ?? ""
+    ).trim()
 
-                return (
-                  <tr
-                    key={`manual-pilot-${row.sourcePosGara}`}
-                    style={{
-                      background: changed
-                        ? "linear-gradient(90deg, rgba(160,90,255,0.10), rgba(255,255,255,0.02))"
-                        : "transparent",
-                    }}
-                  >
-                    <td
-                      style={{
-                        padding: "12px",
-                        borderBottom: "1px solid rgba(255,255,255,0.08)",
-                      }}
-                    >
-                      <PosBadge pos={row.posGara} />
-                    </td>
+    const currentValue = String(
+      manualPilotDraft[baseRow.sourcePosGara] ?? appliedValue
+    ).trim()
 
-                    <td
-                      style={{
-                        padding: "12px",
-                        borderBottom: "1px solid rgba(255,255,255,0.08)",
-                        color: "rgba(255,255,255,0.86)",
-                        fontWeight: 700,
-                      }}
-                    >
-                      {row.pilota || "-"}
-                    </td>
+    const originalValue = appliedValue
+    const changed = currentValue !== originalValue
 
-                    <td
-  style={{
-    padding: "12px",
-    borderBottom: "1px solid rgba(255,255,255,0.08)",
-  }}
->
-  <div style={{ display: "grid", gap: 8 }}>
-    <input
-      value={manualPilotDraft[row.sourcePosGara] ?? ""}
-      onChange={(e) =>
-        setManualPilotDraft((prev) => ({
-          ...prev,
-          [row.sourcePosGara]: e.target.value,
-        }))
-      }
-      placeholder="Correggi nome pilota"
-      style={{
-        width: "100%",
-        padding: "10px 12px",
-        borderRadius: 10,
-        border: changed
-          ? "1px solid rgba(160,90,255,0.30)"
-          : "1px solid rgba(255,255,255,0.14)",
-        background: "rgba(0,0,0,0.24)",
-        color: "white",
-        boxSizing: "border-box",
-      }}
-    />
+    return (
+      <tr
+        key={`manual-pilot-${baseRow.sourcePosGara}`}
+        style={{
+          background: changed
+            ? "linear-gradient(90deg, rgba(160,90,255,0.10), rgba(255,255,255,0.02))"
+            : "transparent",
+        }}
+      >
+        <td
+          style={{
+            padding: "12px",
+            borderBottom: "1px solid rgba(255,255,255,0.08)",
+          }}
+        >
+          <PosBadge pos={baseRow.posGara} />
+        </td>
 
-    <select
-      defaultValue=""
-      onChange={(e) => {
-        const selected = e.target.value
-        if (!selected) return
+        <td
+          style={{
+            padding: "12px",
+            borderBottom: "1px solid rgba(255,255,255,0.08)",
+            color: "rgba(255,255,255,0.86)",
+            fontWeight: 700,
+          }}
+        >
+          {appliedValue || "-"}
+        </td>
 
-        const currentKey = row.sourcePosGara
+        <td
+          style={{
+            padding: "12px",
+            borderBottom: "1px solid rgba(255,255,255,0.08)",
+          }}
+        >
+          <div style={{ display: "grid", gap: 8 }}>
+            <input
+              value={manualPilotDraft[baseRow.sourcePosGara] ?? appliedValue}
+              onChange={(e) =>
+                setManualPilotDraft((prev) => ({
+                  ...prev,
+                  [baseRow.sourcePosGara]: e.target.value,
+                }))
+              }
+              placeholder="Correggi nome pilota"
+              style={{
+                width: "100%",
+                padding: "10px 12px",
+                borderRadius: 10,
+                border: changed
+                  ? "1px solid rgba(160,90,255,0.30)"
+                  : "1px solid rgba(255,255,255,0.14)",
+                background: "rgba(0,0,0,0.24)",
+                color: "white",
+                boxSizing: "border-box",
+              }}
+            />
 
-        const otherRow = displayRows.find(
-          (candidate) =>
-            candidate.sourcePosGara !== currentKey &&
-            String(candidate.pilota ?? "").trim() === selected
-        )
+            <select
+              defaultValue=""
+              onChange={(e) => {
+                const selected = e.target.value
+                if (!selected) return
 
-        if (!otherRow) {
-          e.currentTarget.value = ""
-          return
-        }
+                const currentKey = baseRow.sourcePosGara
 
-        const otherKey = otherRow.sourcePosGara
-
-        const nextDraft: Record<number, string> = {}
-
-        for (const r of displayRows) {
-          nextDraft[r.sourcePosGara] = String(r.pilota ?? "").trim()
-        }
-
-        const currentPilot = nextDraft[currentKey]
-        const otherPilot = nextDraft[otherKey]
-
-        nextDraft[currentKey] = otherPilot
-        nextDraft[otherKey] = currentPilot
-
-        const cleaned: Record<number, string> = {}
-
-        for (const baseRow of previewRows) {
-          const draftValue = String(nextDraft[baseRow.sourcePosGara] ?? "").trim()
-          const originalValue = String(baseRow.pilota ?? "").trim()
-
-          if (draftValue !== originalValue) {
-            cleaned[baseRow.sourcePosGara] = draftValue
-          }
-        }
-
-        const nextAutoOverrides: Record<number, string> = {}
-
-        for (const baseRow of previewRows) {
-          const finalPilotName = String(
-            cleaned[baseRow.sourcePosGara] ?? baseRow.pilota ?? ""
-          ).trim()
-
-          const originalAuto = String(baseRow.auto ?? "").trim()
-
-          if (!finalPilotName) continue
-
-          const sourceRow = previewRows.find(
-            (candidate) => normalizePilot(candidate.pilota) === normalizePilot(finalPilotName)
-          )
-
-          if (!sourceRow) continue
-
-          const sourceAuto = String(sourceRow.auto ?? "").trim()
-
-          if (sourceAuto !== originalAuto) {
-            nextAutoOverrides[baseRow.sourcePosGara] = sourceAuto
-          }
-        }
-
-        setManualPilotOverrides(cleaned)
-        setManualAutoOverrides(nextAutoOverrides)
-        setManualPilotDraft({})
-        setShowPilotModal(false)
-
-        e.currentTarget.value = ""
-      }}
-      style={{
-        width: "100%",
-        padding: "10px 12px",
-        borderRadius: 10,
-        border: "1px solid rgba(255,255,255,0.14)",
-        background: "rgba(0,0,0,0.24)",
-        color: "white",
-        boxSizing: "border-box",
-      }}
-    >
-      <option value="" style={{ background: "#11151d", color: "white" }}>
-        Scambia con...
-      </option>
-
-      {displayRows
-        .filter((candidate) => candidate.sourcePosGara !== row.sourcePosGara)
-        .map((candidate) => (
-          <option
-            key={`pilot-option-${row.sourcePosGara}-${candidate.sourcePosGara}`}
-            value={candidate.pilota}
-            style={{ background: "#11151d", color: "white" }}
-          >
-            {candidate.pilota}
-          </option>
-        ))}
-    </select>
-  </div>
-</td>
-                  </tr>
+                const otherRow = previewRows.find(
+                  (candidate) =>
+                    candidate.sourcePosGara !== currentKey &&
+                    String(
+                      manualPilotDraft[candidate.sourcePosGara] ??
+                        manualPilotOverrides[candidate.sourcePosGara] ??
+                        candidate.pilota ??
+                        ""
+                    ).trim() === selected
                 )
-              })}
-            </tbody>
+
+                if (!otherRow) {
+                  e.currentTarget.value = ""
+                  return
+                }
+
+                const otherKey = otherRow.sourcePosGara
+
+                setManualPilotDraft((prev) => {
+                  const nextDraft: Record<number, string> = {}
+
+                  for (const r of previewRows) {
+                    nextDraft[r.sourcePosGara] = String(
+                      prev[r.sourcePosGara] ??
+                        manualPilotOverrides[r.sourcePosGara] ??
+                        r.pilota ??
+                        ""
+                    ).trim()
+                  }
+
+                  const currentPilot = nextDraft[currentKey]
+                  const otherPilot = nextDraft[otherKey]
+
+                  nextDraft[currentKey] = otherPilot
+                  nextDraft[otherKey] = currentPilot
+
+                  return nextDraft
+                })
+
+                e.currentTarget.value = ""
+              }}
+              style={{
+                width: "100%",
+                padding: "10px 12px",
+                borderRadius: 10,
+                border: "1px solid rgba(255,255,255,0.14)",
+                background: "rgba(0,0,0,0.24)",
+                color: "white",
+                boxSizing: "border-box",
+              }}
+            >
+              <option value="" style={{ background: "#11151d", color: "white" }}>
+                Scambia con...
+              </option>
+
+              {previewRows
+                .filter((candidate) => candidate.sourcePosGara !== baseRow.sourcePosGara)
+                .map((candidate) => {
+                  const candidateName = String(
+                    manualPilotDraft[candidate.sourcePosGara] ??
+                      manualPilotOverrides[candidate.sourcePosGara] ??
+                      candidate.pilota ??
+                      ""
+                  ).trim()
+
+                  return (
+                    <option
+                      key={`pilot-option-${baseRow.sourcePosGara}-${candidate.sourcePosGara}`}
+                      value={candidateName}
+                      style={{ background: "#11151d", color: "white" }}
+                    >
+                      {candidateName}
+                    </option>
+                  )
+                })}
+            </select>
+          </div>
+        </td>
+      </tr>
+    )
+  })}
+</tbody>
           </table>
         </div>
       </div>
@@ -10073,7 +10198,7 @@ if (!authorized) {
                 winner={winner}
                 bestQuali={bestQuali}
                 bestRaceLap={bestRaceLap}
-                unionMeta={{ ...unionMeta, gara: normalizedGaraForOutput, lega: effectiveLega }}
+                unionMeta={{ ...unionMeta, gara: normalizedGaraForOutput, lega: effectiveLegaResolved }}
                 showMeta={showMeta}
                 showLobby={showLobby}
                 exporting={true}
@@ -10082,7 +10207,7 @@ if (!authorized) {
               <ResultsTable
   previewRows={finalRows}
   bestRaceLap={bestRaceLap}
-  unionMeta={{ ...unionMeta, gara: normalizedGaraForOutput, lega: effectiveLega }}
+  unionMeta={{ ...unionMeta, gara: normalizedGaraForOutput, lega: effectiveLegaResolved }}
   prtMode={prtMode}
   unionMode={unionMode}
   currentSprint={currentSprint}
