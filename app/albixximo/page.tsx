@@ -1219,52 +1219,66 @@ function AppHeader({
 
       <div style={{ position: "relative", minWidth: 0, flex: 1 }}>
         <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 10,
-            flexWrap: "nowrap",
-            whiteSpace: "nowrap",
-            minWidth: 0,
-          }}
-        >
-          <div
   style={{
-    fontSize: 34,
-    fontWeight: 900,
-    letterSpacing: "1px",
-    textTransform: "uppercase",
-    lineHeight: 1.05,
-    textShadow: "0 0 18px rgba(255,215,0,0.22)",
-    whiteSpace: "nowrap",
-    flexShrink: 1,
+    display: "flex",
+    alignItems: "center",
+    gap: 10,
+    rowGap: 8,
+    flexWrap: "wrap",
+    whiteSpace: "normal",
     minWidth: 0,
   }}
 >
-  {mainTitle}
+  <div
+    style={{
+      fontSize: "clamp(26px, 3.2vw, 34px)",
+      fontWeight: 900,
+      letterSpacing: "1px",
+      textTransform: "uppercase",
+      lineHeight: 1.05,
+      textShadow: "0 0 18px rgba(255,215,0,0.22)",
+      whiteSpace: "normal",
+      overflowWrap: "anywhere",
+      wordBreak: "break-word",
+      flexShrink: 1,
+      minWidth: 0,
+      maxWidth: "100%",
+    }}
+  >
+    {mainTitle}
+  </div>
+
+  <span
+    style={{
+      fontSize: 14,
+      padding: "6px 10px",
+      borderRadius: 999,
+      border: "1px solid rgba(255,255,255,0.14)",
+      background: "rgba(255,255,255,0.06)",
+      opacity: 0.95,
+      letterSpacing: 0.6,
+      textTransform: "uppercase",
+      whiteSpace: "normal",
+      overflowWrap: "anywhere",
+      maxWidth: "100%",
+      flexShrink: 0,
+    }}
+  >
+    {sideLabel}
+  </span>
 </div>
 
-          <span
-            style={{
-              fontSize: 14,
-              padding: "6px 10px",
-              borderRadius: 999,
-              border: "1px solid rgba(255,255,255,0.14)",
-              background: "rgba(255,255,255,0.06)",
-              opacity: 0.95,
-              letterSpacing: 0.6,
-              textTransform: "uppercase",
-              whiteSpace: "nowrap",
-              flexShrink: 0,
-            }}
-          >
-            {sideLabel}
-          </span>
-        </div>
-
-        <div style={{ marginTop: 5, fontSize: 13, opacity: 0.9, whiteSpace: "nowrap" }}>
-          {subtitle}
-        </div>
+<div
+  style={{
+    marginTop: 5,
+    fontSize: 13,
+    opacity: 0.9,
+    whiteSpace: "normal",
+    overflowWrap: "anywhere",
+  }}
+>
+  {subtitle}
+</div>
 
         <div
           style={{
@@ -1311,15 +1325,16 @@ function AppHeader({
     }}
   >
     <img
-      src="/bmw-m2-team-cup.png"
-      alt="BMW M2 TEAM CUP"
-      style={{
-        height: 110,
-        width: "auto",
-        borderRadius: 14,
-        display: "block",
-      }}
-    />
+  src="/bmw-m2-team-cup.png"
+  alt="BMW M2 TEAM CUP"
+  style={{
+    height: "clamp(78px, 10vw, 110px)",
+    maxWidth: "100%",
+    width: "auto",
+    borderRadius: 14,
+    display: "block",
+  }}
+/>
   </div>
 </a>
     </div>
@@ -4767,43 +4782,49 @@ async function downloadExtendedHtmlExport(customTexts?: {
     }
 
     .title-line {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      flex-wrap: nowrap;
-      white-space: nowrap;
-      min-width: 0;
-    }
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  row-gap: 8px;
+  flex-wrap: wrap;
+  white-space: normal;
+  min-width: 0;
+}
 
     .main-title {
-      font-size: 34px;
-      font-weight: 900;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      line-height: 1.05;
-      text-shadow: 0 0 18px rgba(255,215,0,0.22);
-      white-space: nowrap;
-      min-width: 0;
-    }
+  font-size: clamp(26px, 4vw, 34px);
+  font-weight: 900;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  line-height: 1.05;
+  text-shadow: 0 0 18px rgba(255,215,0,0.22);
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  min-width: 0;
+  max-width: 100%;
+}
 
     .side-label {
-      font-size: 14px;
-      padding: 6px 10px;
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,0.14);
-      background: rgba(255,255,255,0.06);
-      letter-spacing: 0.6px;
-      text-transform: uppercase;
-      white-space: nowrap;
-      flex-shrink: 0;
-    }
+  font-size: 14px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(255,255,255,0.06);
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  max-width: 100%;
+  flex-shrink: 0;
 
     .subtitle {
-      margin-top: 5px;
-      font-size: 13px;
-      opacity: 0.9;
-      white-space: nowrap;
-    }
+  margin-top: 5px;
+  font-size: 13px;
+  opacity: 0.9;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
 
     .title-bar {
       margin-top: 8px;
@@ -5238,6 +5259,26 @@ async function downloadExtendedHtmlExport(customTexts?: {
       opacity: 0.72;
       padding: 0 4px;
     }
+      @media (max-width: 980px) {
+  .header {
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+
+  .header-right {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .header-logo {
+    height: 84px;
+    max-width: 100%;
+  }
+
+  .page {
+    padding: 16px;
+  }
+}
   </style>
 </head>
 <body>
@@ -5525,43 +5566,50 @@ async function downloadGeneralTeamsHtmlExport(customTexts?: {
     }
 
     .title-line {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      flex-wrap: nowrap;
-      white-space: nowrap;
-      min-width: 0;
-    }
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  row-gap: 8px;
+  flex-wrap: wrap;
+  white-space: normal;
+  min-width: 0;
+}
 
     .main-title {
-      font-size: 34px;
-      font-weight: 900;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      line-height: 1.05;
-      text-shadow: 0 0 18px rgba(255,215,0,0.22);
-      white-space: nowrap;
-      min-width: 0;
-    }
+  font-size: clamp(26px, 4vw, 34px);
+  font-weight: 900;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  line-height: 1.05;
+  text-shadow: 0 0 18px rgba(255,215,0,0.22);
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  min-width: 0;
+  max-width: 100%;
+}
 
     .side-label {
-      font-size: 14px;
-      padding: 6px 10px;
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,0.14);
-      background: rgba(255,255,255,0.06);
-      letter-spacing: 0.6px;
-      text-transform: uppercase;
-      white-space: nowrap;
-      flex-shrink: 0;
-    }
+  font-size: 14px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(255,255,255,0.06);
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  max-width: 100%;
+  flex-shrink: 0;
+}
 
     .subtitle {
-      margin-top: 5px;
-      font-size: 13px;
-      opacity: 0.9;
-      white-space: nowrap;
-    }
+  margin-top: 5px;
+  font-size: 13px;
+  opacity: 0.9;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
 
     .title-bar {
       margin-top: 8px;
@@ -5887,34 +5935,55 @@ async function downloadGeneralTeamsHtmlExport(customTexts?: {
     }
 
     @media (max-width: 1100px) {
-      .main-title {
-        font-size: 28px;
-      }
+  .main-title {
+    font-size: 28px;
+  }
 
-      .header-logo {
-        height: 84px;
-      }
+  .header-logo {
+    height: 84px;
+  }
 
-      .col-team {
-        width: 52%;
-      }
+  .col-team {
+    width: 52%;
+  }
 
-      .col-round {
-        width: 8%;
-      }
+  .col-round {
+    width: 8%;
+  }
 
-      .col-total {
-        width: 12%;
-      }
+  .col-total {
+    width: 12%;
+  }
 
-      .team-name {
-        font-size: 16px;
-      }
+  .team-name {
+    font-size: 16px;
+  }
 
-      .round-cell {
-        font-size: 13px;
-      }
-    }
+  .round-cell {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 980px) {
+  .header {
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+
+  .header-right {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .header-logo {
+    height: 84px;
+    max-width: 100%;
+  }
+
+  .page {
+    padding: 16px;
+  }
+}
   </style>
 </head>
 <body>
@@ -7456,14 +7525,7 @@ if (!authorized) {
         style={{
           position: "relative",
           display: "grid",
-          gridTemplateColumns:
-  currentSprint === 2
-    ? unionMode
-      ? "repeat(7, minmax(0, 1fr))"
-      : "repeat(6, minmax(0, 1fr))"
-    : unionMode
-      ? "repeat(9, minmax(0, 1fr))"
-      : "repeat(8, minmax(0, 1fr))",
+          gridTemplateColumns: "repeat(auto-fit, minmax(92px, 1fr))",
           gap: 8,
           padding: "8px 10px",
           overflow: "hidden",
