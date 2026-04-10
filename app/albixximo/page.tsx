@@ -2871,6 +2871,7 @@ const [loginError, setLoginError] = useState("")
 const [manualPilotDraft, setManualPilotDraft] = useState<Record<number, string>>({})
 const [showDistaccoModal, setShowDistaccoModal] = useState(false)
 const [manualDistaccoDraft, setManualDistaccoDraft] = useState<Record<number, string>>({})
+const [showMissingPilotWarning, setShowMissingPilotWarning] = useState(false)
 
     const [exportTexts, setExportTexts] = useState({
     mainTitle: "BMW M2 TEAM CUP",
@@ -3041,6 +3042,10 @@ useEffect(() => {
 
     return null
   }
+
+  function hasMissingPilotRows(rowsToCheck: DisplayRow[]) {
+  return rowsToCheck.some((row) => !String(row.pilota || "").trim())
+}
 
   function resolveTeamForDisplayRow(row: DisplayRow): string {
   const finalPilotName = String(row.pilota || "").trim()
@@ -6841,6 +6846,11 @@ function resetEntireCurrentRound() {
   function openPilotCorrectionModal() {
   const snapshotRows = displayRows.map((row) => ({ ...row }))
 
+  if (hasMissingPilotRows(snapshotRows)) {
+    setShowMissingPilotWarning(true)
+    return
+  }
+
   const nextDraft: Record<number, string> = {}
   for (const row of snapshotRows) {
     nextDraft[row.sourcePosGara] = String(row.pilota ?? "").trim()
@@ -6848,6 +6858,20 @@ function resetEntireCurrentRound() {
 
   setPilotModalRows(snapshotRows)
   setManualPilotDraft(nextDraft)
+  setShowPilotModal(true)
+}
+
+function continuePilotCorrectionModalAnyway() {
+  const snapshotRows = displayRows.map((row) => ({ ...row }))
+
+  const nextDraft: Record<number, string> = {}
+  for (const row of snapshotRows) {
+    nextDraft[row.sourcePosGara] = String(row.pilota ?? "").trim()
+  }
+
+  setPilotModalRows(snapshotRows)
+  setManualPilotDraft(nextDraft)
+  setShowMissingPilotWarning(false)
   setShowPilotModal(true)
 }
 
@@ -9335,6 +9359,88 @@ if (!authorized) {
           </div>
         </div>
       )}
+
+      {showMissingPilotWarning && (
+  <div
+    style={{
+      position: "fixed",
+      inset: 0,
+      background: "rgba(0,0,0,0.72)",
+      backdropFilter: "blur(6px)",
+      display: "grid",
+      placeItems: "center",
+      zIndex: 9999,
+      padding: 20,
+    }}
+  >
+    <div
+      style={{
+        width: "100%",
+        maxWidth: 560,
+        borderRadius: 22,
+        border: "1px solid rgba(255,255,255,0.12)",
+        background: "linear-gradient(180deg, rgba(18,22,31,0.98), rgba(8,10,15,0.98))",
+        boxShadow: "0 20px 80px rgba(0,0,0,0.55)",
+        padding: 22,
+        display: "grid",
+        gap: 16,
+      }}
+    >
+      <div style={{ fontSize: 22, fontWeight: 900 }}>
+        Attenzione
+      </div>
+
+      <div
+        style={{
+          fontSize: 14,
+          lineHeight: 1.55,
+          opacity: 0.88,
+        }}
+      >
+        È presente almeno un <b>pilota non identificato</b>.
+        <br /><br />
+        Conviene inserire prima il nome mancante e solo dopo procedere con eventuali scambi tra piloti.
+      </div>
+
+      <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, flexWrap: "wrap" }}>
+        <button
+          onClick={() => setShowMissingPilotWarning(false)}
+          style={{
+            padding: "12px 16px",
+            borderRadius: 14,
+            border: "1px solid rgba(255,255,255,0.14)",
+            background: "rgba(255,255,255,0.06)",
+            color: "white",
+            cursor: "pointer",
+            fontWeight: 900,
+            textTransform: "uppercase",
+            letterSpacing: 0.5,
+          }}
+        >
+          Chiudi
+        </button>
+
+        <button
+          onClick={continuePilotCorrectionModalAnyway}
+          style={{
+            padding: "12px 16px",
+            borderRadius: 14,
+            border: "1px solid rgba(160,90,255,0.30)",
+            background: "rgba(160,90,255,0.20)",
+            color: "white",
+            cursor: "pointer",
+            fontWeight: 900,
+            textTransform: "uppercase",
+            letterSpacing: 0.5,
+            boxShadow: "0 0 22px rgba(160,90,255,0.12)",
+          }}
+        >
+          Continua comunque
+        </button>
+      </div>
+    </div>
+  </div>
+)}
 
       {showPilotModal && (
   <div
