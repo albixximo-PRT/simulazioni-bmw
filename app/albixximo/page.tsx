@@ -3044,7 +3044,16 @@ useEffect(() => {
   }
 
   function hasMissingPilotRows(rowsToCheck: DisplayRow[]) {
-  return rowsToCheck.some((row) => !String(row.pilota || "").trim())
+  return rowsToCheck.some((row) => {
+    const pilot = String(row.pilota || "").trim()
+
+    return (
+      pilot === "" ||
+      pilot === "-" ||
+      pilot.toLowerCase() === "null" ||
+      pilot.toLowerCase() === "undefined"
+    )
+  })
 }
 
   function resolveTeamForDisplayRow(row: DisplayRow): string {
