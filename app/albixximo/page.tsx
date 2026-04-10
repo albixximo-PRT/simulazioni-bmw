@@ -3054,6 +3054,13 @@ useEffect(() => {
 
   if (!finalPilotName) return originalTeam
 
+  // 1) Prima prova: il nome finale matcha direttamente il roster team
+  const directTeamMatch = findTeamByPilot(finalPilotName)
+  if (directTeamMatch?.team) {
+    return directTeamMatch.team
+  }
+
+  // 2) Seconda prova: il nome finale matcha un altro pilota reale di previewRows
   const matchedPreviewRow = previewRows.find(
     (candidate) => normalizePilot(candidate.pilota) === normalizePilot(finalPilotName)
   )
@@ -3062,6 +3069,7 @@ useEffect(() => {
     return findTeamByPilot(matchedPreviewRow.pilota)?.team || originalTeam
   }
 
+  // 3) Fallback: resta il team originale della riga
   return originalTeam
 }
 
