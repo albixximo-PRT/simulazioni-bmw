@@ -9377,142 +9377,166 @@ if (!authorized) {
             </thead>
 
             <tbody>
-              {displayRows.map((row) => {
-                const currentValue = String(manualPilotDraft[row.sourcePosGara] ?? "").trim()
-                const originalValue = String(row.pilota ?? "").trim()
-                const changed = currentValue !== originalValue
+  {previewRows.map((baseRow) => {
+    const appliedValue = String(
+      manualPilotOverrides[baseRow.sourcePosGara] ?? baseRow.pilota ?? ""
+    ).trim()
 
-                return (
-                  <tr
-                    key={`manual-pilot-${row.sourcePosGara}`}
-                    style={{
-                      background: changed
-                        ? "linear-gradient(90deg, rgba(160,90,255,0.10), rgba(255,255,255,0.02))"
-                        : "transparent",
-                    }}
-                  >
-                    <td
-                      style={{
-                        padding: "12px",
-                        borderBottom: "1px solid rgba(255,255,255,0.08)",
-                      }}
-                    >
-                      <PosBadge pos={row.posGara} />
-                    </td>
+    const currentValue = String(
+      manualPilotDraft[baseRow.sourcePosGara] ?? appliedValue
+    ).trim()
 
-                    <td
-                      style={{
-                        padding: "12px",
-                        borderBottom: "1px solid rgba(255,255,255,0.08)",
-                        color: "rgba(255,255,255,0.86)",
-                        fontWeight: 700,
-                      }}
-                    >
-                      {row.pilota || "-"}
-                    </td>
+    const originalValue = appliedValue
+    const changed = currentValue !== originalValue
 
-                    <td
-  style={{
-    padding: "12px",
-    borderBottom: "1px solid rgba(255,255,255,0.08)",
-  }}
->
-  <div style={{ display: "grid", gap: 8 }}>
-    <input
-      value={manualPilotDraft[row.sourcePosGara] ?? ""}
-      onChange={(e) =>
-        setManualPilotDraft((prev) => ({
-          ...prev,
-          [row.sourcePosGara]: e.target.value,
-        }))
-      }
-      placeholder="Correggi nome pilota"
-      style={{
-        width: "100%",
-        padding: "10px 12px",
-        borderRadius: 10,
-        border: changed
-          ? "1px solid rgba(160,90,255,0.30)"
-          : "1px solid rgba(255,255,255,0.14)",
-        background: "rgba(0,0,0,0.24)",
-        color: "white",
-        boxSizing: "border-box",
-      }}
-    />
-
-    <select
-  defaultValue=""
-  onChange={(e) => {
-    const selected = e.target.value
-    if (!selected) return
-
-    const currentKey = row.sourcePosGara
-
-    const otherRow = displayRows.find(
-      (candidate) =>
-        candidate.sourcePosGara !== currentKey &&
-        String(candidate.pilota ?? "").trim() === selected
-    )
-
-    if (!otherRow) {
-      e.currentTarget.value = ""
-      return
-    }
-
-    const otherKey = otherRow.sourcePosGara
-
-    setManualPilotDraft((prev) => {
-      const nextDraft: Record<number, string> = {}
-
-      for (const r of displayRows) {
-        nextDraft[r.sourcePosGara] = String(
-          prev[r.sourcePosGara] ?? r.pilota ?? ""
-        ).trim()
-      }
-
-      const currentPilot = nextDraft[currentKey]
-      const otherPilot = nextDraft[otherKey]
-
-      nextDraft[currentKey] = otherPilot
-      nextDraft[otherKey] = currentPilot
-
-      return nextDraft
-    })
-
-    e.currentTarget.value = ""
-  }}
-  style={{
-    width: "100%",
-    padding: "10px 12px",
-    borderRadius: 10,
-    border: "1px solid rgba(255,255,255,0.14)",
-    background: "rgba(0,0,0,0.24)",
-    color: "white",
-    boxSizing: "border-box",
-  }}
->
-  <option value="" style={{ background: "#11151d", color: "white" }}>
-    Scambia con...
-  </option>
-
-  {displayRows
-    .filter((candidate) => candidate.sourcePosGara !== row.sourcePosGara)
-    .map((candidate) => (
-      <option
-        key={`pilot-option-${row.sourcePosGara}-${candidate.sourcePosGara}`}
-        value={candidate.pilota}
-        style={{ background: "#11151d", color: "white" }}
+    return (
+      <tr
+        key={`manual-pilot-${baseRow.sourcePosGara}`}
+        style={{
+          background: changed
+            ? "linear-gradient(90deg, rgba(160,90,255,0.10), rgba(255,255,255,0.02))"
+            : "transparent",
+        }}
       >
-        {candidate.pilota}
-      </option>
-    ))}
-</select>
-  </div>
-</td>
-                  </tr>
+        <td
+          style={{
+            padding: "12px",
+            borderBottom: "1px solid rgba(255,255,255,0.08)",
+          }}
+        >
+          <PosBadge pos={baseRow.posGara} />
+        </td>
+
+        <td
+          style={{
+            padding: "12px",
+            borderBottom: "1px solid rgba(255,255,255,0.08)",
+            color: "rgba(255,255,255,0.86)",
+            fontWeight: 700,
+          }}
+        >
+          {appliedValue || "-"}
+        </td>
+
+        <td
+          style={{
+            padding: "12px",
+            borderBottom: "1px solid rgba(255,255,255,0.08)",
+          }}
+        >
+          <div style={{ display: "grid", gap: 8 }}>
+            <input
+              value={manualPilotDraft[baseRow.sourcePosGara] ?? appliedValue}
+              onChange={(e) =>
+                setManualPilotDraft((prev) => ({
+                  ...prev,
+                  [baseRow.sourcePosGara]: e.target.value,
+                }))
+              }
+              placeholder="Correggi nome pilota"
+              style={{
+                width: "100%",
+                padding: "10px 12px",
+                borderRadius: 10,
+                border: changed
+                  ? "1px solid rgba(160,90,255,0.30)"
+                  : "1px solid rgba(255,255,255,0.14)",
+                background: "rgba(0,0,0,0.24)",
+                color: "white",
+                boxSizing: "border-box",
+              }}
+            />
+
+            <select
+              defaultValue=""
+              onChange={(e) => {
+                const selected = e.target.value
+                if (!selected) return
+
+                const currentKey = baseRow.sourcePosGara
+
+                const otherRow = previewRows.find(
+                  (candidate) =>
+                    candidate.sourcePosGara !== currentKey &&
+                    String(
+                      manualPilotDraft[candidate.sourcePosGara] ??
+                        manualPilotOverrides[candidate.sourcePosGara] ??
+                        candidate.pilota ??
+                        ""
+                    ).trim() === selected
                 )
-              })}
-            </tbody>
+
+                if (!otherRow) {
+                  e.currentTarget.value = ""
+                  return
+                }
+
+                const otherKey = otherRow.sourcePosGara
+
+                setManualPilotDraft((prev) => {
+                  const nextDraft: Record<number, string> = {}
+
+                  for (const r of previewRows) {
+                    nextDraft[r.sourcePosGara] = String(
+                      prev[r.sourcePosGara] ??
+                        manualPilotOverrides[r.sourcePosGara] ??
+                        r.pilota ??
+                        ""
+                    ).trim()
+                  }
+
+                  const currentPilot = nextDraft[currentKey]
+                  const otherPilot = nextDraft[otherKey]
+
+                  nextDraft[currentKey] = otherPilot
+                  nextDraft[otherKey] = currentPilot
+
+                  return nextDraft
+                })
+
+                e.currentTarget.value = ""
+              }}
+              style={{
+                width: "100%",
+                padding: "10px 12px",
+                borderRadius: 10,
+                border: "1px solid rgba(255,255,255,0.14)",
+                background: "rgba(0,0,0,0.24)",
+                color: "white",
+                boxSizing: "border-box",
+              }}
+            >
+              <option value="" style={{ background: "#11151d", color: "white" }}>
+                Scambia con...
+              </option>
+
+              {previewRows
+                .filter((candidate) => candidate.sourcePosGara !== baseRow.sourcePosGara)
+                .map((candidate) => {
+                  const candidateName = String(
+                    manualPilotDraft[candidate.sourcePosGara] ??
+                      manualPilotOverrides[candidate.sourcePosGara] ??
+                      candidate.pilota ??
+                      ""
+                  ).trim()
+
+                  return (
+                    <option
+                      key={`pilot-option-${baseRow.sourcePosGara}-${candidate.sourcePosGara}`}
+                      value={candidateName}
+                      style={{ background: "#11151d", color: "white" }}
+                    >
+                      {candidateName}
+                    </option>
+                  )
+                })}
+            </select>
+          </div>
+        </td>
+      </tr>
+    )
+  })}
+</tbody>
           </table>
         </div>
       </div>
