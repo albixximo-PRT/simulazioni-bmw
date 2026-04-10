@@ -4782,49 +4782,44 @@ async function downloadExtendedHtmlExport(customTexts?: {
     }
 
     .title-line {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  row-gap: 8px;
-  flex-wrap: wrap;
-  white-space: normal;
-  min-width: 0;
-}
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      row-gap: 8px;
+      flex-wrap: wrap;
+      white-space: normal;
+      min-width: 0;
+    }
 
     .main-title {
-  font-size: clamp(26px, 4vw, 34px);
-  font-weight: 900;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  line-height: 1.05;
-  text-shadow: 0 0 18px rgba(255,215,0,0.22);
-  white-space: normal;
-  overflow-wrap: anywhere;
-  word-break: break-word;
-  min-width: 0;
-  max-width: 100%;
-}
+      font-size: 34px;
+      font-weight: 900;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      line-height: 1.05;
+      text-shadow: 0 0 18px rgba(255,215,0,0.22);
+      white-space: nowrap;
+      min-width: 0;
+    }
 
     .side-label {
-  font-size: 14px;
-  padding: 6px 10px;
-  border-radius: 999px;
-  border: 1px solid rgba(255,255,255,0.14);
-  background: rgba(255,255,255,0.06);
-  letter-spacing: 0.6px;
-  text-transform: uppercase;
-  white-space: normal;
-  overflow-wrap: anywhere;
-  max-width: 100%;
-  flex-shrink: 0;
+      font-size: 14px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(255,255,255,0.06);
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
 
     .subtitle {
-  margin-top: 5px;
-  font-size: 13px;
-  opacity: 0.9;
-  white-space: normal;
-  overflow-wrap: anywhere;
-}
+      margin-top: 5px;
+      font-size: 13px;
+      opacity: 0.9;
+      white-space: nowrap;
+    }
 
     .title-bar {
       margin-top: 8px;
@@ -4949,10 +4944,10 @@ async function downloadExtendedHtmlExport(customTexts?: {
     }
 
     table {
-  width: 100%;
-  border-collapse: collapse;
-  table-layout: fixed;
-}
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
 
     thead th {
       position: sticky;
@@ -4979,13 +4974,13 @@ async function downloadExtendedHtmlExport(customTexts?: {
     }
 
     .col-pos { width: 60px; }
-.col-pilot { width: 200px; }
-.col-team { width: 220px; }
-.col-quali { width: 160px; }
-.col-race { width: 160px; }
-.col-penalty { width: 200px; }
-.col-bestlap { width: 200px; }
-.col-points { width: 90px; }
+    .col-pilot { width: 200px; }
+    .col-team { width: 220px; }
+    .col-quali { width: 160px; }
+    .col-race { width: 160px; }
+    .col-penalty { width: 200px; }
+    .col-bestlap { width: 200px; }
+    .col-points { width: 90px; }
 
     .row-p1 {
       background: linear-gradient(90deg, rgba(255,215,0,0.11) 0%, rgba(255,215,0,0.05) 28%, rgba(255,255,255,0.02) 70%);
@@ -5183,7 +5178,7 @@ async function downloadExtendedHtmlExport(customTexts?: {
       color: #f59e0b;
     }
 
-        .points-pill {
+    .points-pill {
       position: relative;
       display: inline-flex;
       align-items: center;
@@ -5259,26 +5254,27 @@ async function downloadExtendedHtmlExport(customTexts?: {
       opacity: 0.72;
       padding: 0 4px;
     }
-      @media (max-width: 980px) {
-  .header {
-    flex-wrap: wrap;
-    align-items: flex-start;
-  }
 
-  .header-right {
-    width: 100%;
-    justify-content: flex-start;
-  }
+    @media (max-width: 980px) {
+      .header {
+        flex-wrap: wrap;
+        align-items: flex-start;
+      }
 
-  .header-logo {
-    height: 84px;
-    max-width: 100%;
-  }
+      .header-right {
+        width: 100%;
+        justify-content: flex-start;
+      }
 
-  .page {
-    padding: 16px;
-  }
-}
+      .header-logo {
+        height: 84px;
+        max-width: 100%;
+      }
+
+      .page {
+        padding: 16px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -5287,7 +5283,7 @@ async function downloadExtendedHtmlExport(customTexts?: {
       <div class="header-left">
         <div class="title-line">
           <div class="main-title">${escapeHtml(texts.mainTitle)}</div>
-<span class="side-label">${escapeHtml(texts.sideLabel)}</span>
+          <span class="side-label">${escapeHtml(texts.sideLabel)}</span>
         </div>
         <div class="subtitle">${escapeHtml(texts.subtitle)}</div>
         <div class="title-bar"></div>
