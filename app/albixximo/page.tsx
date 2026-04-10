@@ -2843,6 +2843,7 @@ const [loginError, setLoginError] = useState("")
   const [showReq, setShowReq] = useState(false)
   const [prtMode, setPrtMode] = useState(true)
   const [unionMode, setUnionMode] = useState(false)
+  const [bmwCupMode, setBmwCupMode] = useState(true)
   const [penalties, setPenalties] = useState<PenaltyMap>({})
   const [exportMetaInPng, setExportMetaInPng] = useState(false)
   const [lapOverrides, setLapOverrides] = useState<Record<string, string>>({})
@@ -3040,6 +3041,33 @@ useEffect(() => {
     return null
   }
 
+  function getBmwLeagueFromRows(rowsToCheck: DisplayRow[]): string {
+  const counts: Record<string, number> = {}
+
+  for (const row of rowsToCheck) {
+    const lega = String(findTeamByPilot(row.pilota)?.lega || "").trim().toUpperCase()
+    if (!lega) continue
+
+    if (lega === "PRO" || lega === "PRO-AMA" || lega === "AMA") {
+      counts[lega] = (counts[lega] || 0) + 1
+    }
+  }
+
+  const sorted = Object.entries(counts).sort((a, b) => {
+    if (b[1] !== a[1]) return b[1] - a[1]
+
+    const priority: Record<string, number> = {
+      PRO: 3,
+      "PRO-AMA": 2,
+      AMA: 1,
+    }
+
+    return (priority[b[0]] || 0) - (priority[a[0]] || 0)
+  })
+
+  return sorted[0]?.[0] || ""
+}
+
   /* =========================
    BMW HELPERS (NEW FOUNDATION)
    ========================= */
@@ -3217,7 +3245,7 @@ function buildBmwLeagueDriversFromSprints(
 }
 
 function getCurrentBmwLeagueName(): BmwLeagueName | null {
-  const lega = String(effectiveLega || "").trim().toUpperCase()
+  const lega = String(effectiveLegaResolved || "").trim().toUpperCase()
 
   if (lega === "PRO") return "PRO"
   if (lega === "PRO-AMA") return "PRO-AMA"
@@ -3552,10 +3580,6 @@ const orderedRows = [...finishRows, ...dnfIRows, ...dnfVRows, ...dnpRows]
   return String(manualGaraOverride || detected || "").trim()
 }, [manualGaraOverride, unionMeta.gara])
 
-const effectiveLega = useMemo(() => {
-  const detected = String(unionMeta.lega || "").trim()
-  return String(manualLegaOverride || detected || "").trim()
-}, [manualLegaOverride, unionMeta.lega])
 
 const normalizedGaraForOutput = useMemo(() => {
   const raw = String(effectiveGara || "").trim()
@@ -3770,9 +3794,31 @@ const normalizedGaraForOutput = useMemo(() => {
       distaccoDalPrimo: (manualDistaccoOverrides[r.sourcePosGara] ?? r.distaccoDalPrimo ?? "").trim(),
     }))
   }, [previewRows, manualPilotOverrides, manualAutoOverrides, manualDistaccoOverrides])
-    const hasManualPilotOverrides = useMemo(() => {
-    return Object.keys(manualPilotOverrides).length > 0
-  }, [manualPilotOverrides])
+
+const detectedBmwLega = useMemo(() => {
+  return getBmwLeagueFromRows(displayRows)
+}, [displayRows])
+
+const effectiveLegaResolved = useMemo(() => {
+  const manual = String(manualLegaOverride || "").trim().toUpperCase()
+  if (manual) return manual
+
+  const detectedMeta = String(unionMeta.lega || "").trim().toUpperCase()
+  if (detectedMeta) return detectedMeta
+
+  // SOLO BMW CUP
+  if (bmwCupMode) {
+    return String(detectedBmwLega || "").trim().toUpperCase()
+  }
+
+  return ""
+}, [manualLegaOverride, unionMeta.lega, detectedBmwLega, bmwCupMode])
+
+const effectiveLega = effectiveLegaResolved
+
+const hasManualPilotOverrides = useMemo(() => {
+  return Object.keys(manualPilotOverrides).length > 0
+}, [manualPilotOverrides])
 
   const hasManualDistaccoOverrides = useMemo(() => {
     return Object.keys(manualDistaccoOverrides).length > 0
@@ -4046,6 +4092,8 @@ const normalizedGaraForOutput = useMemo(() => {
     return [...updatedComparable, ...updatedNonComparable, ...updatedDsq]
   }, [displayRows, penalties, lapOverrides, dnfOverrides, shouldSyncDgTableWithManualEdits])
 
+  
+
   const matchSummary = useMemo<PrtMatchSummary>(() => {
   if (finalRows.length === 0) {
     return {
@@ -4172,7 +4220,7 @@ const normalizedGaraForOutput = useMemo(() => {
   // ---------------- META ----------------
   const garaValue = String(effectiveGara || "").trim()
   const lobbyValue = String(unionMeta.lobby || "").trim()
-  const legaValue = String(effectiveLega || "").trim()
+  const legaValue = String(effectiveLegaResolved || "").trim()
 
   if (!garaValue || garaValue === "-") {
   gara = "warn"
@@ -4283,8 +4331,13 @@ const normalizedGaraForOutput = useMemo(() => {
   }, [dgTableRows, lapOverrides])
 
   const finalCsv = useMemo(
-  () => buildCsvFromRows(finalRows, { ...unionMeta, gara: normalizedGaraForOutput, lega: effectiveLega }),
-  [finalRows, unionMeta, normalizedGaraForOutput, effectiveLega]
+  () =>
+    buildCsvFromRows(finalRows, {
+      ...unionMeta,
+      gara: normalizedGaraForOutput,
+      lega: effectiveLegaResolved,
+    }),
+  [finalRows, unionMeta, normalizedGaraForOutput, effectiveLegaResolved]
 )
 
   const hasAnyPenalty = useMemo(
@@ -7156,7 +7209,7 @@ if (!authorized) {
       {showMeta && (
         <>
           <Separator />
-          <HeaderBadge label="LEGA" value={effectiveLega} variant="gold" />
+          <HeaderBadge label="LEGA" value={effectiveLegaResolved} variant="gold" />
         </>
       )}
 
@@ -7835,7 +7888,7 @@ if (!authorized) {
     <ResultsTable
   previewRows={finalRows}
   bestRaceLap={bestRaceLap}
-  unionMeta={{ ...unionMeta, gara: normalizedGaraForOutput, lega: effectiveLega }}
+  unionMeta={{ ...unionMeta, gara: normalizedGaraForOutput, lega: effectiveLegaResolved }}
   prtMode={prtMode}
   unionMode={unionMode}
   currentSprint={currentSprint}
@@ -8689,7 +8742,7 @@ if (!authorized) {
             letterSpacing: 0.4,
           }}
         >
-          Round {currentRound} • Lega {effectiveLega || "-"}
+          Round {currentRound} • Lega {effectiveLegaResolved || "-"}
         </div>
 
         <button
@@ -8806,7 +8859,7 @@ if (!authorized) {
         Round attuale: <b>R{currentRound}</b>
       </div>
       <div>
-        Lega corrente: <b>{effectiveLega || "-"}</b>
+        Lega corrente: <b>{effectiveLegaResolved || "-"}</b>
       </div>
       <div>
         Sprint 1: <b>{savedSprintPreviews.sprint1 ? "salvata" : "non salvata"}</b>
@@ -10131,7 +10184,7 @@ if (!authorized) {
                 winner={winner}
                 bestQuali={bestQuali}
                 bestRaceLap={bestRaceLap}
-                unionMeta={{ ...unionMeta, gara: normalizedGaraForOutput, lega: effectiveLega }}
+                unionMeta={{ ...unionMeta, gara: normalizedGaraForOutput, lega: effectiveLegaResolved }}
                 showMeta={showMeta}
                 showLobby={showLobby}
                 exporting={true}
@@ -10140,7 +10193,7 @@ if (!authorized) {
               <ResultsTable
   previewRows={finalRows}
   bestRaceLap={bestRaceLap}
-  unionMeta={{ ...unionMeta, gara: normalizedGaraForOutput, lega: effectiveLega }}
+  unionMeta={{ ...unionMeta, gara: normalizedGaraForOutput, lega: effectiveLegaResolved }}
   prtMode={prtMode}
   unionMode={unionMode}
   currentSprint={currentSprint}
