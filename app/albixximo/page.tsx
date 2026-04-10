@@ -429,6 +429,73 @@ function getPointsForPrtRow(r: ExtractRow, bestRaceLap: string): number {
   return getBmwPointsForDisplayRow(r, bestRaceLap)
 }
 
+function ensureLeagueDriversFromTeams(
+  rows: DisplayRow[],
+  teams: TeamEntry[],
+  currentLega: string
+): DisplayRow[] {
+  if (!rows.length) return rows
+
+  const normalizeName = (value: string) => {
+    let v = String(value || "").trim().toLowerCase()
+    v = v.replace(/^prt[\s._-]*/i, "")
+    v = v.replace(/[_\-.]/g, "")
+    v = v.replace(/\s+/g, "")
+    return v
+  }
+
+  const normalizedLega = String(currentLega || "").trim().toUpperCase()
+  if (!normalizedLega) return rows
+
+  const leagueDrivers =
+    normalizedLega === "PRO"
+      ? teams.map((team) => String(team.lobby1 || "").trim()).filter(Boolean)
+      : normalizedLega === "PRO-AMA"
+        ? teams.map((team) => String(team.lobby2 || "").trim()).filter(Boolean)
+        : normalizedLega === "AMA"
+          ? teams.map((team) => String(team.lobby3 || "").trim()).filter(Boolean)
+          : []
+
+  if (leagueDrivers.length === 0) return rows
+
+  const presentNames = new Set(
+    rows.map((r) => normalizeName(String(r.pilota || "")))
+  )
+
+  const missingDrivers = leagueDrivers.filter(
+    (name) => !presentNames.has(normalizeName(name))
+  )
+
+  if (missingDrivers.length === 0) return rows
+
+  const lastPos = Math.max(...rows.map((r) => r.posGara || 0), 0)
+
+  const dnpRows: DisplayRow[] = missingDrivers.map((name, i) => ({
+    ...(rows[0] || {
+      posGara: 0,
+      pilota: "",
+      auto: "",
+      tempoTotaleGara: "",
+      distaccoDalPrimo: "",
+      migliorGiroGara: "",
+      tempoQualifica: "",
+      pole: "",
+      sourcePosGara: 0,
+    }),
+    posGara: lastPos + i + 1,
+    sourcePosGara: 1000 + lastPos + i + 1,
+    pilota: name,
+    auto: "",
+    tempoTotaleGara: "DNP",
+    distaccoDalPrimo: "DNP",
+    migliorGiroGara: "",
+    tempoQualifica: "",
+    pole: "",
+  }))
+
+  return [...rows, ...dnpRows]
+}
+
 function TableCell({
   children,
   align,
@@ -3838,13 +3905,33 @@ const normalizedGaraForOutput = useMemo(() => {
   }, [rows, csv])
 
   const displayRows = useMemo<DisplayRow[]>(() => {
-    return previewRows.map((r) => ({
-      ...r,
-      pilota: (manualPilotOverrides[r.sourcePosGara] ?? r.pilota ?? "").trim(),
-      auto: (manualAutoOverrides[r.sourcePosGara] ?? r.auto ?? "").trim(),
-      distaccoDalPrimo: (manualDistaccoOverrides[r.sourcePosGara] ?? r.distaccoDalPrimo ?? "").trim(),
-    }))
-  }, [previewRows, manualPilotOverrides, manualAutoOverrides, manualDistaccoOverrides])
+  const mappedRows = previewRows.map((r) => ({
+    ...r,
+    pilota: (manualPilotOverrides[r.sourcePosGara] ?? r.pilota ?? "").trim(),
+    auto: (manualAutoOverrides[r.sourcePosGara] ?? r.auto ?? "").trim(),
+    distaccoDalPrimo: (manualDistaccoOverrides[r.sourcePosGara] ?? r.distaccoDalPrimo ?? "").trim(),
+  }))
+
+  const detectedLegaFromMappedRows = getBmwLeagueFromRows(mappedRows)
+  const currentLegaForCompletion =
+    String(manualLegaOverride || "").trim().toUpperCase() ||
+    String(detectedLegaFromMappedRows || "").trim().toUpperCase() ||
+    String(unionMeta.lega || "").trim().toUpperCase()
+
+  return ensureLeagueDriversFromTeams(
+    mappedRows,
+    teams,
+    currentLegaForCompletion
+  )
+}, [
+  previewRows,
+  manualPilotOverrides,
+  manualAutoOverrides,
+  manualDistaccoOverrides,
+  manualLegaOverride,
+  unionMeta.lega,
+  teams,
+])
 
 const detectedBmwLega = useMemo(() => {
   return getBmwLeagueFromRows(displayRows)
