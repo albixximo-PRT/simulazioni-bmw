@@ -1435,7 +1435,7 @@ function ResultsTable({
   tableTitle?: string
   showTeamInsteadOfAuto?: boolean
   hideQualifyingColumn?: boolean
-  resolveTeamName?: (pilotName: string) => string
+  resolveTeamName?: (row: DisplayRow) => string
 }) {
   const showMeta = !forceHideMeta && (prtMode || unionMode)
   const showLobby = !forceHideMeta && unionMode
@@ -1597,7 +1597,7 @@ const isP3 = r.posGara === 3
 const isPodium = isP1 || isP2 || isP3
 
 const resolvedTeamName = showTeamInsteadOfAuto
-  ? (resolveTeamName?.(r.pilota) || "-")
+  ? (resolveTeamName?.(r) || "-")
   : r.auto
 
               const podiumBg = isP1
@@ -3041,6 +3041,29 @@ useEffect(() => {
 
     return null
   }
+
+  function resolveTeamForDisplayRow(row: DisplayRow): string {
+  const originalPreviewRow = previewRows.find(
+    (candidate) => candidate.sourcePosGara === row.sourcePosGara
+  )
+
+  if (!originalPreviewRow) return "-"
+
+  const finalPilotName = String(row.pilota || "").trim()
+  const originalTeam = findTeamByPilot(originalPreviewRow.pilota)?.team || "-"
+
+  if (!finalPilotName) return originalTeam
+
+  const matchedPreviewRow = previewRows.find(
+    (candidate) => normalizePilot(candidate.pilota) === normalizePilot(finalPilotName)
+  )
+
+  if (matchedPreviewRow) {
+    return findTeamByPilot(matchedPreviewRow.pilota)?.team || originalTeam
+  }
+
+  return originalTeam
+}
 
   function getBmwLeagueFromRows(rowsToCheck: DisplayRow[]): string {
   const counts: Record<string, number> = {}
@@ -7943,7 +7966,7 @@ if (!authorized) {
   tableTitle={`Classifica Sprint ${currentSprint} (output)`}
   showTeamInsteadOfAuto={showTeamInsteadOfAutoInSprintTables}
   hideQualifyingColumn={hideQualifyingColumnInCurrentSprint}
-  resolveTeamName={(pilotName) => findTeamByPilot(pilotName)?.team || "-"}
+  resolveTeamName={(row) => resolveTeamForDisplayRow(row)}
 />
 
     {displayRows.length > 0 && (
@@ -10238,7 +10261,7 @@ if (!authorized) {
   tableTitle={`Classifica Sprint ${currentSprint} definitiva`}
   showTeamInsteadOfAuto={showTeamInsteadOfAutoInSprintTables}
   hideQualifyingColumn={hideQualifyingColumnInCurrentSprint}
-  resolveTeamName={(pilotName) => findTeamByPilot(pilotName)?.team || "-"}
+  resolveTeamName={(row) => resolveTeamForDisplayRow(row)}
 />
             </div>
           )}
