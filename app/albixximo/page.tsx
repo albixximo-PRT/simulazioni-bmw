@@ -3043,34 +3043,26 @@ useEffect(() => {
   }
 
   function resolveTeamForDisplayRow(row: DisplayRow): string {
+  const finalPilotName = String(row.pilota || "").trim()
   const originalPreviewRow = previewRows.find(
     (candidate) => candidate.sourcePosGara === row.sourcePosGara
   )
+  const originalPilotName = String(originalPreviewRow?.pilota || "").trim()
 
-  if (!originalPreviewRow) return "-"
-
-  const finalPilotName = String(row.pilota || "").trim()
-  const originalTeam = findTeamByPilot(originalPreviewRow.pilota)?.team || "-"
-
-  if (!finalPilotName) return originalTeam
-
-  // 1) Prima prova: il nome finale matcha direttamente il roster team
-  const directTeamMatch = findTeamByPilot(finalPilotName)
-  if (directTeamMatch?.team) {
-    return directTeamMatch.team
+  // 1) Prima: nome finale corretto manualmente
+  const directFinalMatch = findTeamByPilot(finalPilotName)
+  if (directFinalMatch?.team) {
+    return directFinalMatch.team
   }
 
-  // 2) Seconda prova: il nome finale matcha un altro pilota reale di previewRows
-  const matchedPreviewRow = previewRows.find(
-    (candidate) => normalizePilot(candidate.pilota) === normalizePilot(finalPilotName)
-  )
-
-  if (matchedPreviewRow) {
-    return findTeamByPilot(matchedPreviewRow.pilota)?.team || originalTeam
+  // 2) Poi: nome originale OCR della stessa riga
+  const originalMatch = findTeamByPilot(originalPilotName)
+  if (originalMatch?.team) {
+    return originalMatch.team
   }
 
-  // 3) Fallback: resta il team originale della riga
-  return originalTeam
+  // 3) Ultimo fallback
+  return "-"
 }
 
   function getBmwLeagueFromRows(rowsToCheck: DisplayRow[]): string {
