@@ -265,7 +265,15 @@ function normalizePilot(s: string) {
 
     // Fix OCR noti
     .replace(/\bPRT[-_]?timmycice\b/gi, "PRT-timmycicc")
+
+    // PTR.BSO / ptrbso — alias OCR fragili
     .replace(/\bptroso\b/gi, "ptrbso")
+    .replace(/\bprtbso\b/gi, "ptrbso")
+    .replace(/\bptrbs0\b/gi, "ptrbso")
+    .replace(/\bpttrbso\b/gi, "ptrbso")
+    .replace(/\bptrlbso\b/gi, "ptrbso")
+    .replace(/\bptr[._-]?bso\b/gi, "ptrbso")
+
     .replace(/\bneapolis_100\b/gi, "neapolis100")
     .replace(/\bSamueLx\b/gi, "xSamueLx")
     .replace(/\bGabo_Casper85\b/gi, "GaboCasper85")
