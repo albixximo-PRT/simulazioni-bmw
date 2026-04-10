@@ -9441,106 +9441,72 @@ if (!authorized) {
     />
 
     <select
-      defaultValue=""
-      onChange={(e) => {
-        const selected = e.target.value
-        if (!selected) return
+  defaultValue=""
+  onChange={(e) => {
+    const selected = e.target.value
+    if (!selected) return
 
-        const currentKey = row.sourcePosGara
+    const currentKey = row.sourcePosGara
 
-        const otherRow = displayRows.find(
-          (candidate) =>
-            candidate.sourcePosGara !== currentKey &&
-            String(candidate.pilota ?? "").trim() === selected
-        )
+    const otherRow = displayRows.find(
+      (candidate) =>
+        candidate.sourcePosGara !== currentKey &&
+        String(candidate.pilota ?? "").trim() === selected
+    )
 
-        if (!otherRow) {
-          e.currentTarget.value = ""
-          return
-        }
+    if (!otherRow) {
+      e.currentTarget.value = ""
+      return
+    }
 
-        const otherKey = otherRow.sourcePosGara
+    const otherKey = otherRow.sourcePosGara
 
-        const nextDraft: Record<number, string> = {}
+    setManualPilotDraft((prev) => {
+      const nextDraft: Record<number, string> = {}
 
-        for (const r of displayRows) {
-          nextDraft[r.sourcePosGara] = String(r.pilota ?? "").trim()
-        }
+      for (const r of displayRows) {
+        nextDraft[r.sourcePosGara] = String(
+          prev[r.sourcePosGara] ?? r.pilota ?? ""
+        ).trim()
+      }
 
-        const currentPilot = nextDraft[currentKey]
-        const otherPilot = nextDraft[otherKey]
+      const currentPilot = nextDraft[currentKey]
+      const otherPilot = nextDraft[otherKey]
 
-        nextDraft[currentKey] = otherPilot
-        nextDraft[otherKey] = currentPilot
+      nextDraft[currentKey] = otherPilot
+      nextDraft[otherKey] = currentPilot
 
-        const cleaned: Record<number, string> = {}
+      return nextDraft
+    })
 
-        for (const baseRow of previewRows) {
-          const draftValue = String(nextDraft[baseRow.sourcePosGara] ?? "").trim()
-          const originalValue = String(baseRow.pilota ?? "").trim()
+    e.currentTarget.value = ""
+  }}
+  style={{
+    width: "100%",
+    padding: "10px 12px",
+    borderRadius: 10,
+    border: "1px solid rgba(255,255,255,0.14)",
+    background: "rgba(0,0,0,0.24)",
+    color: "white",
+    boxSizing: "border-box",
+  }}
+>
+  <option value="" style={{ background: "#11151d", color: "white" }}>
+    Scambia con...
+  </option>
 
-          if (draftValue !== originalValue) {
-            cleaned[baseRow.sourcePosGara] = draftValue
-          }
-        }
-
-        const nextAutoOverrides: Record<number, string> = {}
-
-        for (const baseRow of previewRows) {
-          const finalPilotName = String(
-            cleaned[baseRow.sourcePosGara] ?? baseRow.pilota ?? ""
-          ).trim()
-
-          const originalAuto = String(baseRow.auto ?? "").trim()
-
-          if (!finalPilotName) continue
-
-          const sourceRow = previewRows.find(
-            (candidate) => normalizePilot(candidate.pilota) === normalizePilot(finalPilotName)
-          )
-
-          if (!sourceRow) continue
-
-          const sourceAuto = String(sourceRow.auto ?? "").trim()
-
-          if (sourceAuto !== originalAuto) {
-            nextAutoOverrides[baseRow.sourcePosGara] = sourceAuto
-          }
-        }
-
-        setManualPilotOverrides(cleaned)
-        setManualAutoOverrides(nextAutoOverrides)
-        setManualPilotDraft({})
-        setShowPilotModal(false)
-
-        e.currentTarget.value = ""
-      }}
-      style={{
-        width: "100%",
-        padding: "10px 12px",
-        borderRadius: 10,
-        border: "1px solid rgba(255,255,255,0.14)",
-        background: "rgba(0,0,0,0.24)",
-        color: "white",
-        boxSizing: "border-box",
-      }}
-    >
-      <option value="" style={{ background: "#11151d", color: "white" }}>
-        Scambia con...
+  {displayRows
+    .filter((candidate) => candidate.sourcePosGara !== row.sourcePosGara)
+    .map((candidate) => (
+      <option
+        key={`pilot-option-${row.sourcePosGara}-${candidate.sourcePosGara}`}
+        value={candidate.pilota}
+        style={{ background: "#11151d", color: "white" }}
+      >
+        {candidate.pilota}
       </option>
-
-      {displayRows
-        .filter((candidate) => candidate.sourcePosGara !== row.sourcePosGara)
-        .map((candidate) => (
-          <option
-            key={`pilot-option-${row.sourcePosGara}-${candidate.sourcePosGara}`}
-            value={candidate.pilota}
-            style={{ background: "#11151d", color: "white" }}
-          >
-            {candidate.pilota}
-          </option>
-        ))}
-    </select>
+    ))}
+</select>
   </div>
 </td>
                   </tr>
