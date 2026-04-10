@@ -6852,17 +6852,7 @@ function resetEntireCurrentRound() {
 }
 
 function applyPilotCorrections() {
-  const cleaned: Record<number, string> = {}
-
-  for (const row of pilotModalRows) {
-    const draftValue = String(manualPilotDraft[row.sourcePosGara] ?? "").trim()
-    const originalValue = String(row.pilota ?? "").trim()
-
-    if (draftValue && draftValue !== originalValue) {
-      cleaned[row.sourcePosGara] = draftValue
-    }
-  }
-
+  const nextPilotOverrides: Record<number, string> = {}
   const nextAutoOverrides: Record<number, string> = {}
 
   for (const modalRow of pilotModalRows) {
@@ -6872,38 +6862,38 @@ function applyPilotCorrections() {
 
     if (!originalPreviewRow) continue
 
+    const originalPilotName = String(originalPreviewRow.pilota ?? "").trim()
     const finalPilotName = String(
-      cleaned[modalRow.sourcePosGara] ?? modalRow.pilota ?? ""
+      manualPilotDraft[modalRow.sourcePosGara] ?? modalRow.pilota ?? ""
     ).trim()
 
-    const originalAuto = String(originalPreviewRow.auto ?? "").trim()
-    const currentModalAuto = String(modalRow.auto ?? "").trim()
-
-    if (!finalPilotName) {
-      if (currentModalAuto !== originalAuto) {
-        nextAutoOverrides[modalRow.sourcePosGara] = currentModalAuto
-      }
-      continue
+    if (finalPilotName && finalPilotName !== originalPilotName) {
+      nextPilotOverrides[modalRow.sourcePosGara] = finalPilotName
     }
 
-    const sourceRow = previewRows.find(
-      (candidate) => normalizePilot(candidate.pilota) === normalizePilot(finalPilotName)
+    const originalAuto = String(originalPreviewRow.auto ?? "").trim()
+
+    const matchedPreviewRow = previewRows.find(
+      (candidate) =>
+        normalizePilot(candidate.pilota) === normalizePilot(finalPilotName)
     )
 
-    if (sourceRow) {
-      const sourceAuto = String(sourceRow.auto ?? "").trim()
+    if (matchedPreviewRow) {
+      const matchedAuto = String(matchedPreviewRow.auto ?? "").trim()
 
-      if (sourceAuto !== originalAuto) {
-        nextAutoOverrides[modalRow.sourcePosGara] = sourceAuto
+      if (matchedAuto && matchedAuto !== originalAuto) {
+        nextAutoOverrides[modalRow.sourcePosGara] = matchedAuto
       }
     } else {
-      if (currentModalAuto !== originalAuto) {
-        nextAutoOverrides[modalRow.sourcePosGara] = currentModalAuto
+      const currentDisplayedAuto = String(modalRow.auto ?? "").trim()
+
+      if (currentDisplayedAuto && currentDisplayedAuto !== originalAuto) {
+        nextAutoOverrides[modalRow.sourcePosGara] = currentDisplayedAuto
       }
     }
   }
 
-  setManualPilotOverrides(cleaned)
+  setManualPilotOverrides(nextPilotOverrides)
   setManualAutoOverrides(nextAutoOverrides)
   setManualPilotDraft({})
   setPilotModalRows([])
