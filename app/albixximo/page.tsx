@@ -9591,7 +9591,7 @@ if (!authorized) {
             boxShadow: "0 0 22px rgba(160,90,255,0.12)",
           }}
         >
-          Applica correzioni
+          APPLICA CORREZIONI TEST 999
         </button>
       </div>
     </div>
