@@ -7335,6 +7335,31 @@ if (!authorized) {
                     />
                     Modalità PRT
                   </label>
+                  <label
+  style={{
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 10,
+    padding: "10px 12px",
+    borderRadius: 14,
+    border: "1px solid rgba(255,255,255,0.12)",
+    background: bmwCupMode ? "rgba(34,197,94,0.16)" : "rgba(255,255,255,0.06)",
+    color: "white",
+    cursor: "pointer",
+    fontWeight: 800,
+    letterSpacing: 0.3,
+    fontSize: 12,
+    userSelect: "none",
+  }}
+>
+  <input
+    type="checkbox"
+    checked={bmwCupMode}
+    onChange={(e) => setBmwCupMode(e.target.checked)}
+    style={{ transform: "scale(1.1)" }}
+  />
+  Modalità BMW CUP
+</label>
                 </div>
               </div>
 
