@@ -385,35 +385,48 @@ const PENALTY_RULES: Record<string, PenaltyRule> = {
 
 const AMMONITION_CODES = new Set(["P01", "P25", "P31"])
 const DSQ_CODES = new Set(["P16", "P27", "P35", "DSQ"])
+const BMW_POINTS_BY_POSITION: Record<number, number> = {
+  1: 25,
+  2: 22,
+  3: 19,
+  4: 16,
+  5: 14,
+  6: 12,
+  7: 10,
+  8: 8,
+  9: 6,
+  10: 5,
+  11: 4,
+  12: 3,
+  13: 2,
+  14: 1,
+}
 
-function getPointsForPrtRow(r: ExtractRow, bestRaceLap: string): number {
-  const basePointsMap: Record<number, number> = {
-    1: 30,
-    2: 27,
-    3: 24,
-    4: 22,
-    5: 20,
-    6: 18,
-    7: 16,
-    8: 14,
-    9: 12,
-    10: 9,
-    11: 7,
-    12: 5,
-    13: 3,
-    14: 1,
-  }
+function getBmwPointsForDisplayRow(r: ExtractRow, bestRaceLap: string): number {
+  const rawTempo = tempoLikeGt7(r).trim().toUpperCase()
+
+  const isZeroPointsStatus =
+    rawTempo === "BOX" ||
+    rawTempo === "DNF" ||
+    rawTempo === "DNFV" ||
+    rawTempo === "DSQ"
 
   const isPole = (r.pole || "").trim().toUpperCase() === "POLE"
+
   const bestLapTime = (bestRaceLap.split("  ").pop() || "").trim()
-  const isBestLap = !!bestLapTime && (r.migliorGiroGara || "").trim() === bestLapTime
+  const isBestLap =
+    !!bestLapTime &&
+    (r.migliorGiroGara || "").trim() === bestLapTime
 
-  let points = basePointsMap[r.posGara] ?? 0
+  const basePoints = isZeroPointsStatus
+    ? 0
+    : BMW_POINTS_BY_POSITION[r.posGara] ?? 0
 
-  if (isPole) points += 1
-  if (isBestLap) points += 1
+  return basePoints + (isPole ? 1 : 0) + (isBestLap ? 1 : 0)
+}
 
-  return points
+function getPointsForPrtRow(r: ExtractRow, bestRaceLap: string): number {
+  return getBmwPointsForDisplayRow(r, bestRaceLap)
 }
 
 function TableCell({
