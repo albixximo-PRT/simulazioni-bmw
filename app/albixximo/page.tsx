@@ -4528,15 +4528,16 @@ if (hasEmptyAuto) {
 }, [finalRows, bestRaceLap])
 
 const currentBmwSprintSnapshot = useMemo<BmwSprintSnapshot | null>(() => {
-  if (finalRows.length === 0) return null
+  if (displayRows.length === 0) return null
 
   return {
     sprint: currentSprint === 1 ? "sprint1" : "sprint2",
     hasQualifying: currentSprint === 1,
     savedAt: new Date().toISOString(),
 
-    finalRows,
-    finalCsv,
+    // SALVIAMO LA BASE, NON IL POST-PENALITÀ
+    finalRows: displayRows,
+    finalCsv: csv,
     unionMeta: {
       ...unionMeta,
       gara: normalizedGaraForOutput,
@@ -4561,8 +4562,8 @@ const currentBmwSprintSnapshot = useMemo<BmwSprintSnapshot | null>(() => {
   }
 }, [
   currentSprint,
-  finalRows,
-  finalCsv,
+  displayRows,
+  csv,
   unionMeta,
   normalizedGaraForOutput,
   effectiveLegaResolved,
@@ -6908,8 +6909,12 @@ function reopenSavedLeagueSprint(
 
   const restoredLobby = String(sprintSnapshot.unionMeta?.lobby || "").trim()
 
-  setCsv(sprintSnapshot.finalCsv || "")
-  setRows(Array.isArray(sprintSnapshot.finalRows) ? sprintSnapshot.finalRows : [])
+  setCsv(typeof sprintSnapshot.finalCsv === "string" ? sprintSnapshot.finalCsv : "")
+setRows(
+  Array.isArray(sprintSnapshot.finalRows)
+    ? (sprintSnapshot.finalRows as unknown as ExtractRow[])
+    : []
+)
 
   setUnionMeta({
     gara: restoredGara,
