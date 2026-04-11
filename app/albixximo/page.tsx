@@ -9070,33 +9070,6 @@ if (!authorized) {
       }}
     >
       {(["PRO", "PRO-AMA", "AMA"] as BmwLeagueName[]).map((league) => {
-       <div
-  style={{
-    marginTop: 4,
-    display: "flex",
-    justifyContent: "stretch",
-  }}
->
-  <button
-    onClick={() => setShowResetAllLeaguesModal(true)}
-    style={{
-      width: "100%",
-      padding: "12px 16px",
-      borderRadius: 12,
-      border: "1px solid rgba(239,68,68,0.30)",
-      background: "rgba(239,68,68,0.16)",
-      color: "white",
-      cursor: "pointer",
-      fontWeight: 900,
-      textTransform: "uppercase",
-      letterSpacing: 0.5,
-      fontSize: 12,
-      boxShadow: "0 0 18px rgba(239,68,68,0.08)",
-    }}
-  >
-    Resetta tutte le leghe del round corrente
-  </button>
-</div> 
         const snapshot = currentRoundSnapshot?.leagues?.[league] || null
         const hasSprint1 = !!snapshot?.sprint1
         const hasSprint2 = !!snapshot?.sprint2
@@ -9165,7 +9138,7 @@ if (!authorized) {
               </div>
             </div>
 
-                        <div
+            <div
               style={{
                 display: "grid",
                 gap: 8,
@@ -9215,194 +9188,34 @@ if (!authorized) {
         )
       })}
     </div>
+
     <div
-  style={{
-    display: "flex",
-    justifyContent: "space-between",
-    gap: 12,
-    flexWrap: "wrap",
-    alignItems: "center",
-  }}
->
-  <div style={{ display: "grid", gap: 4 }}>
-    <div style={{ fontWeight: 900, opacity: 0.96 }}>
-      Archivio leghe salvate nel Round corrente
-    </div>
-    <div style={{ fontSize: 12, opacity: 0.74 }}>
-      Riapri rapidamente una lega già salvata, scegli la sprint da caricare e modifica direttamente la sessione prima di sovrascriverla.
-    </div>
-  </div>
-
-  <div
-    style={{
-      padding: "8px 12px",
-      borderRadius: 12,
-      border: "1px solid rgba(255,255,255,0.10)",
-      background: "rgba(255,255,255,0.05)",
-      fontSize: 12,
-      fontWeight: 900,
-      textTransform: "uppercase",
-      letterSpacing: 0.4,
-    }}
-  >
-    Round {currentRound}
-  </div>
-</div>
-
-<div
-  style={{
-    display: "grid",
-    gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-    gap: 12,
-  }}
->
-  {(["PRO", "PRO-AMA", "AMA"] as BmwLeagueName[]).map((league) => {
-    const snapshot = currentRoundSnapshot?.leagues?.[league] || null
-    const hasSprint1 = !!snapshot?.sprint1
-    const hasSprint2 = !!snapshot?.sprint2
-    const isComplete = hasSprint1 && hasSprint2
-
-    return (
-      <div
-        key={league}
+      style={{
+        marginTop: 4,
+        display: "flex",
+        justifyContent: "stretch",
+      }}
+    >
+      <button
+        onClick={() => setShowResetAllLeaguesModal(true)}
         style={{
-          borderRadius: 14,
-          border: snapshot
-            ? "1px solid rgba(255,255,255,0.12)"
-            : "1px solid rgba(255,255,255,0.08)",
-          background: snapshot
-            ? "rgba(255,255,255,0.05)"
-            : "rgba(255,255,255,0.03)",
-          padding: 12,
-          display: "grid",
-          gap: 10,
+          width: "100%",
+          padding: "12px 16px",
+          borderRadius: 12,
+          border: "1px solid rgba(239,68,68,0.30)",
+          background: "rgba(239,68,68,0.16)",
+          color: "white",
+          cursor: "pointer",
+          fontWeight: 900,
+          textTransform: "uppercase",
+          letterSpacing: 0.5,
+          fontSize: 12,
+          boxShadow: "0 0 18px rgba(239,68,68,0.08)",
         }}
       >
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            gap: 10,
-          }}
-        >
-          <div style={{ fontWeight: 900, letterSpacing: 0.4 }}>
-            {league}
-          </div>
-
-          <div
-            style={{
-              padding: "6px 10px",
-              borderRadius: 999,
-              border: "1px solid rgba(255,255,255,0.10)",
-              background: !snapshot
-                ? "rgba(255,255,255,0.05)"
-                : isComplete
-                  ? "rgba(34,197,94,0.14)"
-                  : "rgba(245,158,11,0.14)",
-              fontSize: 11,
-              fontWeight: 900,
-              textTransform: "uppercase",
-            }}
-          >
-            {!snapshot ? "vuota" : isComplete ? "completa" : "parziale"}
-          </div>
-        </div>
-
-        <div
-          style={{
-            display: "grid",
-            gap: 6,
-            fontSize: 12,
-            opacity: 0.82,
-          }}
-        >
-          <div>
-            Sprint 1: <b>{hasSprint1 ? "salvata" : "non salvata"}</b>
-          </div>
-          <div>
-            Sprint 2: <b>{hasSprint2 ? "salvata" : "non salvata"}</b>
-          </div>
-        </div>
-
-        <div
-          style={{
-            display: "grid",
-            gap: 8,
-          }}
-        >
-          <button
-            onClick={() => openReopenLeagueModal(league)}
-            disabled={!snapshot}
-            style={{
-              padding: "10px 12px",
-              borderRadius: 10,
-              border: "1px solid rgba(160,90,255,0.30)",
-              background: snapshot ? "rgba(160,90,255,0.20)" : "rgba(255,255,255,0.06)",
-              color: "white",
-              cursor: snapshot ? "pointer" : "not-allowed",
-              fontWeight: 800,
-              textTransform: "uppercase",
-              fontSize: 12,
-              opacity: snapshot ? 1 : 0.5,
-              boxShadow: snapshot ? "0 0 18px rgba(160,90,255,0.10)" : "none",
-            }}
-          >
-            Riapri lega
-          </button>
-
-          <button
-            onClick={() => openResetLeagueModal(league)}
-            disabled={!snapshot}
-            style={{
-              padding: "10px 12px",
-              borderRadius: 10,
-              border: "1px solid rgba(239,68,68,0.30)",
-              background: snapshot ? "rgba(239,68,68,0.16)" : "rgba(255,255,255,0.06)",
-              color: "white",
-              cursor: snapshot ? "pointer" : "not-allowed",
-              fontWeight: 800,
-              textTransform: "uppercase",
-              fontSize: 12,
-              opacity: snapshot ? 1 : 0.5,
-              boxShadow: snapshot ? "0 0 18px rgba(239,68,68,0.08)" : "none",
-            }}
-          >
-            Resetta lega
-          </button>
-        </div>
-      </div>
-    )
-  })}
-</div>
-
-<div
-  style={{
-    marginTop: 4,
-    display: "flex",
-    justifyContent: "stretch",
-  }}
->
-  <button
-    onClick={() => setShowResetAllLeaguesModal(true)}
-    style={{
-      width: "100%",
-      padding: "12px 16px",
-      borderRadius: 12,
-      border: "1px solid rgba(239,68,68,0.30)",
-      background: "rgba(239,68,68,0.16)",
-      color: "white",
-      cursor: "pointer",
-      fontWeight: 900,
-      textTransform: "uppercase",
-      letterSpacing: 0.5,
-      fontSize: 12,
-      boxShadow: "0 0 18px rgba(239,68,68,0.08)",
-    }}
-  >
-    Resetta tutte le leghe del round corrente
-  </button>
-</div>
+        Resetta tutte le leghe del round corrente
+      </button>
+    </div>
   </div>
 )}
 
