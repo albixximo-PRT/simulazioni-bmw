@@ -3002,6 +3002,7 @@ const [showMissingPilotWarning, setShowMissingPilotWarning] = useState(false)
 
   const [currentRound, setCurrentRound] = useState<1 | 2 | 3 | 4>(1)
 const [currentSprint, setCurrentSprint] = useState<1 | 2>(1)
+const [showRoundSelector, setShowRoundSelector] = useState(false)
 const [pendingRoundChange, setPendingRoundChange] = useState<1 | 2 | 3 | 4 | null>(null)
 const [showRoundChangeConfirmModal, setShowRoundChangeConfirmModal] = useState(false)
 
@@ -7811,92 +7812,42 @@ if (!authorized) {
       )}
     </div>
 
-    <button
-      onClick={() => setShowReq((v) => !v)}
-      style={{
-        padding: "10px 12px",
-        borderRadius: 12,
-        border: "1px solid rgba(255,255,255,0.14)",
-        background: "rgba(0,0,0,0.18)",
-        color: "white",
-        cursor: "pointer",
-        fontWeight: 900,
-        letterSpacing: 0.4,
-        textTransform: "uppercase",
-        fontSize: 12,
-      }}
-      title="Mostra/Nascondi requisiti"
-    >
-      {showReq ? "Nascondi requisiti" : "Requisiti"}
-    </button>
-  </div>
-
-  {showReq && (
-    <div style={{ marginTop: 10, fontSize: 13, opacity: 0.82, lineHeight: 1.45 }}>
-      <div>
-        Minimo richiesto: <b>Qualifica 1–8</b> e <b>Gara 1–8</b>. Gli screen <b>9–N</b> sono opzionali.
-      </div>
-      <div style={{ marginTop: 8, opacity: 0.85 }}>
-        <b>Nota CSV:</b> la tabella resta in formato visuale GT7, mentre il CSV scaricato è in formato compatibile con il tuo sheet.
-      </div>
-      <div style={{ marginTop: 8, opacity: 0.85 }}>
-        <b>Penalità DG:</b> applicabili ai piloti con tempo gara numerico. Per i doppiati inserisci manualmente il gap finale dal leader.
-      </div>
-    </div>
-  )}
-</div>
-
-          <div style={{ padding: 18, display: "grid", gap: 16 }}>
-  <div
+    <div style={{ position: "relative" }}>
+  <button
+    onClick={() => setShowRoundSelector((v) => !v)}
     style={{
-      borderRadius: 16,
-      border: "1px solid rgba(255,255,255,0.10)",
+      padding: "10px 14px",
+      borderRadius: 12,
+      border: "1px solid rgba(255,255,255,0.14)",
       background: "rgba(0,0,0,0.18)",
-      padding: 14,
-      display: "grid",
-      gap: 12,
-      boxShadow: "0 10px 30px rgba(0,0,0,0.20)",
+      color: "white",
+      cursor: "pointer",
+      fontWeight: 900,
+      letterSpacing: 0.4,
+      textTransform: "uppercase",
+      fontSize: 12,
+      minWidth: 120,
     }}
+    title="Seleziona round attivo"
   >
+    {`Round R${currentRound} ▾`}
+  </button>
+
+  {showRoundSelector && (
     <div
       style={{
-        display: "flex",
-        justifyContent: "space-between",
-        gap: 12,
-        flexWrap: "wrap",
-        alignItems: "center",
-      }}
-    >
-      <div style={{ display: "grid", gap: 4 }}>
-        <div style={{ fontWeight: 900, opacity: 0.96 }}>
-          Selezione Round attivo
-        </div>
-        <div style={{ fontSize: 12, opacity: 0.74 }}>
-          Tutti i salvataggi, le riaperture e i reset agiranno sul round selezionato qui sotto.
-        </div>
-      </div>
-
-      <div
-        style={{
-          padding: "8px 12px",
-          borderRadius: 12,
-          border: "1px solid rgba(255,255,255,0.10)",
-          background: "rgba(255,255,255,0.05)",
-          fontSize: 12,
-          fontWeight: 900,
-          textTransform: "uppercase",
-          letterSpacing: 0.4,
-        }}
-      >
-        Round attuale: R{currentRound}
-      </div>
-    </div>
-
-    <div
-      style={{
+        position: "absolute",
+        top: "calc(100% + 8px)",
+        right: 0,
+        minWidth: 140,
+        padding: 8,
+        borderRadius: 14,
+        border: "1px solid rgba(255,255,255,0.12)",
+        background: "linear-gradient(180deg, rgba(18,22,31,0.98), rgba(8,10,15,0.98))",
+        boxShadow: "0 20px 40px rgba(0,0,0,0.35)",
         display: "grid",
-        gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
-        gap: 10,
+        gap: 6,
+        zIndex: 1000,
       }}
     >
       {[1, 2, 3, 4].map((round) => {
@@ -7905,49 +7856,45 @@ if (!authorized) {
         return (
           <button
             key={round}
-            onClick={() => requestRoundChange(round as 1 | 2 | 3 | 4)}
+            onClick={() => {
+              requestRoundChange(round as 1 | 2 | 3 | 4)
+              setShowRoundSelector(false)
+            }}
             style={{
-              padding: "12px 14px",
-              borderRadius: 12,
+              padding: "10px 12px",
+              borderRadius: 10,
               border: isActive
-                ? "1px solid rgba(255,215,0,0.38)"
-                : "1px solid rgba(255,255,255,0.12)",
+                ? "1px solid rgba(255,215,0,0.35)"
+                : "1px solid rgba(255,255,255,0.10)",
               background: isActive
                 ? "linear-gradient(180deg, rgba(255,215,0,0.18), rgba(255,215,0,0.08))"
                 : "rgba(255,255,255,0.05)",
               color: "white",
               cursor: "pointer",
-              fontWeight: 900,
+              fontWeight: 800,
               textTransform: "uppercase",
-              letterSpacing: 0.5,
               fontSize: 12,
-              boxShadow: isActive
-                ? "0 0 18px rgba(255,215,0,0.10)"
-                : "none",
+              letterSpacing: 0.4,
             }}
           >
-            R{round}
+            {isActive ? `R${round} • attivo` : `Vai a R${round}`}
           </button>
         )
       })}
     </div>
-
-    <div
-      style={{
-        fontSize: 12,
-        opacity: 0.78,
-        padding: "10px 12px",
-        borderRadius: 10,
-        border: "1px solid rgba(255,255,255,0.08)",
-        background: "rgba(255,255,255,0.03)",
-        lineHeight: 1.45,
-      }}
-    >
-      Stai lavorando su <b>Round {currentRound}</b>. Prima di caricare screen o salvare una lega, controlla sempre che il round selezionato sia quello giusto.
-    </div>
+  )}
+</div>
   </div>
 
-  {/* 👉 QUI RIPARTE IL TUO BLOCCO ORIGINALE */}
+  {false && showReq && (
+  <div style={{ marginTop: 10, fontSize: 13, opacity: 0.82, lineHeight: 1.45 }}>
+    ...
+  </div>
+)}
+</div>
+
+          <div style={{ padding: 18, display: "grid", gap: 16 }}>
+
   <div
     style={{
       borderRadius: 16,
