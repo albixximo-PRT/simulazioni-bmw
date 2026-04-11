@@ -2989,6 +2989,8 @@ const [pendingSaveLeagueMode, setPendingSaveLeagueMode] = useState<"save" | "ove
 const [manualPilotDraft, setManualPilotDraft] = useState<Record<number, string>>({})
 const [showDistaccoModal, setShowDistaccoModal] = useState(false)
 const [manualDistaccoDraft, setManualDistaccoDraft] = useState<Record<number, string>>({})
+const [showConfirmFinalizeRoundModal, setShowConfirmFinalizeRoundModal] = useState(false)
+const [finalizeRoundMode, setFinalizeRoundMode] = useState<"save" | "overwrite">("save")
 const [showMissingPilotWarning, setShowMissingPilotWarning] = useState(false)
 
     const [exportTexts, setExportTexts] = useState({
@@ -4632,6 +4634,10 @@ const roundLeagueStatus = useMemo(() => {
 
 const isCurrentRoundReady = useMemo(() => {
   return isRoundSnapshotReady(currentRoundSnapshot)
+}, [currentRoundSnapshot])
+
+const isCurrentRoundAlreadySaved = useMemo(() => {
+  return currentRoundSnapshot?.status === "consolidated"
 }, [currentRoundSnapshot])
 
 const savedLeaguesInCurrentRound = useMemo(() => {
@@ -7125,6 +7131,11 @@ function openConfirmSaveLeagueModal() {
   setShowConfirmSaveLeagueModal(true)
 }  
 
+function openConfirmFinalizeRoundModal() {
+  setFinalizeRoundMode(isCurrentRoundAlreadySaved ? "overwrite" : "save")
+  setShowConfirmFinalizeRoundModal(true)
+}
+
 function saveOrUpdateCurrentRound() {
   const roundKey = getRoundKey(currentRound)
   const leagueName = getCurrentBmwLeagueName()
@@ -8166,12 +8177,6 @@ if (!authorized) {
   >
     Importa backup
   </button>
-
-  {!canRun && (
-    <div style={{ fontSize: 12, opacity: 0.75 }}>
-      Seleziona almeno 2 immagini (Quali + Gara).
-    </div>
-  )}
 </div>
 
 {sprint2Ready && (
@@ -9764,15 +9769,17 @@ if (!authorized) {
     >
       <div style={{ display: "grid", gap: 4 }}>
         <div style={{ fontWeight: 900, opacity: 0.96 }}>
-          ✅ Round completo
+          {isCurrentRoundAlreadySaved ? "✅ Round già salvato" : "✅ Round completo"}
         </div>
         <div style={{ fontSize: 12, opacity: 0.78 }}>
-          PRO, PRO-AMA e AMA sono state salvate. Ora puoi consolidare il round e metterlo in classifica generale.
+          {isCurrentRoundAlreadySaved
+            ? "Questo round è già presente in classifica generale. Se hai modificato una lega, puoi sovrascriverlo."
+            : "PRO, PRO-AMA e AMA sono state salvate. Ora puoi consolidare il round e metterlo in classifica generale."}
         </div>
       </div>
 
       <button
-        onClick={finalizeCurrentRound}
+        onClick={openConfirmFinalizeRoundModal}
         style={{
           padding: "12px 16px",
           borderRadius: 14,
@@ -9786,7 +9793,9 @@ if (!authorized) {
           boxShadow: "0 0 22px rgba(34,197,94,0.12)",
         }}
       >
-        Salva Round in classifica
+        {isCurrentRoundAlreadySaved
+          ? "Sovrascrivi Round in classifica"
+          : "Salva Round in classifica"}
       </button>
     </div>
   </div>
@@ -11392,6 +11401,100 @@ if (!authorized) {
           }}
         >
           OK
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+{showConfirmFinalizeRoundModal && (
+  <div
+    style={{
+      position: "fixed",
+      inset: 0,
+      background: "rgba(0,0,0,0.72)",
+      backdropFilter: "blur(6px)",
+      display: "grid",
+      placeItems: "center",
+      zIndex: 9999,
+      padding: 20,
+    }}
+  >
+    <div
+      style={{
+        width: "100%",
+        maxWidth: 560,
+        borderRadius: 22,
+        border: "1px solid rgba(255,255,255,0.12)",
+        background: "linear-gradient(180deg, rgba(18,22,31,0.98), rgba(8,10,15,0.98))",
+        boxShadow: "0 20px 80px rgba(0,0,0,0.55)",
+        padding: 22,
+        display: "grid",
+        gap: 16,
+      }}
+    >
+      <div>
+        <div style={{ fontSize: 22, fontWeight: 900 }}>
+          {finalizeRoundMode === "overwrite"
+            ? "Sovrascrivi Round in classifica"
+            : "Salva Round in classifica"}
+        </div>
+        <div style={{ marginTop: 6, fontSize: 13, opacity: 0.76 }}>
+          Round selezionato: <b>R{currentRound}</b>
+        </div>
+      </div>
+
+      <div
+        style={{
+          fontSize: 14,
+          lineHeight: 1.55,
+          opacity: 0.88,
+        }}
+      >
+        {finalizeRoundMode === "overwrite"
+          ? "Stai per aggiornare un round già presente in classifica generale con i dati correnti delle tre leghe."
+          : "Stai per salvare questo round in classifica generale usando i dati correnti delle tre leghe."}
+      </div>
+
+      <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, flexWrap: "wrap" }}>
+        <button
+          onClick={() => setShowConfirmFinalizeRoundModal(false)}
+          style={{
+            padding: "12px 16px",
+            borderRadius: 14,
+            border: "1px solid rgba(255,255,255,0.14)",
+            background: "rgba(255,255,255,0.06)",
+            color: "white",
+            cursor: "pointer",
+            fontWeight: 900,
+            textTransform: "uppercase",
+            letterSpacing: 0.5,
+          }}
+        >
+          Annulla
+        </button>
+
+        <button
+          onClick={() => {
+            finalizeCurrentRound()
+            setShowConfirmFinalizeRoundModal(false)
+          }}
+          style={{
+            padding: "12px 16px",
+            borderRadius: 14,
+            border: "1px solid rgba(34,197,94,0.30)",
+            background: "rgba(34,197,94,0.16)",
+            color: "white",
+            cursor: "pointer",
+            fontWeight: 900,
+            textTransform: "uppercase",
+            letterSpacing: 0.5,
+            boxShadow: "0 0 22px rgba(34,197,94,0.12)",
+          }}
+        >
+          {finalizeRoundMode === "overwrite"
+            ? "Conferma sovrascrittura"
+            : "Conferma salvataggio"}
         </button>
       </div>
     </div>
