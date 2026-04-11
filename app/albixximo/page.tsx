@@ -6766,24 +6766,67 @@ function handleBackupImportChange(e: React.ChangeEvent<HTMLInputElement>) {
   function saveCurrentSprint() {
   if (!currentBmwSprintSnapshot) return
 
+  const sprintKey: BmwSprintKey = currentSprint === 1 ? "sprint1" : "sprint2"
+
   const wasAlreadySaved =
     currentSprint === 1
       ? !!savedSprintPreviews.sprint1
       : !!savedSprintPreviews.sprint2
 
-  setSavedSprintPreviews((prev) => {
-    if (currentSprint === 1) {
+  const nextSavedSprintPreviews = {
+    ...savedSprintPreviews,
+    [sprintKey]: currentBmwSprintSnapshot,
+  }
+
+  setSavedSprintPreviews(nextSavedSprintPreviews)
+
+  const currentLeagueName = getCurrentBmwLeagueName()
+  const roundKey = getRoundKey(currentRound)
+
+  if (currentLeagueName && roundSnapshots[roundKey]?.leagues?.[currentLeagueName]) {
+    setRoundSnapshots((prev) => {
+      const currentRoundSnapshotLocal = prev[roundKey]
+      const currentLeagueSnapshot = currentRoundSnapshotLocal?.leagues?.[currentLeagueName]
+
+      if (!currentRoundSnapshotLocal || !currentLeagueSnapshot) return prev
+
+      const updatedSprint1 =
+        sprintKey === "sprint1"
+          ? currentBmwSprintSnapshot
+          : currentLeagueSnapshot.sprint1
+
+      const updatedSprint2 =
+        sprintKey === "sprint2"
+          ? currentBmwSprintSnapshot
+          : currentLeagueSnapshot.sprint2
+
+      const updatedLeagueSnapshot: BmwLeagueSnapshot = {
+        ...currentLeagueSnapshot,
+        savedAt: new Date().toISOString(),
+        status: getBmwLeagueSnapshotStatus(updatedSprint1, updatedSprint2),
+        sprint1: updatedSprint1,
+        sprint2: updatedSprint2,
+        drivers: buildBmwLeagueDriversFromSprints(updatedSprint1, updatedSprint2),
+      }
+
+      const nextLeagues: Partial<Record<BmwLeagueName, BmwLeagueSnapshot>> = {
+        ...(currentRoundSnapshotLocal.leagues || {}),
+        [currentLeagueName]: updatedLeagueSnapshot,
+      }
+
+      const nextRoundTeamResults = buildBmwRoundTeamResultsFromLeagues(nextLeagues, teams)
+
       return {
         ...prev,
-        sprint1: currentBmwSprintSnapshot,
+        [roundKey]: {
+          ...currentRoundSnapshotLocal,
+          updatedAt: new Date().toISOString(),
+          leagues: nextLeagues,
+          roundTeamResults: nextRoundTeamResults,
+        },
       }
-    }
-
-    return {
-      ...prev,
-      sprint2: currentBmwSprintSnapshot,
-    }
-  })
+    })
+  }
 
   setLastSavedSprintNumber(currentSprint)
   setLastSprintSaveMode(wasAlreadySaved ? "overwrite" : "save")
