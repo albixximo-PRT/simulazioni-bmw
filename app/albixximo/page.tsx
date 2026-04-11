@@ -126,6 +126,9 @@ type BmwSprintSnapshot = {
   finalCsv: string
   unionMeta: UnionMeta
 
+  savedGara: string
+  savedLega: string
+
   winner: string
   bestQuali: string
   bestRaceLap: string
@@ -4514,6 +4517,9 @@ const currentBmwSprintSnapshot = useMemo<BmwSprintSnapshot | null>(() => {
       lega: effectiveLegaResolved,
     },
 
+    savedGara: normalizedGaraForOutput,
+    savedLega: effectiveLegaResolved,
+
     winner,
     bestQuali: currentSprint === 1 ? bestQuali : "",
     bestRaceLap,
@@ -6797,19 +6803,28 @@ function reopenSavedLeagueSprint(
 
   setError("")
 
+  const restoredGara =
+    String(sprintSnapshot.savedGara || "").trim() ||
+    String(sprintSnapshot.unionMeta?.gara || "").trim()
+
+  const restoredLega =
+    String(sprintSnapshot.savedLega || "").trim().toUpperCase() ||
+    String(sprintSnapshot.unionMeta?.lega || "").trim().toUpperCase() ||
+    league
+
+  const restoredLobby = String(sprintSnapshot.unionMeta?.lobby || "").trim()
+
   setCsv(sprintSnapshot.finalCsv || "")
   setRows(Array.isArray(sprintSnapshot.finalRows) ? sprintSnapshot.finalRows : [])
 
-  setUnionMeta(
-    sprintSnapshot.unionMeta || {
-      gara: "",
-      lobby: "",
-      lega: league,
-    }
-  )
+  setUnionMeta({
+    gara: restoredGara,
+    lobby: restoredLobby,
+    lega: restoredLega,
+  })
 
-  setManualGaraOverride("")
-  setManualLegaOverride(league)
+  setManualGaraOverride(restoredGara && restoredGara !== "-" ? restoredGara : "")
+  setManualLegaOverride(restoredLega || league)
 
   setCurrentSprint(sprint === "sprint1" ? 1 : 2)
 
