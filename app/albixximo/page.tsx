@@ -3002,6 +3002,8 @@ const [showMissingPilotWarning, setShowMissingPilotWarning] = useState(false)
 
   const [currentRound, setCurrentRound] = useState<1 | 2 | 3 | 4>(1)
 const [currentSprint, setCurrentSprint] = useState<1 | 2>(1)
+const [pendingRoundChange, setPendingRoundChange] = useState<1 | 2 | 3 | 4 | null>(null)
+const [showRoundChangeConfirmModal, setShowRoundChangeConfirmModal] = useState(false)
 
 const [roundSnapshots, setRoundSnapshots] = useState<
   Partial<Record<RoundKey, BmwRoundSnapshot>>
@@ -4643,6 +4645,69 @@ const savedLeaguesInCurrentRound = useMemo(() => {
 }, [currentRoundSnapshot])
 
 const hasSavedLeaguesInCurrentRound = savedLeaguesInCurrentRound.length > 0
+
+const currentRoundHasUnsavedWork = useMemo(() => {
+  const hasLiveExtraction =
+    rows.length > 0 ||
+    finalRows.length > 0 ||
+    csv.trim().length > 0 ||
+    files.length > 0
+
+  const hasSavedSprintWork =
+    !!savedSprintPreviews.sprint1 || !!savedSprintPreviews.sprint2
+
+  const hasManualWork =
+    Object.keys(penalties).length > 0 ||
+    Object.keys(lapOverrides).length > 0 ||
+    Object.keys(dnfOverrides).length > 0 ||
+    Object.keys(manualPilotOverrides).length > 0 ||
+    Object.keys(manualAutoOverrides).length > 0 ||
+    Object.keys(manualDistaccoOverrides).length > 0
+
+  const currentSnapshot = roundSnapshots[getRoundKey(currentRound)]
+  const currentRoundIncomplete = !!currentSnapshot && !isRoundSnapshotReady(currentSnapshot)
+
+  return hasLiveExtraction || hasSavedSprintWork || hasManualWork || currentRoundIncomplete
+}, [
+  rows,
+  finalRows,
+  csv,
+  files,
+  savedSprintPreviews,
+  penalties,
+  lapOverrides,
+  dnfOverrides,
+  manualPilotOverrides,
+  manualAutoOverrides,
+  manualDistaccoOverrides,
+  roundSnapshots,
+  currentRound,
+])
+
+function requestRoundChange(nextRound: 1 | 2 | 3 | 4) {
+  if (nextRound === currentRound) return
+
+  if (!currentRoundHasUnsavedWork) {
+    setCurrentRound(nextRound)
+    return
+  }
+
+  setPendingRoundChange(nextRound)
+  setShowRoundChangeConfirmModal(true)
+}
+
+function confirmRoundChange() {
+  if (pendingRoundChange == null) return
+
+  setCurrentRound(pendingRoundChange)
+  setPendingRoundChange(null)
+  setShowRoundChangeConfirmModal(false)
+}
+
+function cancelRoundChange() {
+  setPendingRoundChange(null)
+  setShowRoundChangeConfirmModal(false)
+}
 
 async function performExportTablePng() {
     if (!exportRef.current || finalRows.length === 0) return
@@ -7422,13 +7487,13 @@ function resetDistaccoCorrections() {
 function resetAllManualCorrections() {
   setManualPilotOverrides({})
   setManualPilotDraft({})
+  setManualAutoOverrides({})
+  setPilotModalRows([])
   setShowPilotModal(false)
 
   setManualDistaccoOverrides({})
   setManualDistaccoDraft({})
   setShowDistaccoModal(false)
-
-  
 }
 
   const showMeta = prtMode || unionMode
@@ -7782,17 +7847,118 @@ if (!authorized) {
 </div>
 
           <div style={{ padding: 18, display: "grid", gap: 16 }}>
-            <div
-              style={{
-                borderRadius: 16,
-                border: "1px solid rgba(255,255,255,0.10)",
-                background: "rgba(0,0,0,0.18)",
-                padding: 14,
-                display: "grid",
-                gap: 12,
-                boxShadow: "0 10px 30px rgba(0,0,0,0.20)",
-              }}
-            >
+  <div
+    style={{
+      borderRadius: 16,
+      border: "1px solid rgba(255,255,255,0.10)",
+      background: "rgba(0,0,0,0.18)",
+      padding: 14,
+      display: "grid",
+      gap: 12,
+      boxShadow: "0 10px 30px rgba(0,0,0,0.20)",
+    }}
+  >
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "space-between",
+        gap: 12,
+        flexWrap: "wrap",
+        alignItems: "center",
+      }}
+    >
+      <div style={{ display: "grid", gap: 4 }}>
+        <div style={{ fontWeight: 900, opacity: 0.96 }}>
+          Selezione Round attivo
+        </div>
+        <div style={{ fontSize: 12, opacity: 0.74 }}>
+          Tutti i salvataggi, le riaperture e i reset agiranno sul round selezionato qui sotto.
+        </div>
+      </div>
+
+      <div
+        style={{
+          padding: "8px 12px",
+          borderRadius: 12,
+          border: "1px solid rgba(255,255,255,0.10)",
+          background: "rgba(255,255,255,0.05)",
+          fontSize: 12,
+          fontWeight: 900,
+          textTransform: "uppercase",
+          letterSpacing: 0.4,
+        }}
+      >
+        Round attuale: R{currentRound}
+      </div>
+    </div>
+
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
+        gap: 10,
+      }}
+    >
+      {[1, 2, 3, 4].map((round) => {
+        const isActive = currentRound === round
+
+        return (
+          <button
+            key={round}
+            onClick={() => requestRoundChange(round as 1 | 2 | 3 | 4)}
+            style={{
+              padding: "12px 14px",
+              borderRadius: 12,
+              border: isActive
+                ? "1px solid rgba(255,215,0,0.38)"
+                : "1px solid rgba(255,255,255,0.12)",
+              background: isActive
+                ? "linear-gradient(180deg, rgba(255,215,0,0.18), rgba(255,215,0,0.08))"
+                : "rgba(255,255,255,0.05)",
+              color: "white",
+              cursor: "pointer",
+              fontWeight: 900,
+              textTransform: "uppercase",
+              letterSpacing: 0.5,
+              fontSize: 12,
+              boxShadow: isActive
+                ? "0 0 18px rgba(255,215,0,0.10)"
+                : "none",
+            }}
+          >
+            R{round}
+          </button>
+        )
+      })}
+    </div>
+
+    <div
+      style={{
+        fontSize: 12,
+        opacity: 0.78,
+        padding: "10px 12px",
+        borderRadius: 10,
+        border: "1px solid rgba(255,255,255,0.08)",
+        background: "rgba(255,255,255,0.03)",
+        lineHeight: 1.45,
+      }}
+    >
+      Stai lavorando su <b>Round {currentRound}</b>. Prima di caricare screen o salvare una lega, controlla sempre che il round selezionato sia quello giusto.
+    </div>
+  </div>
+
+  {/* 👉 QUI RIPARTE IL TUO BLOCCO ORIGINALE */}
+  <div
+    style={{
+      borderRadius: 16,
+      border: "1px solid rgba(255,255,255,0.10)",
+      background: "rgba(0,0,0,0.18)",
+      padding: 14,
+      display: "grid",
+      gap: 12,
+      boxShadow: "0 10px 30px rgba(0,0,0,0.20)",
+    }}
+  >
               <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
                 <div style={{ fontWeight: 900, opacity: 0.95 }}>Caricamento immagini</div>
 
@@ -11455,6 +11621,95 @@ if (!authorized) {
             OK
           </button>
         )}
+      </div>
+    </div>
+  </div>
+)}
+
+{showRoundChangeConfirmModal && pendingRoundChange && (
+  <div
+    style={{
+      position: "fixed",
+      inset: 0,
+      background: "rgba(0,0,0,0.72)",
+      backdropFilter: "blur(6px)",
+      display: "grid",
+      placeItems: "center",
+      zIndex: 9999,
+      padding: 20,
+    }}
+  >
+    <div
+      style={{
+        width: "100%",
+        maxWidth: 580,
+        borderRadius: 22,
+        border: "1px solid rgba(255,255,255,0.12)",
+        background: "linear-gradient(180deg, rgba(18,22,31,0.98), rgba(8,10,15,0.98))",
+        boxShadow: "0 20px 80px rgba(0,0,0,0.55)",
+        padding: 22,
+        display: "grid",
+        gap: 16,
+      }}
+    >
+      <div>
+        <div style={{ fontSize: 22, fontWeight: 900 }}>
+          Cambio Round
+        </div>
+        <div style={{ marginTop: 6, fontSize: 13, opacity: 0.76 }}>
+          Da <b>R{currentRound}</b> a <b>R{pendingRoundChange}</b>
+        </div>
+      </div>
+
+      <div
+        style={{
+          fontSize: 14,
+          lineHeight: 1.55,
+          opacity: 0.88,
+        }}
+      >
+        Stai lasciando un round che contiene dati in lavorazione o non ancora completati.
+        <br /><br />
+        <b>I dati già salvati non verranno cancellati.</b>
+        <br />
+        Cambierai solo il round attivo di lavoro.
+      </div>
+
+      <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, flexWrap: "wrap" }}>
+        <button
+          onClick={cancelRoundChange}
+          style={{
+            padding: "12px 16px",
+            borderRadius: 14,
+            border: "1px solid rgba(255,255,255,0.14)",
+            background: "rgba(255,255,255,0.06)",
+            color: "white",
+            cursor: "pointer",
+            fontWeight: 900,
+            textTransform: "uppercase",
+            letterSpacing: 0.5,
+          }}
+        >
+          Annulla
+        </button>
+
+        <button
+          onClick={confirmRoundChange}
+          style={{
+            padding: "12px 16px",
+            borderRadius: 14,
+            border: "1px solid rgba(255,215,0,0.30)",
+            background: "rgba(255,215,0,0.18)",
+            color: "white",
+            cursor: "pointer",
+            fontWeight: 900,
+            textTransform: "uppercase",
+            letterSpacing: 0.5,
+            boxShadow: "0 0 22px rgba(255,215,0,0.10)",
+          }}
+        >
+          Continua e cambia round
+        </button>
       </div>
     </div>
   </div>
