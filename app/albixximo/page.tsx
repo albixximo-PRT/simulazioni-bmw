@@ -2958,6 +2958,8 @@ const [lastResetLeagueName, setLastResetLeagueName] = useState<BmwLeagueName | n
 const [showSaveLeagueSuccessModal, setShowSaveLeagueSuccessModal] = useState(false)
 const [lastSavedLeagueName, setLastSavedLeagueName] = useState<BmwLeagueName | null>(null)
 const [lastSaveLeagueMode, setLastSaveLeagueMode] = useState<"save" | "overwrite">("save")
+const [showConfirmSaveLeagueModal, setShowConfirmSaveLeagueModal] = useState(false)
+const [pendingSaveLeagueMode, setPendingSaveLeagueMode] = useState<"save" | "overwrite">("save")
   const [manualGaraOverride, setManualGaraOverride] = useState("")
   const [manualLegaOverride, setManualLegaOverride] = useState("")
 
@@ -6932,7 +6934,27 @@ function reopenSavedLeagueSprint(
   })
 }
   
-  function saveOrUpdateCurrentRound() {
+function openConfirmSaveLeagueModal() {
+  const leagueName = getCurrentBmwLeagueName()
+
+  if (!leagueName) {
+    setError("Lega BMW non valida. Deve essere PRO, PRO-AMA oppure AMA.")
+    return
+  }
+
+  if (!savedSprintPreviews.sprint1 || !savedSprintPreviews.sprint2) {
+    setError("Devi prima salvare Sprint 1 e Sprint 2 prima di salvare la lega nel round.")
+    return
+  }
+
+  const roundKey = getRoundKey(currentRound)
+  const alreadyExists = !!roundSnapshots[roundKey]?.leagues?.[leagueName]
+
+  setPendingSaveLeagueMode(alreadyExists ? "overwrite" : "save")
+  setShowConfirmSaveLeagueModal(true)
+}  
+
+function saveOrUpdateCurrentRound() {
   const roundKey = getRoundKey(currentRound)
   const leagueName = getCurrentBmwLeagueName()
 
@@ -6945,6 +6967,8 @@ function reopenSavedLeagueSprint(
     setError("Devi prima salvare Sprint 1 e Sprint 2 prima di salvare la lega nel round.")
     return
   }
+
+  setShowConfirmSaveLeagueModal(false)
 
   const alreadyExists = !!roundSnapshots[roundKey]?.leagues?.[leagueName]
 
@@ -9332,7 +9356,7 @@ if (!authorized) {
         </div>
 
         <button
-  onClick={saveOrUpdateCurrentRound}
+  onClick={openConfirmSaveLeagueModal}
   style={{
     padding: "10px 14px",
     borderRadius: 12,
@@ -10774,6 +10798,95 @@ if (!authorized) {
           }}
         >
           RESET
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+{showConfirmSaveLeagueModal && (
+  <div
+    style={{
+      position: "fixed",
+      inset: 0,
+      background: "rgba(0,0,0,0.72)",
+      backdropFilter: "blur(6px)",
+      display: "grid",
+      placeItems: "center",
+      zIndex: 9999,
+      padding: 20,
+    }}
+  >
+    <div
+      style={{
+        width: "100%",
+        maxWidth: 560,
+        borderRadius: 22,
+        border: "1px solid rgba(255,255,255,0.12)",
+        background: "linear-gradient(180deg, rgba(18,22,31,0.98), rgba(8,10,15,0.98))",
+        boxShadow: "0 20px 80px rgba(0,0,0,0.55)",
+        padding: 22,
+        display: "grid",
+        gap: 16,
+      }}
+    >
+      <div>
+        <div style={{ fontSize: 22, fontWeight: 900 }}>
+          {pendingSaveLeagueMode === "overwrite"
+            ? "Sovrascrivi lega nel round"
+            : "Salva lega nel round"}
+        </div>
+        <div style={{ marginTop: 6, fontSize: 13, opacity: 0.76 }}>
+          Lega selezionata: <b>{effectiveLegaResolved || "-"}</b>
+        </div>
+      </div>
+
+      <div
+        style={{
+          fontSize: 14,
+          lineHeight: 1.55,
+          opacity: 0.88,
+        }}
+      >
+        {pendingSaveLeagueMode === "overwrite"
+          ? "Stai per sovrascrivere i dati già salvati di questa lega nel round corrente."
+          : "Stai per salvare i dati di questa lega nel round corrente."}
+      </div>
+
+      <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, flexWrap: "wrap" }}>
+        <button
+          onClick={() => setShowConfirmSaveLeagueModal(false)}
+          style={{
+            padding: "12px 16px",
+            borderRadius: 14,
+            border: "1px solid rgba(255,255,255,0.14)",
+            background: "rgba(255,255,255,0.06)",
+            color: "white",
+            cursor: "pointer",
+            fontWeight: 900,
+            textTransform: "uppercase",
+            letterSpacing: 0.5,
+          }}
+        >
+          Annulla
+        </button>
+
+        <button
+          onClick={saveOrUpdateCurrentRound}
+          style={{
+            padding: "12px 16px",
+            borderRadius: 14,
+            border: "1px solid rgba(34,197,94,0.30)",
+            background: "rgba(34,197,94,0.16)",
+            color: "white",
+            cursor: "pointer",
+            fontWeight: 900,
+            textTransform: "uppercase",
+            letterSpacing: 0.5,
+            boxShadow: "0 0 22px rgba(34,197,94,0.12)",
+          }}
+        >
+          Conferma
         </button>
       </div>
     </div>
