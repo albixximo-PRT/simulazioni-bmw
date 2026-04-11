@@ -2967,6 +2967,8 @@ const [showResetLeagueModal, setShowResetLeagueModal] = useState(false)
 const [selectedLeagueToReset, setSelectedLeagueToReset] = useState<BmwLeagueName | null>(null)
 const [showResetLeagueSuccessModal, setShowResetLeagueSuccessModal] = useState(false)
 const [lastResetLeagueName, setLastResetLeagueName] = useState<BmwLeagueName | null>(null)
+const [showResetAllLeaguesModal, setShowResetAllLeaguesModal] = useState(false)
+const [showResetAllLeaguesSuccessModal, setShowResetAllLeaguesSuccessModal] = useState(false)
 const [showSaveLeagueSuccessModal, setShowSaveLeagueSuccessModal] = useState(false)
 const [lastSavedLeagueName, setLastSavedLeagueName] = useState<BmwLeagueName | null>(null)
 const [lastSaveLeagueMode, setLastSaveLeagueMode] = useState<"save" | "overwrite">("save")
@@ -6921,6 +6923,29 @@ function resetSpecificLeagueInRound(league: BmwLeagueName) {
   setShowResetLeagueSuccessModal(true)
 }
 
+function resetAllLeaguesInCurrentRound() {
+  const roundKey = getRoundKey(currentRound)
+
+  setRoundSnapshots((prev) => {
+    const currentSnapshot = prev[roundKey]
+    if (!currentSnapshot) return prev
+
+    const nextSnapshots: Partial<Record<RoundKey, BmwRoundSnapshot>> = {
+      ...prev,
+    }
+
+    delete nextSnapshots[roundKey]
+
+    const nextTeams = buildTeamsFromRoundSnapshots(teams, nextSnapshots)
+    setTeams(nextTeams)
+
+    return nextSnapshots
+  })
+
+  setShowResetAllLeaguesModal(false)
+  setShowResetAllLeaguesSuccessModal(true)
+}
+
 function reopenSavedLeagueSprint(
   league: BmwLeagueName,
   sprint: BmwSprintKey
@@ -9045,6 +9070,33 @@ if (!authorized) {
       }}
     >
       {(["PRO", "PRO-AMA", "AMA"] as BmwLeagueName[]).map((league) => {
+       <div
+  style={{
+    marginTop: 4,
+    display: "flex",
+    justifyContent: "stretch",
+  }}
+>
+  <button
+    onClick={() => setShowResetAllLeaguesModal(true)}
+    style={{
+      width: "100%",
+      padding: "12px 16px",
+      borderRadius: 12,
+      border: "1px solid rgba(239,68,68,0.30)",
+      background: "rgba(239,68,68,0.16)",
+      color: "white",
+      cursor: "pointer",
+      fontWeight: 900,
+      textTransform: "uppercase",
+      letterSpacing: 0.5,
+      fontSize: 12,
+      boxShadow: "0 0 18px rgba(239,68,68,0.08)",
+    }}
+  >
+    Resetta tutte le leghe del round corrente
+  </button>
+</div> 
         const snapshot = currentRoundSnapshot?.leagues?.[league] || null
         const hasSprint1 = !!snapshot?.sprint1
         const hasSprint2 = !!snapshot?.sprint2
@@ -10794,6 +10846,185 @@ if (!authorized) {
           }}
         >
           Conferma reset
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+{showResetAllLeaguesModal && (
+  <div
+    style={{
+      position: "fixed",
+      inset: 0,
+      background: "rgba(0,0,0,0.72)",
+      backdropFilter: "blur(6px)",
+      display: "grid",
+      placeItems: "center",
+      zIndex: 9999,
+      padding: 20,
+    }}
+  >
+    <div
+      style={{
+        width: "100%",
+        maxWidth: 560,
+        borderRadius: 22,
+        border: "1px solid rgba(255,255,255,0.12)",
+        background: "linear-gradient(180deg, rgba(18,22,31,0.98), rgba(8,10,15,0.98))",
+        boxShadow: "0 20px 80px rgba(0,0,0,0.55)",
+        padding: 22,
+        display: "grid",
+        gap: 16,
+      }}
+    >
+      <div>
+        <div style={{ fontSize: 22, fontWeight: 900 }}>
+          Reset totale leghe del round
+        </div>
+        <div style={{ marginTop: 6, fontSize: 13, opacity: 0.76 }}>
+          Round selezionato: <b>{currentRound}</b>
+        </div>
+      </div>
+
+      <div
+        style={{
+          fontSize: 14,
+          lineHeight: 1.55,
+          opacity: 0.88,
+        }}
+      >
+        Stai per eliminare <b>tutte le leghe salvate</b> del round corrente.
+        <br /><br />
+        Verranno rimossi completamente:
+        <br />• PRO
+        <br />• PRO-AMA
+        <br />• AMA
+        <br /><br />
+        Questo eliminerà anche il <b>round corrente</b> dai salvataggi.
+        <br />
+        Gli altri round resteranno intatti.
+      </div>
+
+      <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, flexWrap: "wrap" }}>
+        <button
+          onClick={() => setShowResetAllLeaguesModal(false)}
+          style={{
+            padding: "12px 16px",
+            borderRadius: 14,
+            border: "1px solid rgba(255,255,255,0.14)",
+            background: "rgba(255,255,255,0.06)",
+            color: "white",
+            cursor: "pointer",
+            fontWeight: 900,
+            textTransform: "uppercase",
+            letterSpacing: 0.5,
+          }}
+        >
+          Annulla
+        </button>
+
+        <button
+          onClick={resetAllLeaguesInCurrentRound}
+          style={{
+            padding: "12px 16px",
+            borderRadius: 14,
+            border: "1px solid rgba(239,68,68,0.30)",
+            background: "rgba(239,68,68,0.18)",
+            color: "white",
+            cursor: "pointer",
+            fontWeight: 900,
+            textTransform: "uppercase",
+            letterSpacing: 0.5,
+            boxShadow: "0 0 22px rgba(239,68,68,0.10)",
+          }}
+        >
+          Conferma reset totale
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+{showResetAllLeaguesSuccessModal && (
+  <div
+    style={{
+      position: "fixed",
+      inset: 0,
+      background: "rgba(0,0,0,0.72)",
+      backdropFilter: "blur(6px)",
+      display: "grid",
+      placeItems: "center",
+      zIndex: 9999,
+      padding: 20,
+    }}
+  >
+    <div
+      style={{
+        width: "100%",
+        maxWidth: 560,
+        borderRadius: 22,
+        border: "1px solid rgba(255,255,255,0.12)",
+        background: "linear-gradient(180deg, rgba(18,22,31,0.98), rgba(8,10,15,0.98))",
+        boxShadow: "0 20px 80px rgba(0,0,0,0.55)",
+        padding: 22,
+        display: "grid",
+        gap: 16,
+      }}
+    >
+      <div>
+        <div style={{ fontSize: 22, fontWeight: 900 }}>
+          Reset totale completato
+        </div>
+        <div style={{ marginTop: 6, fontSize: 13, opacity: 0.76 }}>
+          Tutte le leghe del round corrente sono state eliminate.
+        </div>
+      </div>
+
+      <div
+        style={{
+          fontSize: 14,
+          lineHeight: 1.55,
+          opacity: 0.88,
+        }}
+      >
+        Premi <b>RESET HARD</b> per tornare alla schermata iniziale e ripartire completamente pulito.
+      </div>
+
+      <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, flexWrap: "wrap" }}>
+        <button
+          onClick={() => setShowResetAllLeaguesSuccessModal(false)}
+          style={{
+            padding: "12px 16px",
+            borderRadius: 14,
+            border: "1px solid rgba(255,255,255,0.14)",
+            background: "rgba(255,255,255,0.06)",
+            color: "white",
+            cursor: "pointer",
+            fontWeight: 900,
+            textTransform: "uppercase",
+            letterSpacing: 0.5,
+          }}
+        >
+          Chiudi
+        </button>
+
+        <button
+          onClick={resetAll}
+          style={{
+            padding: "12px 16px",
+            borderRadius: 14,
+            border: "1px solid rgba(239,68,68,0.30)",
+            background: "rgba(239,68,68,0.18)",
+            color: "white",
+            cursor: "pointer",
+            fontWeight: 900,
+            textTransform: "uppercase",
+            letterSpacing: 0.5,
+            boxShadow: "0 0 22px rgba(239,68,68,0.10)",
+          }}
+        >
+          RESET HARD
         </button>
       </div>
     </div>
