@@ -4288,20 +4288,21 @@ if (hasEmptyAuto) {
 
   // ---------------- DISTACCHI ----------------
   const validDistacco = finalRows.every((r, i) => {
-    if (i === 0) return true
-    const d = (r.distaccoDalPrimo || "").trim()
+  if (i === 0) return true
+  const d = (r.distaccoDalPrimo || "").trim()
 
-    return (
-  /^\+\d{1,2}:\d{2}\.\d{3}$/.test(d) ||
-  /^\+\d{1,2}\.\d{3}$/.test(d) ||
-  /^DNF$/i.test(d) ||
-  /^DNFV$/i.test(d) ||
-  /^BOX$/i.test(d) ||
-  /^DSQ$/i.test(d) ||
-  /^DOPPIATO$/i.test(d) ||
-  /^\d+giro$/i.test(d)
-)
-  })
+  return (
+    /^\+\d{1,2}:\d{2}\.\d{3}$/.test(d) ||
+    /^\+\d{1,2}\.\d{3}$/.test(d) ||
+    /^DNF$/i.test(d) ||
+    /^DNFV$/i.test(d) ||
+    /^DNP$/i.test(d) ||
+    /^BOX$/i.test(d) ||
+    /^DSQ$/i.test(d) ||
+    /^DOPPIATO$/i.test(d) ||
+    /^\d+giro$/i.test(d)
+  )
+})
 
   if (!validDistacco) {
     distacchi = "warn"
