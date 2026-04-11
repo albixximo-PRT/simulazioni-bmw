@@ -9331,7 +9331,7 @@ if (!authorized) {
           boxShadow: "0 0 18px rgba(239,68,68,0.08)",
         }}
       >
-        Resetta tutte le leghe del round corrente
+        Resetta tutte le leghe del round corrente → ROUND {currentRound}
       </button>
     </div>
   </div>
