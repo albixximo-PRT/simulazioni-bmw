@@ -7033,44 +7033,52 @@ function resetCurrentLeagueInRound() {
     return
   }
 
-  setRoundSnapshots((prev) => {
-    const currentSnapshot = prev[roundKey]
-    if (!currentSnapshot) return prev
-
-    const nextLeagues: Partial<Record<BmwLeagueName, BmwLeagueSnapshot>> = {
-      ...(currentSnapshot.leagues || {}),
-    }
-
-    delete nextLeagues[leagueName]
-
-    const hasAnyLeagueLeft = Object.keys(nextLeagues).length > 0
-
-    const nextSnapshots: Partial<Record<RoundKey, BmwRoundSnapshot>> = {
-      ...prev,
-    }
-
-    if (!hasAnyLeagueLeft) {
-      delete nextSnapshots[roundKey]
-    } else {
-      const nextRoundTeamResults = buildBmwRoundTeamResultsFromLeagues(nextLeagues, teams)
-
-      nextSnapshots[roundKey] = {
-        ...currentSnapshot,
-        updatedAt: new Date().toISOString(),
-        leagues: nextLeagues,
-        roundTeamResults: nextRoundTeamResults,
-      }
-    }
-
-    const nextTeams = buildTeamsFromRoundSnapshots(teams, nextSnapshots)
-    setTeams(nextTeams)
-
-    return nextSnapshots
-  })
-
-  setTimeout(() => {
+  const currentSnapshot = roundSnapshots[roundKey]
+  if (!currentSnapshot) {
     window.location.reload()
-  }, 80)
+    return
+  }
+
+  const nextLeagues: Partial<Record<BmwLeagueName, BmwLeagueSnapshot>> = {
+    ...(currentSnapshot.leagues || {}),
+  }
+
+  delete nextLeagues[leagueName]
+
+  const hasAnyLeagueLeft = Object.keys(nextLeagues).length > 0
+
+  const nextSnapshots: Partial<Record<RoundKey, BmwRoundSnapshot>> = {
+    ...roundSnapshots,
+  }
+
+  if (!hasAnyLeagueLeft) {
+    delete nextSnapshots[roundKey]
+  } else {
+    const nextRoundTeamResults = buildBmwRoundTeamResultsFromLeagues(nextLeagues, teams)
+
+    nextSnapshots[roundKey] = {
+      ...currentSnapshot,
+      updatedAt: new Date().toISOString(),
+      leagues: nextLeagues,
+      roundTeamResults: nextRoundTeamResults,
+    }
+  }
+
+  const nextTeams = buildTeamsFromRoundSnapshots(teams, nextSnapshots)
+
+  setRoundSnapshots(nextSnapshots)
+  setTeams(nextTeams)
+
+  localStorage.setItem(
+    BMW_EVENT_STORAGE_KEY,
+    JSON.stringify({
+      teams: nextTeams,
+      currentRound,
+      roundSnapshots: nextSnapshots,
+    })
+  )
+
+  window.location.reload()
 }
 
 function resetEntireCurrentRound() {
