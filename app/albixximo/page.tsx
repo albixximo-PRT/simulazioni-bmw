@@ -2951,6 +2951,8 @@ const [loginError, setLoginError] = useState("")
   const [sprint2Ready, setSprint2Ready] = useState(false)
   const [showReopenLeagueModal, setShowReopenLeagueModal] = useState(false)
 const [selectedLeagueToReopen, setSelectedLeagueToReopen] = useState<BmwLeagueName | null>(null)
+const [showResetLeagueModal, setShowResetLeagueModal] = useState(false)
+const [selectedLeagueToReset, setSelectedLeagueToReset] = useState<BmwLeagueName | null>(null)
   const [manualGaraOverride, setManualGaraOverride] = useState("")
   const [manualLegaOverride, setManualLegaOverride] = useState("")
 
@@ -6783,6 +6785,61 @@ function closeReopenLeagueModal() {
   setShowReopenLeagueModal(false)
 }
 
+function openResetLeagueModal(league: BmwLeagueName) {
+  setSelectedLeagueToReset(league)
+  setShowResetLeagueModal(true)
+}
+
+function closeResetLeagueModal() {
+  setSelectedLeagueToReset(null)
+  setShowResetLeagueModal(false)
+}
+
+function resetSpecificLeagueInRound(league: BmwLeagueName) {
+  const roundKey = getRoundKey(currentRound)
+
+  setRoundSnapshots((prev) => {
+    const currentSnapshot = prev[roundKey]
+    if (!currentSnapshot) return prev
+
+    const nextLeagues: Partial<Record<BmwLeagueName, BmwLeagueSnapshot>> = {
+      ...(currentSnapshot.leagues || {}),
+    }
+
+    delete nextLeagues[league]
+
+    const hasAnyLeagueLeft = Object.keys(nextLeagues).length > 0
+
+    const nextSnapshots: Partial<Record<RoundKey, BmwRoundSnapshot>> = {
+      ...prev,
+    }
+
+    if (!hasAnyLeagueLeft) {
+      delete nextSnapshots[roundKey]
+    } else {
+      const nextRoundTeamResults = buildBmwRoundTeamResultsFromLeagues(nextLeagues, teams)
+
+      nextSnapshots[roundKey] = {
+        ...currentSnapshot,
+        updatedAt: new Date().toISOString(),
+        leagues: nextLeagues,
+        roundTeamResults: nextRoundTeamResults,
+      }
+    }
+
+    const nextTeams = buildTeamsFromRoundSnapshots(teams, nextSnapshots)
+    setTeams(nextTeams)
+
+    return nextSnapshots
+  })
+
+  if (selectedLeagueToReset === league) {
+    setSelectedLeagueToReset(null)
+  }
+
+  setShowResetLeagueModal(false)
+}
+
 function reopenSavedLeagueSprint(
   league: BmwLeagueName,
   sprint: BmwSprintKey
@@ -8926,25 +8983,52 @@ if (!authorized) {
               </div>
             </div>
 
-            <button
-              onClick={() => openReopenLeagueModal(league)}
-              disabled={!snapshot}
+                        <div
               style={{
-                padding: "10px 12px",
-                borderRadius: 10,
-                border: "1px solid rgba(160,90,255,0.30)",
-                background: snapshot ? "rgba(160,90,255,0.20)" : "rgba(255,255,255,0.06)",
-                color: "white",
-                cursor: snapshot ? "pointer" : "not-allowed",
-                fontWeight: 800,
-                textTransform: "uppercase",
-                fontSize: 12,
-                opacity: snapshot ? 1 : 0.5,
-                boxShadow: snapshot ? "0 0 18px rgba(160,90,255,0.10)" : "none",
+                display: "grid",
+                gap: 8,
               }}
             >
-              Riapri lega
-            </button>
+              <button
+                onClick={() => openReopenLeagueModal(league)}
+                disabled={!snapshot}
+                style={{
+                  padding: "10px 12px",
+                  borderRadius: 10,
+                  border: "1px solid rgba(160,90,255,0.30)",
+                  background: snapshot ? "rgba(160,90,255,0.20)" : "rgba(255,255,255,0.06)",
+                  color: "white",
+                  cursor: snapshot ? "pointer" : "not-allowed",
+                  fontWeight: 800,
+                  textTransform: "uppercase",
+                  fontSize: 12,
+                  opacity: snapshot ? 1 : 0.5,
+                  boxShadow: snapshot ? "0 0 18px rgba(160,90,255,0.10)" : "none",
+                }}
+              >
+                Riapri lega
+              </button>
+
+              <button
+                onClick={() => openResetLeagueModal(league)}
+                disabled={!snapshot}
+                style={{
+                  padding: "10px 12px",
+                  borderRadius: 10,
+                  border: "1px solid rgba(239,68,68,0.30)",
+                  background: snapshot ? "rgba(239,68,68,0.16)" : "rgba(255,255,255,0.06)",
+                  color: "white",
+                  cursor: snapshot ? "pointer" : "not-allowed",
+                  fontWeight: 800,
+                  textTransform: "uppercase",
+                  fontSize: 12,
+                  opacity: snapshot ? 1 : 0.5,
+                  boxShadow: snapshot ? "0 0 18px rgba(239,68,68,0.08)" : "none",
+                }}
+              >
+                Resetta lega
+              </button>
+            </div>
           </div>
         )
       })}
@@ -10484,6 +10568,96 @@ if (!authorized) {
           }}
         >
           Chiudi
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+{showResetLeagueModal && selectedLeagueToReset && (
+  <div
+    style={{
+      position: "fixed",
+      inset: 0,
+      background: "rgba(0,0,0,0.72)",
+      backdropFilter: "blur(6px)",
+      display: "grid",
+      placeItems: "center",
+      zIndex: 9999,
+      padding: 20,
+    }}
+  >
+    <div
+      style={{
+        width: "100%",
+        maxWidth: 560,
+        borderRadius: 22,
+        border: "1px solid rgba(255,255,255,0.12)",
+        background: "linear-gradient(180deg, rgba(18,22,31,0.98), rgba(8,10,15,0.98))",
+        boxShadow: "0 20px 80px rgba(0,0,0,0.55)",
+        padding: 22,
+        display: "grid",
+        gap: 16,
+      }}
+    >
+      <div>
+        <div style={{ fontSize: 22, fontWeight: 900 }}>
+          Resetta lega salvata
+        </div>
+        <div style={{ marginTop: 6, fontSize: 13, opacity: 0.76 }}>
+          Lega selezionata: <b>{selectedLeagueToReset}</b>
+        </div>
+      </div>
+
+      <div
+        style={{
+          fontSize: 14,
+          lineHeight: 1.55,
+          opacity: 0.88,
+        }}
+      >
+        Stai per cancellare la memoria salvata di questa lega nel round corrente.
+        <br /><br />
+        Verranno rimossi:
+        <br />• Sprint 1 salvata
+        <br />• Sprint 2 salvata
+        <br />• preview driver/lega collegata
+      </div>
+
+      <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, flexWrap: "wrap" }}>
+        <button
+          onClick={closeResetLeagueModal}
+          style={{
+            padding: "12px 16px",
+            borderRadius: 14,
+            border: "1px solid rgba(255,255,255,0.14)",
+            background: "rgba(255,255,255,0.06)",
+            color: "white",
+            cursor: "pointer",
+            fontWeight: 900,
+            textTransform: "uppercase",
+            letterSpacing: 0.5,
+          }}
+        >
+          Annulla
+        </button>
+
+        <button
+          onClick={() => resetSpecificLeagueInRound(selectedLeagueToReset)}
+          style={{
+            padding: "12px 16px",
+            borderRadius: 14,
+            border: "1px solid rgba(239,68,68,0.30)",
+            background: "rgba(239,68,68,0.18)",
+            color: "white",
+            cursor: "pointer",
+            fontWeight: 900,
+            textTransform: "uppercase",
+            letterSpacing: 0.5,
+            boxShadow: "0 0 22px rgba(239,68,68,0.10)",
+          }}
+        >
+          Conferma reset
         </button>
       </div>
     </div>
