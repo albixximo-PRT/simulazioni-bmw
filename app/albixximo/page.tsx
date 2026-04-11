@@ -2950,6 +2950,8 @@ const [loginError, setLoginError] = useState("")
   const [showSprintResetConfirm, setShowSprintResetConfirm] = useState(false)
   const [sprint2Ready, setSprint2Ready] = useState(false)
   const [showReopenLeagueModal, setShowReopenLeagueModal] = useState(false)
+  const [isReopenedSavedSprint, setIsReopenedSavedSprint] = useState(false)
+const [reopenedSprintKey, setReopenedSprintKey] = useState<"sprint1" | "sprint2" | null>(null)
 const [selectedLeagueToReopen, setSelectedLeagueToReopen] = useState<BmwLeagueName | null>(null)
 const [showResetLeagueModal, setShowResetLeagueModal] = useState(false)
 const [selectedLeagueToReset, setSelectedLeagueToReset] = useState<BmwLeagueName | null>(null)
@@ -2958,6 +2960,9 @@ const [lastResetLeagueName, setLastResetLeagueName] = useState<BmwLeagueName | n
 const [showSaveLeagueSuccessModal, setShowSaveLeagueSuccessModal] = useState(false)
 const [lastSavedLeagueName, setLastSavedLeagueName] = useState<BmwLeagueName | null>(null)
 const [lastSaveLeagueMode, setLastSaveLeagueMode] = useState<"save" | "overwrite">("save")
+const [showSprintSaveSuccessModal, setShowSprintSaveSuccessModal] = useState(false)
+const [lastSavedSprintNumber, setLastSavedSprintNumber] = useState<1 | 2 | null>(null)
+const [lastSprintSaveMode, setLastSprintSaveMode] = useState<"save" | "overwrite">("save")
 const [showConfirmSaveLeagueModal, setShowConfirmSaveLeagueModal] = useState(false)
 const [pendingSaveLeagueMode, setPendingSaveLeagueMode] = useState<"save" | "overwrite">("save")
   const [manualGaraOverride, setManualGaraOverride] = useState("")
@@ -6437,6 +6442,8 @@ function renderPointsHtmlForExport(row: DisplayRow, bestRaceLap: string) {
 setManualDistaccoDraft({})
 setShowPilotModal(false)
 setShowDistaccoModal(false)
+setIsReopenedSavedSprint(false)
+    setReopenedSprintKey(null)
 
     try {
       const fd = new FormData()
@@ -6746,6 +6753,11 @@ function handleBackupImportChange(e: React.ChangeEvent<HTMLInputElement>) {
   function saveCurrentSprint() {
   if (!currentBmwSprintSnapshot) return
 
+  const wasAlreadySaved =
+    currentSprint === 1
+      ? !!savedSprintPreviews.sprint1
+      : !!savedSprintPreviews.sprint2
+
   setSavedSprintPreviews((prev) => {
     if (currentSprint === 1) {
       return {
@@ -6760,12 +6772,13 @@ function handleBackupImportChange(e: React.ChangeEvent<HTMLInputElement>) {
     }
   })
 
-  if (currentSprint === 1) {
-    setShowSprintInfo(true)
-  }
+  setLastSavedSprintNumber(currentSprint)
+  setLastSprintSaveMode(wasAlreadySaved ? "overwrite" : "save")
+  setShowSprintSaveSuccessModal(true)
 
-  if (currentSprint === 2) {
-    setShowSprint2DoneInfo(true)
+  if (isReopenedSavedSprint) {
+    setIsReopenedSavedSprint(false)
+    setReopenedSprintKey(null)
   }
 }
 
@@ -6780,6 +6793,8 @@ function resetSavedSprints() {
   setShowSprint2UploadConfirm(false)
   setShowSprint2DoneInfo(false)
   setShowSprintResetConfirm(true)
+  setIsReopenedSavedSprint(false)
+setReopenedSprintKey(null)
 }
 
 function openReopenLeagueModal(league: BmwLeagueName) {
@@ -6894,6 +6909,8 @@ function reopenSavedLeagueSprint(
   setManualLegaOverride(restoredLega || league)
 
   setCurrentSprint(sprint === "sprint1" ? 1 : 2)
+  setIsReopenedSavedSprint(true)
+setReopenedSprintKey(sprint)
 
   setPenalties(sprintSnapshot.penalties || {})
   setLapOverrides(sprintSnapshot.lapOverrides || {})
@@ -6925,6 +6942,9 @@ function reopenSavedLeagueSprint(
     ...prev,
     [sprint]: sprintSnapshot,
   }))
+
+  setIsReopenedSavedSprint(true)
+  setReopenedSprintKey(sprint)
 
   requestAnimationFrame(() => {
     topPageRef.current?.scrollIntoView({
@@ -9153,22 +9173,28 @@ if (!authorized) {
 <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
 
     <button
-      onClick={saveCurrentSprint}
-      style={{
-        padding: "10px 14px",
-        borderRadius: 12,
-        border: "1px solid rgba(34,197,94,0.30)",
-        background: "rgba(34,197,94,0.16)",
-        color: "white",
-        cursor: "pointer",
-        fontWeight: 900,
-        letterSpacing: 0.4,
-        textTransform: "uppercase",
-        fontSize: 12,
-      }}
-    >
-      {currentSprint === 1 ? "SALVA SPRINT 1" : "SALVA SPRINT 2"}
-    </button>
+  onClick={saveCurrentSprint}
+  style={{
+    padding: "10px 14px",
+    borderRadius: 12,
+    border: "1px solid rgba(34,197,94,0.30)",
+    background: "rgba(34,197,94,0.16)",
+    color: "white",
+    cursor: "pointer",
+    fontWeight: 900,
+    letterSpacing: 0.4,
+    textTransform: "uppercase",
+    fontSize: 12,
+  }}
+>
+  {isReopenedSavedSprint
+    ? currentSprint === 1
+      ? "SOVRASCRIVI SPRINT 1"
+      : "SOVRASCRIVI SPRINT 2"
+    : currentSprint === 1
+      ? "SALVA SPRINT 1"
+      : "SALVA SPRINT 2"}
+</button>
 
     <button
       onClick={resetSavedSprints}
@@ -10964,6 +10990,181 @@ if (!authorized) {
         >
           OK
         </button>
+      </div>
+    </div>
+  </div>
+)}
+
+{showSprintSaveSuccessModal && (
+  <div
+    style={{
+      position: "fixed",
+      inset: 0,
+      background: "rgba(0,0,0,0.72)",
+      backdropFilter: "blur(6px)",
+      display: "grid",
+      placeItems: "center",
+      zIndex: 9999,
+      padding: 20,
+    }}
+  >
+    <div
+      style={{
+        width: "100%",
+        maxWidth: 560,
+        borderRadius: 22,
+        border: "1px solid rgba(255,255,255,0.12)",
+        background: "linear-gradient(180deg, rgba(18,22,31,0.98), rgba(8,10,15,0.98))",
+        boxShadow: "0 20px 80px rgba(0,0,0,0.55)",
+        padding: 22,
+        display: "grid",
+        gap: 16,
+      }}
+    >
+      <div>
+        <div style={{ fontSize: 22, fontWeight: 900 }}>
+          {lastSprintSaveMode === "overwrite"
+            ? `Sprint ${lastSavedSprintNumber || "-"} sovrascritta correttamente`
+            : `Sprint ${lastSavedSprintNumber || "-"} salvata correttamente`}
+        </div>
+
+        <div style={{ marginTop: 6, fontSize: 13, opacity: 0.76 }}>
+          {lastSprintSaveMode === "overwrite"
+            ? "La sprint salvata è stata aggiornata con successo."
+            : "La sprint è stata memorizzata con successo."}
+        </div>
+      </div>
+
+      <div
+        style={{
+          fontSize: 14,
+          lineHeight: 1.55,
+          opacity: 0.88,
+        }}
+      >
+        {lastSprintSaveMode === "overwrite" ? (
+          <>
+            I dati della <b>Sprint {lastSavedSprintNumber || "-"}</b> sono stati
+            sovrascritti correttamente.
+          </>
+        ) : lastSavedSprintNumber === 1 ? (
+          <>
+            Hai salvato correttamente la <b>Sprint 1</b>.
+            <br /><br />
+            Ora puoi caricare i due screen gara della <b>Sprint 2</b> oppure
+            chiudere il popup e continuare più tardi.
+          </>
+        ) : (
+          <>
+            Hai salvato correttamente la <b>Sprint 2</b>.
+            <br /><br />
+            Si è generata un’ulteriore tabella chiamata <b>Preview classifica TEAM</b>.
+          </>
+        )}
+      </div>
+
+      <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, flexWrap: "wrap" }}>
+        <button
+          onClick={() => {
+            setShowSprintSaveSuccessModal(false)
+            setLastSavedSprintNumber(null)
+            setLastSprintSaveMode("save")
+          }}
+          style={{
+            padding: "12px 16px",
+            borderRadius: 14,
+            border: "1px solid rgba(255,255,255,0.14)",
+            background: "rgba(255,255,255,0.06)",
+            color: "white",
+            cursor: "pointer",
+            fontWeight: 900,
+            textTransform: "uppercase",
+            letterSpacing: 0.5,
+          }}
+        >
+          Chiudi
+        </button>
+
+        {lastSprintSaveMode === "save" && lastSavedSprintNumber === 1 && (
+          <button
+            onClick={() => {
+              setShowSprintSaveSuccessModal(false)
+              setLastSavedSprintNumber(null)
+              setLastSprintSaveMode("save")
+              setPendingSprint2Upload(true)
+              fileInputRef.current?.click()
+            }}
+            style={{
+              padding: "12px 16px",
+              borderRadius: 14,
+              border: "1px solid rgba(34,197,94,0.30)",
+              background: "rgba(34,197,94,0.16)",
+              color: "white",
+              cursor: "pointer",
+              fontWeight: 900,
+              textTransform: "uppercase",
+              letterSpacing: 0.5,
+              boxShadow: "0 0 22px rgba(34,197,94,0.12)",
+            }}
+          >
+            CARICA I DUE FILE DELLA SPRINT 2
+          </button>
+        )}
+
+        {lastSprintSaveMode === "save" && lastSavedSprintNumber === 2 && (
+          <button
+            onClick={() => {
+              setShowSprintSaveSuccessModal(false)
+              setLastSavedSprintNumber(null)
+              setLastSprintSaveMode("save")
+
+              requestAnimationFrame(() => {
+                teamPreviewRef.current?.scrollIntoView({
+                  behavior: "smooth",
+                  block: "start",
+                })
+              })
+            }}
+            style={{
+              padding: "12px 16px",
+              borderRadius: 14,
+              border: "1px solid rgba(34,197,94,0.30)",
+              background: "rgba(34,197,94,0.16)",
+              color: "white",
+              cursor: "pointer",
+              fontWeight: 900,
+              textTransform: "uppercase",
+              letterSpacing: 0.5,
+              boxShadow: "0 0 22px rgba(34,197,94,0.12)",
+            }}
+          >
+            PROSEGUI
+          </button>
+        )}
+
+        {lastSprintSaveMode === "overwrite" && (
+          <button
+            onClick={() => {
+              setShowSprintSaveSuccessModal(false)
+              setLastSavedSprintNumber(null)
+              setLastSprintSaveMode("save")
+            }}
+            style={{
+              padding: "12px 16px",
+              borderRadius: 14,
+              border: "1px solid rgba(34,197,94,0.30)",
+              background: "rgba(34,197,94,0.16)",
+              color: "white",
+              cursor: "pointer",
+              fontWeight: 900,
+              textTransform: "uppercase",
+              letterSpacing: 0.5,
+              boxShadow: "0 0 22px rgba(34,197,94,0.12)",
+            }}
+          >
+            OK
+          </button>
+        )}
       </div>
     </div>
   </div>
