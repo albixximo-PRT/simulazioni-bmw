@@ -385,35 +385,116 @@ const PENALTY_RULES: Record<string, PenaltyRule> = {
 
 const AMMONITION_CODES = new Set(["P01", "P25", "P31"])
 const DSQ_CODES = new Set(["P16", "P27", "P35", "DSQ"])
+const BMW_POINTS_BY_POSITION: Record<number, number> = {
+  1: 25,
+  2: 22,
+  3: 19,
+  4: 16,
+  5: 14,
+  6: 12,
+  7: 10,
+  8: 8,
+  9: 6,
+  10: 5,
+  11: 4,
+  12: 3,
+  13: 2,
+  14: 1,
+}
 
-function getPointsForPrtRow(r: ExtractRow, bestRaceLap: string): number {
-  const basePointsMap: Record<number, number> = {
-    1: 30,
-    2: 27,
-    3: 24,
-    4: 22,
-    5: 20,
-    6: 18,
-    7: 16,
-    8: 14,
-    9: 12,
-    10: 9,
-    11: 7,
-    12: 5,
-    13: 3,
-    14: 1,
-  }
+function getBmwPointsForDisplayRow(r: ExtractRow, bestRaceLap: string): number {
+  const rawTempo = tempoLikeGt7(r).trim().toUpperCase()
+
+  const isZeroPointsStatus =
+  rawTempo === "BOX" ||
+  rawTempo === "DNF" ||
+  rawTempo === "DNFV" ||
+  rawTempo === "DNP" ||
+  rawTempo === "DSQ"
 
   const isPole = (r.pole || "").trim().toUpperCase() === "POLE"
+
   const bestLapTime = (bestRaceLap.split("  ").pop() || "").trim()
-  const isBestLap = !!bestLapTime && (r.migliorGiroGara || "").trim() === bestLapTime
+  const isBestLap =
+    !!bestLapTime &&
+    (r.migliorGiroGara || "").trim() === bestLapTime
 
-  let points = basePointsMap[r.posGara] ?? 0
+  const basePoints = isZeroPointsStatus
+    ? 0
+    : BMW_POINTS_BY_POSITION[r.posGara] ?? 0
 
-  if (isPole) points += 1
-  if (isBestLap) points += 1
+  return basePoints + (isPole ? 1 : 0) + (isBestLap ? 1 : 0)
+}
 
-  return points
+function getPointsForPrtRow(r: ExtractRow, bestRaceLap: string): number {
+  return getBmwPointsForDisplayRow(r, bestRaceLap)
+}
+
+function ensureLeagueDriversFromTeams(
+  rows: DisplayRow[],
+  teams: TeamEntry[],
+  currentLega: string
+): DisplayRow[] {
+  if (!rows.length) return rows
+
+  const normalizeName = (value: string) => {
+    let v = String(value || "").trim().toLowerCase()
+    v = v.replace(/^prt[\s._-]*/i, "")
+    v = v.replace(/[_\-.]/g, "")
+    v = v.replace(/\s+/g, "")
+    return v
+  }
+
+  const normalizedLega = String(currentLega || "").trim().toUpperCase()
+  if (!normalizedLega) return rows
+
+  const leagueDrivers =
+    normalizedLega === "PRO"
+      ? teams.map((team) => String(team.lobby1 || "").trim()).filter(Boolean)
+      : normalizedLega === "PRO-AMA"
+        ? teams.map((team) => String(team.lobby2 || "").trim()).filter(Boolean)
+        : normalizedLega === "AMA"
+          ? teams.map((team) => String(team.lobby3 || "").trim()).filter(Boolean)
+          : []
+
+  if (leagueDrivers.length === 0) return rows
+
+  const presentNames = new Set(
+    rows.map((r) => normalizeName(String(r.pilota || "")))
+  )
+
+  const missingDrivers = leagueDrivers.filter(
+    (name) => !presentNames.has(normalizeName(name))
+  )
+
+  if (missingDrivers.length === 0) return rows
+
+  const lastPos = Math.max(...rows.map((r) => r.posGara || 0), 0)
+
+  const dnpRows: DisplayRow[] = missingDrivers.map((name, i) => ({
+    ...(rows[0] || {
+      posGara: 0,
+      pilota: "",
+      auto: "",
+      tempoTotaleGara: "",
+      distaccoDalPrimo: "",
+      migliorGiroGara: "",
+      tempoQualifica: "",
+      pole: "",
+      sourcePosGara: 0,
+    }),
+    posGara: lastPos + i + 1,
+    sourcePosGara: 1000 + lastPos + i + 1,
+    pilota: name,
+    auto: "",
+    tempoTotaleGara: "DNP",
+    distaccoDalPrimo: "DNP",
+    migliorGiroGara: "",
+    tempoQualifica: "",
+    pole: "",
+  }))
+
+  return [...rows, ...dnpRows]
 }
 
 function TableCell({
@@ -1155,6 +1236,7 @@ function renderTempoCell(tempo: string) {
 
   if (upper === "DNF") return <Pill left="DNF" variant="teal" />
   if (upper === "DNFV") return <Pill left="DNFV" variant="teal" />
+  if (upper === "DNP") return <Pill left="DNP" variant="teal" />
   if (upper === "BOX") return <Pill left="BOX" variant="fuchsia" />
   if (/^\d+giro$/i.test(t) || upper === "DOPPIATO") return <Pill left="DOPPIATO" variant="orange" />
   if (upper === "DSQ") return <Pill left="DSQ" variant="dsq" />
@@ -1435,7 +1517,7 @@ function ResultsTable({
   tableTitle?: string
   showTeamInsteadOfAuto?: boolean
   hideQualifyingColumn?: boolean
-  resolveTeamName?: (pilotName: string) => string
+  resolveTeamName?: (row: DisplayRow) => string
 }) {
   const showMeta = !forceHideMeta && (prtMode || unionMode)
   const showLobby = !forceHideMeta && unionMode
@@ -1581,15 +1663,12 @@ function ResultsTable({
               const showPenaltyDetail = !(exporting && unionMode)
               const rawTempo = tempoLikeGt7(r).trim().toUpperCase()
 
-              const isBox = rawTempo === "BOX"
-              const isDnf = rawTempo === "DNF" || rawTempo === "DNFV"
-              const isZeroPointsStatus = isBox || isDnf || isDsqRow
+const isBox = rawTempo === "BOX"
+const isDnf = rawTempo === "DNF" || rawTempo === "DNFV"
+const isDnp = rawTempo === "DNP"
+const isZeroPointsStatus = isBox || isDnf || isDnp || isDsqRow
 
-              const bonusPoints = (isPole ? 1 : 0) + (isBestLap ? 1 : 0)
-
-              const pointsValue = isZeroPointsStatus
-                ? bonusPoints
-                : getPointsForPrtRow(r, bestRaceLap)
+const pointsValue = getPointsForPrtRow(r, bestRaceLap)
 
               const isP1 = r.posGara === 1
 const isP2 = r.posGara === 2
@@ -1597,7 +1676,7 @@ const isP3 = r.posGara === 3
 const isPodium = isP1 || isP2 || isP3
 
 const resolvedTeamName = showTeamInsteadOfAuto
-  ? (resolveTeamName?.(r.pilota) || "-")
+  ? (resolveTeamName?.(r) || "-")
   : r.auto
 
               const podiumBg = isP1
@@ -2871,6 +2950,7 @@ const [loginError, setLoginError] = useState("")
 const [manualPilotDraft, setManualPilotDraft] = useState<Record<number, string>>({})
 const [showDistaccoModal, setShowDistaccoModal] = useState(false)
 const [manualDistaccoDraft, setManualDistaccoDraft] = useState<Record<number, string>>({})
+const [showMissingPilotWarning, setShowMissingPilotWarning] = useState(false)
 
     const [exportTexts, setExportTexts] = useState({
     mainTitle: "BMW M2 TEAM CUP",
@@ -3041,6 +3121,42 @@ useEffect(() => {
 
     return null
   }
+
+  function hasMissingPilotRows(rowsToCheck: DisplayRow[]) {
+  return rowsToCheck.some((row) => {
+    const pilot = String(row.pilota || "").trim()
+
+    return (
+      pilot === "" ||
+      pilot === "-" ||
+      pilot.toLowerCase() === "null" ||
+      pilot.toLowerCase() === "undefined"
+    )
+  })
+}
+
+  function resolveTeamForDisplayRow(row: DisplayRow): string {
+  const finalPilotName = String(row.pilota || "").trim()
+  const originalPreviewRow = previewRows.find(
+    (candidate) => candidate.sourcePosGara === row.sourcePosGara
+  )
+  const originalPilotName = String(originalPreviewRow?.pilota || "").trim()
+
+  // 1) Prima: nome finale corretto manualmente
+  const directFinalMatch = findTeamByPilot(finalPilotName)
+  if (directFinalMatch?.team) {
+    return directFinalMatch.team
+  }
+
+  // 2) Poi: nome originale OCR della stessa riga
+  const originalMatch = findTeamByPilot(originalPilotName)
+  if (originalMatch?.team) {
+    return originalMatch.team
+  }
+
+  // 3) Ultimo fallback
+  return "-"
+}
 
   function getBmwLeagueFromRows(rowsToCheck: DisplayRow[]): string {
   const counts: Record<string, number> = {}
@@ -3475,24 +3591,6 @@ function buildLiveBmwTeamStandings(
 
   return standings
 }
-
-    const BMW_POINTS_BY_POSITION: Record<number, number> = {
-    1: 25,
-    2: 22,
-    3: 19,
-    4: 16,
-    5: 14,
-    6: 12,
-    7: 10,
-    8: 8,
-    9: 6,
-    10: 5,
-    11: 4,
-    12: 3,
-    13: 2,
-    14: 1,
-  }
-
   function getBmwTeamCompletionBonus(
   teamName: string,
   pilotRows: BmwPilotRacePoints[]
@@ -3788,13 +3886,33 @@ const normalizedGaraForOutput = useMemo(() => {
   }, [rows, csv])
 
   const displayRows = useMemo<DisplayRow[]>(() => {
-    return previewRows.map((r) => ({
-      ...r,
-      pilota: (manualPilotOverrides[r.sourcePosGara] ?? r.pilota ?? "").trim(),
-      auto: (manualAutoOverrides[r.sourcePosGara] ?? r.auto ?? "").trim(),
-      distaccoDalPrimo: (manualDistaccoOverrides[r.sourcePosGara] ?? r.distaccoDalPrimo ?? "").trim(),
-    }))
-  }, [previewRows, manualPilotOverrides, manualAutoOverrides, manualDistaccoOverrides])
+  const mappedRows = previewRows.map((r) => ({
+    ...r,
+    pilota: (manualPilotOverrides[r.sourcePosGara] ?? r.pilota ?? "").trim(),
+    auto: (manualAutoOverrides[r.sourcePosGara] ?? r.auto ?? "").trim(),
+    distaccoDalPrimo: (manualDistaccoOverrides[r.sourcePosGara] ?? r.distaccoDalPrimo ?? "").trim(),
+  }))
+
+  const detectedLegaFromMappedRows = getBmwLeagueFromRows(mappedRows)
+  const currentLegaForCompletion =
+    String(manualLegaOverride || "").trim().toUpperCase() ||
+    String(detectedLegaFromMappedRows || "").trim().toUpperCase() ||
+    String(unionMeta.lega || "").trim().toUpperCase()
+
+  return ensureLeagueDriversFromTeams(
+    mappedRows,
+    teams,
+    currentLegaForCompletion
+  )
+}, [
+  previewRows,
+  manualPilotOverrides,
+  manualAutoOverrides,
+  manualDistaccoOverrides,
+  manualLegaOverride,
+  unionMeta.lega,
+  teams,
+])
 
 const detectedBmwLega = useMemo(() => {
   return getBmwLeagueFromRows(displayRows)
@@ -4151,34 +4269,40 @@ const hasManualPilotOverrides = useMemo(() => {
   }
 
   // ---------------- AUTO ----------------
-  const autos = finalRows.map((r) => (r.auto || "").trim())
-  const hasEmptyAuto = autos.some((a) => !a)
-  const suspiciousAuto = autos.some((a) => a.length < 3)
+  const comparableAutoRows = finalRows.filter((r) => {
+  const rawTempo = tempoLikeGt7(r).trim().toUpperCase()
+  return rawTempo !== "DNP"
+})
 
-  if (hasEmptyAuto) {
-    auto = "error"
-    notes.push("Presente almeno un'auto vuota.")
-  } else if (suspiciousAuto) {
-    auto = "warn"
-    notes.push("Possibile auto anomala.")
-  }
+const autos = comparableAutoRows.map((r) => (r.auto || "").trim())
+const hasEmptyAuto = autos.some((a) => !a)
+const suspiciousAuto = autos.some((a) => a.length < 3)
+
+if (hasEmptyAuto) {
+  auto = "error"
+  notes.push("Presente almeno un'auto vuota.")
+} else if (suspiciousAuto) {
+  auto = "warn"
+  notes.push("Possibile auto anomala.")
+}
 
   // ---------------- DISTACCHI ----------------
   const validDistacco = finalRows.every((r, i) => {
-    if (i === 0) return true
-    const d = (r.distaccoDalPrimo || "").trim()
+  if (i === 0) return true
+  const d = (r.distaccoDalPrimo || "").trim()
 
-    return (
-  /^\+\d{1,2}:\d{2}\.\d{3}$/.test(d) ||
-  /^\+\d{1,2}\.\d{3}$/.test(d) ||
-  /^DNF$/i.test(d) ||
-  /^DNFV$/i.test(d) ||
-  /^BOX$/i.test(d) ||
-  /^DSQ$/i.test(d) ||
-  /^DOPPIATO$/i.test(d) ||
-  /^\d+giro$/i.test(d)
-)
-  })
+  return (
+    /^\+\d{1,2}:\d{2}\.\d{3}$/.test(d) ||
+    /^\+\d{1,2}\.\d{3}$/.test(d) ||
+    /^DNF$/i.test(d) ||
+    /^DNFV$/i.test(d) ||
+    /^DNP$/i.test(d) ||
+    /^BOX$/i.test(d) ||
+    /^DSQ$/i.test(d) ||
+    /^DOPPIATO$/i.test(d) ||
+    /^\d+giro$/i.test(d)
+  )
+})
 
   if (!validDistacco) {
     distacchi = "warn"
@@ -4518,6 +4642,7 @@ function renderTempoHtml(tempo: string) {
   if (!t || t === "-") return `<span class="tempo-text">-</span>`
   if (upper === "DNF") return `<span class="pill teal">DNF</span>`
   if (upper === "DNFV") return `<span class="pill teal">DNFV</span>`
+  if (upper === "DNP") return `<span class="pill teal">DNP</span>`
   if (upper === "BOX") return `<span class="pill fuchsia">BOX</span>`
   if (/^\d+giro$/i.test(t) || upper === "DOPPIATO") return `<span class="pill orange">DOPPIATO</span>`
   if (upper === "DSQ") return `<span class="pill dsq">DSQ</span>`
@@ -6129,7 +6254,7 @@ function renderPenaltyHtmlForExport(row: DisplayRow, penalties: PenaltyMap) {
 
 function renderPointsHtmlForExport(row: DisplayRow, bestRaceLap: string) {
   const rawTempo = tempoLikeGt7(row).trim().toUpperCase()
-  const isZero = rawTempo === "BOX" || rawTempo === "DNF" || rawTempo === "DNFV" || rawTempo === "DSQ"
+  const isZero = rawTempo === "BOX" || rawTempo === "DNF" || rawTempo === "DNFV" || rawTempo === "DNP" || rawTempo === "DSQ"
 
   const isPole = (row.pole || "").trim().toUpperCase() === "POLE"
   const bestLapTime = (bestRaceLap.split("  ").pop() || "").trim()
@@ -6816,52 +6941,83 @@ function resetEntireCurrentRound() {
   }
 
   function openPilotCorrectionModal() {
+  const snapshotRows = displayRows.map((row) => ({ ...row }))
+
+  if (hasMissingPilotRows(snapshotRows)) {
+    setShowMissingPilotWarning(true)
+    return
+  }
+
   const nextDraft: Record<number, string> = {}
-  for (const row of displayRows) {
+  for (const row of snapshotRows) {
     nextDraft[row.sourcePosGara] = String(row.pilota ?? "").trim()
   }
+
+  setPilotModalRows(snapshotRows)
   setManualPilotDraft(nextDraft)
   setShowPilotModal(true)
 }
 
-function applyPilotCorrections() {
-  const cleaned: Record<number, string> = {}
+function continuePilotCorrectionModalAnyway() {
+  const snapshotRows = displayRows.map((row) => ({ ...row }))
 
-  for (const row of previewRows) {
-    const draftValue = String(manualPilotDraft[row.sourcePosGara] ?? "").trim()
-    const originalValue = String(row.pilota ?? "").trim()
-
-    if (draftValue && draftValue !== originalValue) {
-      cleaned[row.sourcePosGara] = draftValue
-    }
+  const nextDraft: Record<number, string> = {}
+  for (const row of snapshotRows) {
+    nextDraft[row.sourcePosGara] = String(row.pilota ?? "").trim()
   }
 
+  setPilotModalRows(snapshotRows)
+  setManualPilotDraft(nextDraft)
+  setShowMissingPilotWarning(false)
+  setShowPilotModal(true)
+}
+
+function applyPilotCorrections() {
+  const nextPilotOverrides: Record<number, string> = {}
   const nextAutoOverrides: Record<number, string> = {}
 
-  for (const baseRow of previewRows) {
-    const finalPilotName = String(
-      cleaned[baseRow.sourcePosGara] ?? baseRow.pilota ?? ""
-    ).trim()
-
-    const originalAuto = String(baseRow.auto ?? "").trim()
-
-    if (!finalPilotName) continue
-
-    const sourceRow = previewRows.find(
-      (candidate) => normalizePilot(candidate.pilota) === normalizePilot(finalPilotName)
+  for (const modalRow of pilotModalRows) {
+    const originalPreviewRow = previewRows.find(
+      (candidate) => candidate.sourcePosGara === modalRow.sourcePosGara
     )
 
-    if (!sourceRow) continue
+    if (!originalPreviewRow) continue
 
-    const sourceAuto = String(sourceRow.auto ?? "").trim()
+    const originalPilotName = String(originalPreviewRow.pilota ?? "").trim()
+    const finalPilotName = String(
+      manualPilotDraft[modalRow.sourcePosGara] ?? modalRow.pilota ?? ""
+    ).trim()
 
-    if (sourceAuto !== originalAuto) {
-      nextAutoOverrides[baseRow.sourcePosGara] = sourceAuto
+    if (finalPilotName && finalPilotName !== originalPilotName) {
+      nextPilotOverrides[modalRow.sourcePosGara] = finalPilotName
+    }
+
+    const originalAuto = String(originalPreviewRow.auto ?? "").trim()
+
+    const matchedPreviewRow = previewRows.find(
+      (candidate) =>
+        normalizePilot(candidate.pilota) === normalizePilot(finalPilotName)
+    )
+
+    if (matchedPreviewRow) {
+      const matchedAuto = String(matchedPreviewRow.auto ?? "").trim()
+
+      if (matchedAuto && matchedAuto !== originalAuto) {
+        nextAutoOverrides[modalRow.sourcePosGara] = matchedAuto
+      }
+    } else {
+      const currentDisplayedAuto = String(modalRow.auto ?? "").trim()
+
+      if (currentDisplayedAuto && currentDisplayedAuto !== originalAuto) {
+        nextAutoOverrides[modalRow.sourcePosGara] = currentDisplayedAuto
+      }
     }
   }
 
-  setManualPilotOverrides(cleaned)
+  setManualPilotOverrides(nextPilotOverrides)
   setManualAutoOverrides(nextAutoOverrides)
+  setManualPilotDraft({})
+  setPilotModalRows([])
   setShowPilotModal(false)
 }
 
@@ -6869,6 +7025,7 @@ function resetPilotCorrections() {
   setManualPilotOverrides({})
   setManualPilotDraft({})
   setManualAutoOverrides({})
+  setPilotModalRows([])
   setShowPilotModal(false)
 }
 
@@ -7920,7 +8077,7 @@ if (!authorized) {
   tableTitle={`Classifica Sprint ${currentSprint} (output)`}
   showTeamInsteadOfAuto={showTeamInsteadOfAutoInSprintTables}
   hideQualifyingColumn={hideQualifyingColumnInCurrentSprint}
-  resolveTeamName={(pilotName) => findTeamByPilot(pilotName)?.team || "-"}
+  resolveTeamName={(row) => resolveTeamForDisplayRow(row)}
 />
 
     {displayRows.length > 0 && (
@@ -9300,6 +9457,88 @@ if (!authorized) {
         </div>
       )}
 
+      {showMissingPilotWarning && (
+  <div
+    style={{
+      position: "fixed",
+      inset: 0,
+      background: "rgba(0,0,0,0.72)",
+      backdropFilter: "blur(6px)",
+      display: "grid",
+      placeItems: "center",
+      zIndex: 9999,
+      padding: 20,
+    }}
+  >
+    <div
+      style={{
+        width: "100%",
+        maxWidth: 560,
+        borderRadius: 22,
+        border: "1px solid rgba(255,255,255,0.12)",
+        background: "linear-gradient(180deg, rgba(18,22,31,0.98), rgba(8,10,15,0.98))",
+        boxShadow: "0 20px 80px rgba(0,0,0,0.55)",
+        padding: 22,
+        display: "grid",
+        gap: 16,
+      }}
+    >
+      <div style={{ fontSize: 22, fontWeight: 900 }}>
+        Attenzione
+      </div>
+
+      <div
+        style={{
+          fontSize: 14,
+          lineHeight: 1.55,
+          opacity: 0.88,
+        }}
+      >
+        È presente almeno un <b>pilota non identificato</b>.
+        <br /><br />
+        Conviene inserire prima il nome mancante e solo dopo procedere con eventuali scambi tra piloti.
+      </div>
+
+      <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, flexWrap: "wrap" }}>
+        <button
+          onClick={() => setShowMissingPilotWarning(false)}
+          style={{
+            padding: "12px 16px",
+            borderRadius: 14,
+            border: "1px solid rgba(255,255,255,0.14)",
+            background: "rgba(255,255,255,0.06)",
+            color: "white",
+            cursor: "pointer",
+            fontWeight: 900,
+            textTransform: "uppercase",
+            letterSpacing: 0.5,
+          }}
+        >
+          Chiudi
+        </button>
+
+        <button
+          onClick={continuePilotCorrectionModalAnyway}
+          style={{
+            padding: "12px 16px",
+            borderRadius: 14,
+            border: "1px solid rgba(160,90,255,0.30)",
+            background: "rgba(160,90,255,0.20)",
+            color: "white",
+            cursor: "pointer",
+            fontWeight: 900,
+            textTransform: "uppercase",
+            letterSpacing: 0.5,
+            boxShadow: "0 0 22px rgba(160,90,255,0.12)",
+          }}
+        >
+          Continua comunque
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
       {showPilotModal && (
   <div
     style={{
@@ -9378,173 +9617,171 @@ if (!authorized) {
             </thead>
 
             <tbody>
-  {previewRows.map((baseRow) => {
-    const appliedValue = String(
-      manualPilotOverrides[baseRow.sourcePosGara] ?? baseRow.pilota ?? ""
-    ).trim()
+              {pilotModalRows.map((baseRow) => {
+                const originalValue = String(baseRow.pilota ?? "").trim()
 
-    const currentValue = String(
-      manualPilotDraft[baseRow.sourcePosGara] ?? appliedValue
-    ).trim()
+                const currentValue = String(
+                  manualPilotDraft[baseRow.sourcePosGara] ?? originalValue
+                ).trim()
 
-    const originalValue = appliedValue
-    const changed = currentValue !== originalValue
+                const changed = currentValue !== originalValue
 
-    return (
-      <tr
-        key={`manual-pilot-${baseRow.sourcePosGara}`}
-        style={{
-          background: changed
-            ? "linear-gradient(90deg, rgba(160,90,255,0.10), rgba(255,255,255,0.02))"
-            : "transparent",
-        }}
-      >
-        <td
-          style={{
-            padding: "12px",
-            borderBottom: "1px solid rgba(255,255,255,0.08)",
-          }}
-        >
-          <PosBadge pos={baseRow.posGara} />
-        </td>
-
-        <td
-          style={{
-            padding: "12px",
-            borderBottom: "1px solid rgba(255,255,255,0.08)",
-            color: "rgba(255,255,255,0.86)",
-            fontWeight: 700,
-          }}
-        >
-          {appliedValue || "-"}
-        </td>
-
-        <td
-          style={{
-            padding: "12px",
-            borderBottom: "1px solid rgba(255,255,255,0.08)",
-          }}
-        >
-          <div style={{ display: "grid", gap: 8 }}>
-            <input
-              value={manualPilotDraft[baseRow.sourcePosGara] ?? appliedValue}
-              onChange={(e) =>
-                setManualPilotDraft((prev) => ({
-                  ...prev,
-                  [baseRow.sourcePosGara]: e.target.value,
-                }))
-              }
-              placeholder="Correggi nome pilota"
-              style={{
-                width: "100%",
-                padding: "10px 12px",
-                borderRadius: 10,
-                border: changed
-                  ? "1px solid rgba(160,90,255,0.30)"
-                  : "1px solid rgba(255,255,255,0.14)",
-                background: "rgba(0,0,0,0.24)",
-                color: "white",
-                boxSizing: "border-box",
-              }}
-            />
-
-            <select
-              defaultValue=""
-              onChange={(e) => {
-                const selected = e.target.value
-                if (!selected) return
-
-                const currentKey = baseRow.sourcePosGara
-
-                const otherRow = previewRows.find(
-                  (candidate) =>
-                    candidate.sourcePosGara !== currentKey &&
-                    String(
-                      manualPilotDraft[candidate.sourcePosGara] ??
-                        manualPilotOverrides[candidate.sourcePosGara] ??
-                        candidate.pilota ??
-                        ""
-                    ).trim() === selected
-                )
-
-                if (!otherRow) {
-                  e.currentTarget.value = ""
-                  return
-                }
-
-                const otherKey = otherRow.sourcePosGara
-
-                setManualPilotDraft((prev) => {
-                  const nextDraft: Record<number, string> = {}
-
-                  for (const r of previewRows) {
-                    nextDraft[r.sourcePosGara] = String(
-                      prev[r.sourcePosGara] ??
-                        manualPilotOverrides[r.sourcePosGara] ??
-                        r.pilota ??
-                        ""
-                    ).trim()
-                  }
-
-                  const currentPilot = nextDraft[currentKey]
-                  const otherPilot = nextDraft[otherKey]
-
-                  nextDraft[currentKey] = otherPilot
-                  nextDraft[otherKey] = currentPilot
-
-                  return nextDraft
-                })
-
-                e.currentTarget.value = ""
-              }}
-              style={{
-                width: "100%",
-                padding: "10px 12px",
-                borderRadius: 10,
-                border: "1px solid rgba(255,255,255,0.14)",
-                background: "rgba(0,0,0,0.24)",
-                color: "white",
-                boxSizing: "border-box",
-              }}
-            >
-              <option value="" style={{ background: "#11151d", color: "white" }}>
-                Scambia con...
-              </option>
-
-              {previewRows
-                .filter((candidate) => candidate.sourcePosGara !== baseRow.sourcePosGara)
-                .map((candidate) => {
-                  const candidateName = String(
-                    manualPilotDraft[candidate.sourcePosGara] ??
-                      manualPilotOverrides[candidate.sourcePosGara] ??
-                      candidate.pilota ??
-                      ""
-                  ).trim()
-
-                  return (
-                    <option
-                      key={`pilot-option-${baseRow.sourcePosGara}-${candidate.sourcePosGara}`}
-                      value={candidateName}
-                      style={{ background: "#11151d", color: "white" }}
+                return (
+                  <tr
+                    key={`manual-pilot-${baseRow.sourcePosGara}`}
+                    style={{
+                      background: changed
+                        ? "linear-gradient(90deg, rgba(160,90,255,0.10), rgba(255,255,255,0.02))"
+                        : "transparent",
+                    }}
+                  >
+                    <td
+                      style={{
+                        padding: "12px",
+                        borderBottom: "1px solid rgba(255,255,255,0.08)",
+                      }}
                     >
-                      {candidateName}
-                    </option>
-                  )
-                })}
-            </select>
-          </div>
-        </td>
-      </tr>
-    )
-  })}
-</tbody>
+                      <PosBadge pos={baseRow.posGara} />
+                    </td>
+
+                    <td
+                      style={{
+                        padding: "12px",
+                        borderBottom: "1px solid rgba(255,255,255,0.08)",
+                        color: "rgba(255,255,255,0.86)",
+                        fontWeight: 700,
+                      }}
+                    >
+                      {originalValue || "-"}
+                    </td>
+
+                    <td
+                      style={{
+                        padding: "12px",
+                        borderBottom: "1px solid rgba(255,255,255,0.08)",
+                      }}
+                    >
+                      <div style={{ display: "grid", gap: 8 }}>
+                        <input
+                          value={manualPilotDraft[baseRow.sourcePosGara] ?? originalValue}
+                          onChange={(e) =>
+                            setManualPilotDraft((prev) => ({
+                              ...prev,
+                              [baseRow.sourcePosGara]: e.target.value,
+                            }))
+                          }
+                          placeholder="Correggi nome pilota"
+                          style={{
+                            width: "100%",
+                            padding: "10px 12px",
+                            borderRadius: 10,
+                            border: changed
+                              ? "1px solid rgba(160,90,255,0.30)"
+                              : "1px solid rgba(255,255,255,0.14)",
+                            background: "rgba(0,0,0,0.24)",
+                            color: "white",
+                            boxSizing: "border-box",
+                          }}
+                        />
+
+                        <select
+                          defaultValue=""
+                          onChange={(e) => {
+                            const selected = e.target.value
+                            if (!selected) return
+
+                            const currentKey = baseRow.sourcePosGara
+
+                            const otherRow = pilotModalRows.find(
+                              (candidate) =>
+                                candidate.sourcePosGara !== currentKey &&
+                                String(
+                                  manualPilotDraft[candidate.sourcePosGara] ??
+                                    candidate.pilota ??
+                                    ""
+                                ).trim() === selected
+                            )
+
+                            if (!otherRow) {
+                              e.currentTarget.value = ""
+                              return
+                            }
+
+                            const otherKey = otherRow.sourcePosGara
+
+                            setManualPilotDraft((prev) => {
+                              const nextDraft: Record<number, string> = {}
+
+                              for (const r of pilotModalRows) {
+                                nextDraft[r.sourcePosGara] = String(
+                                  prev[r.sourcePosGara] ??
+                                    r.pilota ??
+                                    ""
+                                ).trim()
+                              }
+
+                              const currentPilot = nextDraft[currentKey]
+                              const otherPilot = nextDraft[otherKey]
+
+                              nextDraft[currentKey] = otherPilot
+                              nextDraft[otherKey] = currentPilot
+
+                              return nextDraft
+                            })
+
+                            e.currentTarget.value = ""
+                          }}
+                          style={{
+                            width: "100%",
+                            padding: "10px 12px",
+                            borderRadius: 10,
+                            border: "1px solid rgba(255,255,255,0.14)",
+                            background: "rgba(0,0,0,0.24)",
+                            color: "white",
+                            boxSizing: "border-box",
+                          }}
+                        >
+                          <option value="" style={{ background: "#11151d", color: "white" }}>
+                            Scambia con...
+                          </option>
+
+                          {pilotModalRows
+                            .filter((candidate) => candidate.sourcePosGara !== baseRow.sourcePosGara)
+                            .map((candidate) => {
+                              const candidateName = String(
+                                manualPilotDraft[candidate.sourcePosGara] ??
+                                  candidate.pilota ??
+                                  ""
+                              ).trim()
+
+                              return (
+                                <option
+                                  key={`pilot-option-${baseRow.sourcePosGara}-${candidate.sourcePosGara}`}
+                                  value={candidateName}
+                                  style={{ background: "#11151d", color: "white" }}
+                                >
+                                  {candidateName}
+                                </option>
+                              )
+                            })}
+                        </select>
+                      </div>
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
           </table>
         </div>
       </div>
 
       <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, flexWrap: "wrap" }}>
         <button
-          onClick={() => setShowPilotModal(false)}
+          onClick={() => {
+            setShowPilotModal(false)
+            setManualPilotDraft({})
+            setPilotModalRows([])
+          }}
           style={{
             padding: "12px 16px",
             borderRadius: 14,
@@ -10217,7 +10454,7 @@ if (!authorized) {
   tableTitle={`Classifica Sprint ${currentSprint} definitiva`}
   showTeamInsteadOfAuto={showTeamInsteadOfAutoInSprintTables}
   hideQualifyingColumn={hideQualifyingColumnInCurrentSprint}
-  resolveTeamName={(pilotName) => findTeamByPilot(pilotName)?.team || "-"}
+  resolveTeamName={(row) => resolveTeamForDisplayRow(row)}
 />
             </div>
           )}

@@ -124,12 +124,20 @@ type BmwSprintSnapshot = {
 
   finalRows: DisplayRow[]
   finalCsv: string
+  unionMeta: UnionMeta
 
   winner: string
   bestQuali: string
   bestRaceLap: string
 
   drivers: BmwSprintDriver[]
+
+  penalties: PenaltyMap
+  lapOverrides: Record<string, string>
+  dnfOverrides: DnfOverrideMap
+  manualPilotOverrides: Record<number, string>
+  manualAutoOverrides: Record<number, string>
+  manualDistaccoOverrides: Record<number, string>
 }
 
 type BmwRoundDriver = {
@@ -2938,6 +2946,8 @@ const [loginError, setLoginError] = useState("")
   const [showSprint2UploadConfirm, setShowSprint2UploadConfirm] = useState(false)
   const [showSprintResetConfirm, setShowSprintResetConfirm] = useState(false)
   const [sprint2Ready, setSprint2Ready] = useState(false)
+  const [showReopenLeagueModal, setShowReopenLeagueModal] = useState(false)
+const [selectedLeagueToReopen, setSelectedLeagueToReopen] = useState<BmwLeagueName | null>(null)
   const [manualGaraOverride, setManualGaraOverride] = useState("")
   const [manualLegaOverride, setManualLegaOverride] = useState("")
 
@@ -4495,21 +4505,45 @@ const currentBmwSprintSnapshot = useMemo<BmwSprintSnapshot | null>(() => {
     sprint: currentSprint === 1 ? "sprint1" : "sprint2",
     hasQualifying: currentSprint === 1,
     savedAt: new Date().toISOString(),
+
     finalRows,
     finalCsv,
+    unionMeta: {
+      ...unionMeta,
+      gara: normalizedGaraForOutput,
+      lega: effectiveLegaResolved,
+    },
+
     winner,
     bestQuali: currentSprint === 1 ? bestQuali : "",
     bestRaceLap,
+
     drivers: bmwSprintDriversPreview,
+
+    penalties,
+    lapOverrides,
+    dnfOverrides,
+    manualPilotOverrides,
+    manualAutoOverrides,
+    manualDistaccoOverrides,
   }
 }, [
   currentSprint,
   finalRows,
   finalCsv,
+  unionMeta,
+  normalizedGaraForOutput,
+  effectiveLegaResolved,
   winner,
   bestQuali,
   bestRaceLap,
   bmwSprintDriversPreview,
+  penalties,
+  lapOverrides,
+  dnfOverrides,
+  manualPilotOverrides,
+  manualAutoOverrides,
+  manualDistaccoOverrides,
 ])
 
 const bmwLeagueDriversPreview = useMemo(() => {
@@ -4561,6 +4595,19 @@ const roundLeagueStatus = useMemo(() => {
 const isCurrentRoundReady = useMemo(() => {
   return isRoundSnapshotReady(currentRoundSnapshot)
 }, [currentRoundSnapshot])
+
+const savedLeaguesInCurrentRound = useMemo(() => {
+  if (!currentRoundSnapshot?.leagues) return []
+
+  return (["PRO", "PRO-AMA", "AMA"] as BmwLeagueName[])
+    .map((league) => ({
+      league,
+      snapshot: currentRoundSnapshot.leagues?.[league] || null,
+    }))
+    .filter((item) => !!item.snapshot)
+}, [currentRoundSnapshot])
+
+const hasSavedLeaguesInCurrentRound = savedLeaguesInCurrentRound.length > 0
 
 async function performExportTablePng() {
     if (!exportRef.current || finalRows.length === 0) return
@@ -6719,6 +6766,91 @@ function resetSavedSprints() {
   setShowSprint2DoneInfo(false)
   setShowSprintResetConfirm(true)
 }
+
+function openReopenLeagueModal(league: BmwLeagueName) {
+  setSelectedLeagueToReopen(league)
+  setShowReopenLeagueModal(true)
+}
+
+function closeReopenLeagueModal() {
+  setSelectedLeagueToReopen(null)
+  setShowReopenLeagueModal(false)
+}
+
+function reopenSavedLeagueSprint(
+  league: BmwLeagueName,
+  sprint: BmwSprintKey
+) {
+  const leagueSnapshot = currentRoundSnapshot?.leagues?.[league]
+  if (!leagueSnapshot) {
+    setError(`Nessun salvataggio trovato per la lega ${league}.`)
+    return
+  }
+
+  const sprintSnapshot =
+    sprint === "sprint1" ? leagueSnapshot.sprint1 : leagueSnapshot.sprint2
+
+  if (!sprintSnapshot) {
+    setError(`Nessun salvataggio trovato per ${league} - ${sprint.toUpperCase()}.`)
+    return
+  }
+
+  setError("")
+
+  setCsv(sprintSnapshot.finalCsv || "")
+  setRows(Array.isArray(sprintSnapshot.finalRows) ? sprintSnapshot.finalRows : [])
+
+  setUnionMeta(
+    sprintSnapshot.unionMeta || {
+      gara: "",
+      lobby: "",
+      lega: league,
+    }
+  )
+
+  setManualGaraOverride("")
+  setManualLegaOverride(league)
+
+  setCurrentSprint(sprint === "sprint1" ? 1 : 2)
+
+  setPenalties(sprintSnapshot.penalties || {})
+  setLapOverrides(sprintSnapshot.lapOverrides || {})
+  setDnfOverrides(sprintSnapshot.dnfOverrides || {})
+  setManualPilotOverrides(sprintSnapshot.manualPilotOverrides || {})
+  setManualAutoOverrides(sprintSnapshot.manualAutoOverrides || {})
+  setManualDistaccoOverrides(sprintSnapshot.manualDistaccoOverrides || {})
+
+  setManualPilotDraft({})
+  setManualDistaccoDraft({})
+  setPilotModalRows([])
+
+  setShowPilotModal(false)
+  setShowDistaccoModal(false)
+  setShowDgTable(false)
+  setShowMissingPilotWarning(false)
+
+  setShowSprintInfo(false)
+  setShowSprint2DoneInfo(false)
+  setShowSprint2UploadConfirm(false)
+  setShowSprintResetConfirm(false)
+  setSprint2Ready(false)
+  setPendingSprint2Upload(false)
+
+  setShowReopenLeagueModal(false)
+  setSelectedLeagueToReopen(null)
+
+  setSavedSprintPreviews((prev) => ({
+    ...prev,
+    [sprint]: sprintSnapshot,
+  }))
+
+  requestAnimationFrame(() => {
+    topPageRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    })
+  })
+}
   
   function saveOrUpdateCurrentRound() {
   const roundKey = getRoundKey(currentRound)
@@ -8657,6 +8789,154 @@ if (!authorized) {
   </div>
 )}
 
+{hasSavedLeaguesInCurrentRound && (
+  <div
+    style={{
+      borderRadius: 16,
+      border: "1px solid rgba(255,255,255,0.10)",
+      background: "rgba(0,0,0,0.18)",
+      padding: 14,
+      display: "grid",
+      gap: 12,
+      boxShadow: "0 10px 30px rgba(0,0,0,0.20)",
+    }}
+  >
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "space-between",
+        gap: 12,
+        flexWrap: "wrap",
+        alignItems: "center",
+      }}
+    >
+      <div style={{ display: "grid", gap: 4 }}>
+        <div style={{ fontWeight: 900, opacity: 0.96 }}>
+          Archivio leghe salvate nel Round corrente
+        </div>
+        <div style={{ fontSize: 12, opacity: 0.74 }}>
+          Riapri rapidamente una lega già salvata, scegli la sprint da caricare e modifica direttamente la sessione prima di sovrascriverla.
+        </div>
+      </div>
+
+      <div
+        style={{
+          padding: "8px 12px",
+          borderRadius: 12,
+          border: "1px solid rgba(255,255,255,0.10)",
+          background: "rgba(255,255,255,0.05)",
+          fontSize: 12,
+          fontWeight: 900,
+          textTransform: "uppercase",
+          letterSpacing: 0.4,
+        }}
+      >
+        Round {currentRound}
+      </div>
+    </div>
+
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+        gap: 12,
+      }}
+    >
+      {(["PRO", "PRO-AMA", "AMA"] as BmwLeagueName[]).map((league) => {
+        const snapshot = currentRoundSnapshot?.leagues?.[league] || null
+        const hasSprint1 = !!snapshot?.sprint1
+        const hasSprint2 = !!snapshot?.sprint2
+        const isComplete = hasSprint1 && hasSprint2
+
+        return (
+          <div
+            key={league}
+            style={{
+              borderRadius: 14,
+              border: snapshot
+                ? "1px solid rgba(255,255,255,0.12)"
+                : "1px solid rgba(255,255,255,0.08)",
+              background: snapshot
+                ? "rgba(255,255,255,0.05)"
+                : "rgba(255,255,255,0.03)",
+              padding: 12,
+              display: "grid",
+              gap: 10,
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                gap: 10,
+              }}
+            >
+              <div style={{ fontWeight: 900, letterSpacing: 0.4 }}>
+                {league}
+              </div>
+
+              <div
+                style={{
+                  padding: "6px 10px",
+                  borderRadius: 999,
+                  border: "1px solid rgba(255,255,255,0.10)",
+                  background: !snapshot
+                    ? "rgba(255,255,255,0.05)"
+                    : isComplete
+                      ? "rgba(34,197,94,0.14)"
+                      : "rgba(245,158,11,0.14)",
+                  fontSize: 11,
+                  fontWeight: 900,
+                  textTransform: "uppercase",
+                }}
+              >
+                {!snapshot ? "vuota" : isComplete ? "completa" : "parziale"}
+              </div>
+            </div>
+
+            <div
+              style={{
+                display: "grid",
+                gap: 6,
+                fontSize: 12,
+                opacity: 0.82,
+              }}
+            >
+              <div>
+                Sprint 1: <b>{hasSprint1 ? "salvata" : "non salvata"}</b>
+              </div>
+              <div>
+                Sprint 2: <b>{hasSprint2 ? "salvata" : "non salvata"}</b>
+              </div>
+            </div>
+
+            <button
+              onClick={() => openReopenLeagueModal(league)}
+              disabled={!snapshot}
+              style={{
+                padding: "10px 12px",
+                borderRadius: 10,
+                border: "1px solid rgba(160,90,255,0.30)",
+                background: snapshot ? "rgba(160,90,255,0.20)" : "rgba(255,255,255,0.06)",
+                color: "white",
+                cursor: snapshot ? "pointer" : "not-allowed",
+                fontWeight: 800,
+                textTransform: "uppercase",
+                fontSize: 12,
+                opacity: snapshot ? 1 : 0.5,
+                boxShadow: snapshot ? "0 0 18px rgba(160,90,255,0.10)" : "none",
+              }}
+            >
+              Riapri lega
+            </button>
+          </div>
+        )
+      })}
+    </div>
+  </div>
+)}
+
 {bmwSprintDriversPreview.length > 0 && (
   <div
     style={{
@@ -10074,6 +10354,121 @@ if (!authorized) {
           }}
         >
           Applica correzioni
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+{showReopenLeagueModal && selectedLeagueToReopen && (
+  <div
+    style={{
+      position: "fixed",
+      inset: 0,
+      background: "rgba(0,0,0,0.72)",
+      backdropFilter: "blur(6px)",
+      display: "grid",
+      placeItems: "center",
+      zIndex: 9999,
+      padding: 20,
+    }}
+  >
+    <div
+      style={{
+        width: "100%",
+        maxWidth: 560,
+        borderRadius: 22,
+        border: "1px solid rgba(255,255,255,0.12)",
+        background: "linear-gradient(180deg, rgba(18,22,31,0.98), rgba(8,10,15,0.98))",
+        boxShadow: "0 20px 80px rgba(0,0,0,0.55)",
+        padding: 22,
+        display: "grid",
+        gap: 16,
+      }}
+    >
+      <div>
+        <div style={{ fontSize: 22, fontWeight: 900 }}>
+          Riapri lega salvata
+        </div>
+        <div style={{ marginTop: 6, fontSize: 13, opacity: 0.76 }}>
+          Lega selezionata: <b>{selectedLeagueToReopen}</b>
+        </div>
+      </div>
+
+      <div
+        style={{
+          fontSize: 14,
+          lineHeight: 1.55,
+          opacity: 0.88,
+        }}
+      >
+        Scegli quale sprint vuoi riaprire. Verrà ripristinata l’ultima versione salvata di quella lega, completa di penalità e correzioni manuali.
+      </div>
+
+      <div style={{ display: "grid", gap: 10 }}>
+        <button
+          onClick={() => reopenSavedLeagueSprint(selectedLeagueToReopen, "sprint1")}
+          disabled={!currentRoundSnapshot?.leagues?.[selectedLeagueToReopen]?.sprint1}
+          style={{
+            padding: "12px 16px",
+            borderRadius: 14,
+            border: "1px solid rgba(255,215,0,0.30)",
+            background: currentRoundSnapshot?.leagues?.[selectedLeagueToReopen]?.sprint1
+              ? "rgba(255,215,0,0.18)"
+              : "rgba(255,255,255,0.06)",
+            color: "white",
+            cursor: currentRoundSnapshot?.leagues?.[selectedLeagueToReopen]?.sprint1
+              ? "pointer"
+              : "not-allowed",
+            fontWeight: 900,
+            textTransform: "uppercase",
+            letterSpacing: 0.5,
+            opacity: currentRoundSnapshot?.leagues?.[selectedLeagueToReopen]?.sprint1 ? 1 : 0.5,
+          }}
+        >
+          Apri Sprint 1
+        </button>
+
+        <button
+          onClick={() => reopenSavedLeagueSprint(selectedLeagueToReopen, "sprint2")}
+          disabled={!currentRoundSnapshot?.leagues?.[selectedLeagueToReopen]?.sprint2}
+          style={{
+            padding: "12px 16px",
+            borderRadius: 14,
+            border: "1px solid rgba(34,197,94,0.30)",
+            background: currentRoundSnapshot?.leagues?.[selectedLeagueToReopen]?.sprint2
+              ? "rgba(34,197,94,0.16)"
+              : "rgba(255,255,255,0.06)",
+            color: "white",
+            cursor: currentRoundSnapshot?.leagues?.[selectedLeagueToReopen]?.sprint2
+              ? "pointer"
+              : "not-allowed",
+            fontWeight: 900,
+            textTransform: "uppercase",
+            letterSpacing: 0.5,
+            opacity: currentRoundSnapshot?.leagues?.[selectedLeagueToReopen]?.sprint2 ? 1 : 0.5,
+          }}
+        >
+          Apri Sprint 2
+        </button>
+      </div>
+
+      <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, flexWrap: "wrap" }}>
+        <button
+          onClick={closeReopenLeagueModal}
+          style={{
+            padding: "12px 16px",
+            borderRadius: 14,
+            border: "1px solid rgba(255,255,255,0.14)",
+            background: "rgba(255,255,255,0.06)",
+            color: "white",
+            cursor: "pointer",
+            fontWeight: 900,
+            textTransform: "uppercase",
+            letterSpacing: 0.5,
+          }}
+        >
+          Chiudi
         </button>
       </div>
     </div>
