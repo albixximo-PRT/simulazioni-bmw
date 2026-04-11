@@ -2953,6 +2953,8 @@ const [loginError, setLoginError] = useState("")
 const [selectedLeagueToReopen, setSelectedLeagueToReopen] = useState<BmwLeagueName | null>(null)
 const [showResetLeagueModal, setShowResetLeagueModal] = useState(false)
 const [selectedLeagueToReset, setSelectedLeagueToReset] = useState<BmwLeagueName | null>(null)
+const [showResetLeagueSuccessModal, setShowResetLeagueSuccessModal] = useState(false)
+const [lastResetLeagueName, setLastResetLeagueName] = useState<BmwLeagueName | null>(null)
   const [manualGaraOverride, setManualGaraOverride] = useState("")
   const [manualLegaOverride, setManualLegaOverride] = useState("")
 
@@ -6833,11 +6835,14 @@ function resetSpecificLeagueInRound(league: BmwLeagueName) {
     return nextSnapshots
   })
 
+  setLastResetLeagueName(league)
+
   if (selectedLeagueToReset === league) {
     setSelectedLeagueToReset(null)
   }
 
   setShowResetLeagueModal(false)
+  setShowResetLeagueSuccessModal(true)
 }
 
 function reopenSavedLeagueSprint(
@@ -10670,6 +10675,96 @@ if (!authorized) {
           }}
         >
           Conferma reset
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+{showResetLeagueSuccessModal && (
+  <div
+    style={{
+      position: "fixed",
+      inset: 0,
+      background: "rgba(0,0,0,0.72)",
+      backdropFilter: "blur(6px)",
+      display: "grid",
+      placeItems: "center",
+      zIndex: 9999,
+      padding: 20,
+    }}
+  >
+    <div
+      style={{
+        width: "100%",
+        maxWidth: 560,
+        borderRadius: 22,
+        border: "1px solid rgba(255,255,255,0.12)",
+        background: "linear-gradient(180deg, rgba(18,22,31,0.98), rgba(8,10,15,0.98))",
+        boxShadow: "0 20px 80px rgba(0,0,0,0.55)",
+        padding: 22,
+        display: "grid",
+        gap: 16,
+      }}
+    >
+      <div>
+        <div style={{ fontSize: 22, fontWeight: 900 }}>
+          Reset lega completato
+        </div>
+        <div style={{ marginTop: 6, fontSize: 13, opacity: 0.76 }}>
+          Lega eliminata: <b>{lastResetLeagueName || "-"}</b>
+        </div>
+      </div>
+
+      <div
+        style={{
+          fontSize: 14,
+          lineHeight: 1.55,
+          opacity: 0.88,
+        }}
+      >
+        I dati della lega selezionata sono stati eliminati con successo.
+        <br /><br />
+        Premi <b>RESET</b> per tornare alla schermata iniziale, con lo stesso comportamento del tasto RESET in alto.
+      </div>
+
+      <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, flexWrap: "wrap" }}>
+        <button
+          onClick={() => {
+            setShowResetLeagueSuccessModal(false)
+            setLastResetLeagueName(null)
+          }}
+          style={{
+            padding: "12px 16px",
+            borderRadius: 14,
+            border: "1px solid rgba(255,255,255,0.14)",
+            background: "rgba(255,255,255,0.06)",
+            color: "white",
+            cursor: "pointer",
+            fontWeight: 900,
+            textTransform: "uppercase",
+            letterSpacing: 0.5,
+          }}
+        >
+          Chiudi
+        </button>
+
+        <button
+          onClick={resetAll}
+          style={{
+            padding: "12px 16px",
+            borderRadius: 14,
+            border: "1px solid rgba(239,68,68,0.30)",
+            background: "rgba(239,68,68,0.18)",
+            color: "white",
+            cursor: "pointer",
+            fontWeight: 900,
+            textTransform: "uppercase",
+            letterSpacing: 0.5,
+            boxShadow: "0 0 22px rgba(239,68,68,0.10)",
+          }}
+        >
+          RESET
         </button>
       </div>
     </div>
