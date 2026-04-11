@@ -2955,6 +2955,9 @@ const [showResetLeagueModal, setShowResetLeagueModal] = useState(false)
 const [selectedLeagueToReset, setSelectedLeagueToReset] = useState<BmwLeagueName | null>(null)
 const [showResetLeagueSuccessModal, setShowResetLeagueSuccessModal] = useState(false)
 const [lastResetLeagueName, setLastResetLeagueName] = useState<BmwLeagueName | null>(null)
+const [showSaveLeagueSuccessModal, setShowSaveLeagueSuccessModal] = useState(false)
+const [lastSavedLeagueName, setLastSavedLeagueName] = useState<BmwLeagueName | null>(null)
+const [lastSaveLeagueMode, setLastSaveLeagueMode] = useState<"save" | "overwrite">("save")
   const [manualGaraOverride, setManualGaraOverride] = useState("")
   const [manualLegaOverride, setManualLegaOverride] = useState("")
 
@@ -6943,6 +6946,8 @@ function reopenSavedLeagueSprint(
     return
   }
 
+  const alreadyExists = !!roundSnapshots[roundKey]?.leagues?.[leagueName]
+
   setRoundSnapshots((prev) => {
     const now = new Date().toISOString()
     const existingRound = prev[roundKey]
@@ -6983,6 +6988,10 @@ function reopenSavedLeagueSprint(
       },
     }
   })
+
+  setLastSavedLeagueName(leagueName)
+  setLastSaveLeagueMode(alreadyExists ? "overwrite" : "save")
+  setShowSaveLeagueSuccessModal(true)
 }
 
 function finalizeCurrentRound() {
@@ -10725,7 +10734,7 @@ if (!authorized) {
       >
         I dati della lega selezionata sono stati eliminati con successo.
         <br /><br />
-        Premi <b>RESET</b> per tornare alla schermata iniziale, con lo stesso comportamento del tasto RESET in alto.
+        Premi <b>RESET</b> per tornare alla schermata iniziale e reinserire i dati della lega.
       </div>
 
       <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, flexWrap: "wrap" }}>
@@ -10765,6 +10774,82 @@ if (!authorized) {
           }}
         >
           RESET
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+{showSaveLeagueSuccessModal && (
+  <div
+    style={{
+      position: "fixed",
+      inset: 0,
+      background: "rgba(0,0,0,0.72)",
+      backdropFilter: "blur(6px)",
+      display: "grid",
+      placeItems: "center",
+      zIndex: 9999,
+      padding: 20,
+    }}
+  >
+    <div
+      style={{
+        width: "100%",
+        maxWidth: 560,
+        borderRadius: 22,
+        border: "1px solid rgba(255,255,255,0.12)",
+        background: "linear-gradient(180deg, rgba(18,22,31,0.98), rgba(8,10,15,0.98))",
+        boxShadow: "0 20px 80px rgba(0,0,0,0.55)",
+        padding: 22,
+        display: "grid",
+        gap: 16,
+      }}
+    >
+      <div>
+        <div style={{ fontSize: 22, fontWeight: 900 }}>
+          {lastSaveLeagueMode === "overwrite"
+            ? "Lega sovrascritta correttamente"
+            : "Lega salvata correttamente"}
+        </div>
+        <div style={{ marginTop: 6, fontSize: 13, opacity: 0.76 }}>
+          Lega: <b>{lastSavedLeagueName || "-"}</b>
+        </div>
+      </div>
+
+      <div
+        style={{
+          fontSize: 14,
+          lineHeight: 1.55,
+          opacity: 0.88,
+        }}
+      >
+        {lastSaveLeagueMode === "overwrite"
+          ? "I dati della lega sono stati aggiornati correttamente nel round corrente."
+          : "I dati della lega sono stati salvati correttamente nel round corrente."}
+      </div>
+
+      <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, flexWrap: "wrap" }}>
+        <button
+          onClick={() => {
+            setShowSaveLeagueSuccessModal(false)
+            setLastSavedLeagueName(null)
+            setLastSaveLeagueMode("save")
+          }}
+          style={{
+            padding: "12px 16px",
+            borderRadius: 14,
+            border: "1px solid rgba(34,197,94,0.30)",
+            background: "rgba(34,197,94,0.16)",
+            color: "white",
+            cursor: "pointer",
+            fontWeight: 900,
+            textTransform: "uppercase",
+            letterSpacing: 0.5,
+            boxShadow: "0 0 22px rgba(34,197,94,0.12)",
+          }}
+        >
+          OK
         </button>
       </div>
     </div>
