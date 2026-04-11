@@ -406,10 +406,11 @@ function getBmwPointsForDisplayRow(r: ExtractRow, bestRaceLap: string): number {
   const rawTempo = tempoLikeGt7(r).trim().toUpperCase()
 
   const isZeroPointsStatus =
-    rawTempo === "BOX" ||
-    rawTempo === "DNF" ||
-    rawTempo === "DNFV" ||
-    rawTempo === "DSQ"
+  rawTempo === "BOX" ||
+  rawTempo === "DNF" ||
+  rawTempo === "DNFV" ||
+  rawTempo === "DNP" ||
+  rawTempo === "DSQ"
 
   const isPole = (r.pole || "").trim().toUpperCase() === "POLE"
 
@@ -1235,6 +1236,7 @@ function renderTempoCell(tempo: string) {
 
   if (upper === "DNF") return <Pill left="DNF" variant="teal" />
   if (upper === "DNFV") return <Pill left="DNFV" variant="teal" />
+  if (upper === "DNP") return <Pill left="DNP" variant="teal" />
   if (upper === "BOX") return <Pill left="BOX" variant="fuchsia" />
   if (/^\d+giro$/i.test(t) || upper === "DOPPIATO") return <Pill left="DOPPIATO" variant="orange" />
   if (upper === "DSQ") return <Pill left="DSQ" variant="dsq" />
@@ -1661,15 +1663,12 @@ function ResultsTable({
               const showPenaltyDetail = !(exporting && unionMode)
               const rawTempo = tempoLikeGt7(r).trim().toUpperCase()
 
-              const isBox = rawTempo === "BOX"
-              const isDnf = rawTempo === "DNF" || rawTempo === "DNFV"
-              const isZeroPointsStatus = isBox || isDnf || isDsqRow
+const isBox = rawTempo === "BOX"
+const isDnf = rawTempo === "DNF" || rawTempo === "DNFV"
+const isDnp = rawTempo === "DNP"
+const isZeroPointsStatus = isBox || isDnf || isDnp || isDsqRow
 
-              const bonusPoints = (isPole ? 1 : 0) + (isBestLap ? 1 : 0)
-
-              const pointsValue = isZeroPointsStatus
-                ? bonusPoints
-                : getPointsForPrtRow(r, bestRaceLap)
+const pointsValue = getPointsForPrtRow(r, bestRaceLap)
 
               const isP1 = r.posGara === 1
 const isP2 = r.posGara === 2
@@ -3592,24 +3591,6 @@ function buildLiveBmwTeamStandings(
 
   return standings
 }
-
-    const BMW_POINTS_BY_POSITION: Record<number, number> = {
-    1: 25,
-    2: 22,
-    3: 19,
-    4: 16,
-    5: 14,
-    6: 12,
-    7: 10,
-    8: 8,
-    9: 6,
-    10: 5,
-    11: 4,
-    12: 3,
-    13: 2,
-    14: 1,
-  }
-
   function getBmwTeamCompletionBonus(
   teamName: string,
   pilotRows: BmwPilotRacePoints[]
@@ -4288,17 +4269,22 @@ const hasManualPilotOverrides = useMemo(() => {
   }
 
   // ---------------- AUTO ----------------
-  const autos = finalRows.map((r) => (r.auto || "").trim())
-  const hasEmptyAuto = autos.some((a) => !a)
-  const suspiciousAuto = autos.some((a) => a.length < 3)
+  const comparableAutoRows = finalRows.filter((r) => {
+  const rawTempo = tempoLikeGt7(r).trim().toUpperCase()
+  return rawTempo !== "DNP"
+})
 
-  if (hasEmptyAuto) {
-    auto = "error"
-    notes.push("Presente almeno un'auto vuota.")
-  } else if (suspiciousAuto) {
-    auto = "warn"
-    notes.push("Possibile auto anomala.")
-  }
+const autos = comparableAutoRows.map((r) => (r.auto || "").trim())
+const hasEmptyAuto = autos.some((a) => !a)
+const suspiciousAuto = autos.some((a) => a.length < 3)
+
+if (hasEmptyAuto) {
+  auto = "error"
+  notes.push("Presente almeno un'auto vuota.")
+} else if (suspiciousAuto) {
+  auto = "warn"
+  notes.push("Possibile auto anomala.")
+}
 
   // ---------------- DISTACCHI ----------------
   const validDistacco = finalRows.every((r, i) => {
@@ -4655,6 +4641,7 @@ function renderTempoHtml(tempo: string) {
   if (!t || t === "-") return `<span class="tempo-text">-</span>`
   if (upper === "DNF") return `<span class="pill teal">DNF</span>`
   if (upper === "DNFV") return `<span class="pill teal">DNFV</span>`
+  if (upper === "DNP") return `<span class="pill teal">DNP</span>`
   if (upper === "BOX") return `<span class="pill fuchsia">BOX</span>`
   if (/^\d+giro$/i.test(t) || upper === "DOPPIATO") return `<span class="pill orange">DOPPIATO</span>`
   if (upper === "DSQ") return `<span class="pill dsq">DSQ</span>`
@@ -6266,7 +6253,7 @@ function renderPenaltyHtmlForExport(row: DisplayRow, penalties: PenaltyMap) {
 
 function renderPointsHtmlForExport(row: DisplayRow, bestRaceLap: string) {
   const rawTempo = tempoLikeGt7(row).trim().toUpperCase()
-  const isZero = rawTempo === "BOX" || rawTempo === "DNF" || rawTempo === "DNFV" || rawTempo === "DSQ"
+  const isZero = rawTempo === "BOX" || rawTempo === "DNF" || rawTempo === "DNFV" || rawTempo === "DNP" || rawTempo === "DSQ"
 
   const isPole = (row.pole || "").trim().toUpperCase() === "POLE"
   const bestLapTime = (bestRaceLap.split("  ").pop() || "").trim()
