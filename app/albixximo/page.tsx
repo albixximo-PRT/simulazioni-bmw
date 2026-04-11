@@ -7067,6 +7067,10 @@ function resetCurrentLeagueInRound() {
 
     return nextSnapshots
   })
+
+  setTimeout(() => {
+    window.location.reload()
+  }, 80)
 }
 
 function resetEntireCurrentRound() {
