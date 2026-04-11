@@ -748,6 +748,16 @@ function normalizePilot(s: string) {
   return (s || "").trim().toLowerCase()
 }
 
+function getSavedSourcePos(row: any): number {
+  const saved = Number(row?.sourcePosGara)
+  if (Number.isFinite(saved) && saved > 0) return saved
+
+  const pos = Number(row?.posGara)
+  if (Number.isFinite(pos) && pos > 0) return pos
+
+  return 0
+}
+
 function getPrtRowStableKey(sourcePosGara: number) {
   return `row-${sourcePosGara}`
 }
@@ -3861,56 +3871,58 @@ const normalizedGaraForOutput = useMemo(() => {
 }, [])
 
   const previewRows = useMemo<DisplayRow[]>(() => {
-    const csvRows = parseCsvRows(csv)
+  const csvRows = parseCsvRows(csv)
 
-    if (csvRows.length === 0) {
-      return rows.map((r) => ({
-        ...r,
-        sourcePosGara: r.posGara,
-      }))
-    }
+  if (csvRows.length === 0) {
+    return rows.map((r: any) => ({
+      ...r,
+      sourcePosGara: getSavedSourcePos(r),
+    }))
+  }
 
-    const byPilot = new Map<string, ExtractRow>()
-    const byPos = new Map<number, ExtractRow>()
+  const byPilot = new Map<string, ExtractRow>()
+  const byPos = new Map<number, ExtractRow>()
 
-    for (const r of csvRows) {
-      byPilot.set(normalizePilot(r.pilota), r)
-      byPos.set(r.posGara, r)
-    }
+  for (const r of csvRows) {
+    byPilot.set(normalizePilot(r.pilota), r)
+    byPos.set(r.posGara, r)
+  }
 
-    if (rows.length === 0) {
-      return csvRows.map((r) => ({
-        ...r,
-        sourcePosGara: r.posGara,
-      }))
-    }
+  if (rows.length === 0) {
+    return csvRows.map((r) => ({
+      ...r,
+      sourcePosGara: r.posGara,
+    }))
+  }
 
-    return rows.map((r) => {
-      const fromPilot = byPilot.get(normalizePilot(r.pilota))
-      const fromPos = byPos.get(r.posGara)
-      const merged = fromPilot || fromPos
+  return rows.map((r: any) => {
+    const preservedSourcePos = getSavedSourcePos(r)
 
-      if (!merged) {
-        return {
-          ...r,
-          sourcePosGara: r.posGara,
-        }
-      }
+    const fromPilot = byPilot.get(normalizePilot(r.pilota))
+    const fromPos = byPos.get(r.posGara)
+    const merged = fromPilot || fromPos
 
+    if (!merged) {
       return {
         ...r,
-        sourcePosGara: r.posGara,
-        posGara: merged.posGara || r.posGara,
-        pilota: merged.pilota || r.pilota,
-        auto: merged.auto || r.auto,
-        tempoTotaleGara: merged.tempoTotaleGara || r.tempoTotaleGara,
-        distaccoDalPrimo: merged.distaccoDalPrimo || r.distaccoDalPrimo,
-        migliorGiroGara: merged.migliorGiroGara || r.migliorGiroGara,
-        tempoQualifica: merged.tempoQualifica || r.tempoQualifica,
-        pole: merged.pole || r.pole,
+        sourcePosGara: preservedSourcePos,
       }
-    })
-  }, [rows, csv])
+    }
+
+    return {
+      ...r,
+      sourcePosGara: preservedSourcePos,
+      posGara: merged.posGara || r.posGara,
+      pilota: merged.pilota || r.pilota,
+      auto: merged.auto || r.auto,
+      tempoTotaleGara: merged.tempoTotaleGara || r.tempoTotaleGara,
+      distaccoDalPrimo: merged.distaccoDalPrimo || r.distaccoDalPrimo,
+      migliorGiroGara: merged.migliorGiroGara || r.migliorGiroGara,
+      tempoQualifica: merged.tempoQualifica || r.tempoQualifica,
+      pole: merged.pole || r.pole,
+    }
+  })
+}, [rows, csv])
 
   const displayRows = useMemo<DisplayRow[]>(() => {
   const mappedRows = previewRows.map((r) => ({
