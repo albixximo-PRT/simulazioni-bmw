@@ -3070,21 +3070,35 @@ function TeamChampionshipTable({
                         <span
                           key={`${team.team}-${label}`}
                           style={{
-                            display: "inline-flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            minWidth: exporting ? 28 : 24,
-                            height: exporting ? 18 : 16,
-                            padding: exporting ? "0 6px" : "0 5px",
-                            borderRadius: 999,
-                            border: "1px solid rgba(255,255,255,0.14)",
-                            background: "rgba(255,255,255,0.05)",
-                            color: "rgba(255,255,255,0.88)",
-                            fontSize: exporting ? 10 : 9,
-                            fontWeight: 900,
-                            lineHeight: 1,
-                            letterSpacing: 0.2,
-                          }}
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  minWidth: exporting ? 28 : 24,
+  height: exporting ? 18 : 16,
+  padding: exporting ? "0 6px" : "0 5px",
+  borderRadius: 999,
+
+  border:
+    label === "S1"
+      ? "1px solid rgba(0,207,255,0.45)"
+      : "1px solid rgba(37,99,235,0.45)",
+
+  background:
+    label === "S1"
+      ? "linear-gradient(180deg, rgba(0,207,255,0.22), rgba(0,140,200,0.18))"
+      : "linear-gradient(180deg, rgba(37,99,235,0.22), rgba(29,78,216,0.18))",
+
+  boxShadow:
+    label === "S1"
+      ? "0 0 10px rgba(0,207,255,0.25)"
+      : "0 0 10px rgba(37,99,235,0.25)",
+
+  color: "#ffffff",
+  fontSize: exporting ? 10 : 9,
+  fontWeight: 900,
+  lineHeight: 1,
+  letterSpacing: 0.2,
+}}
                         >
                           {label}
                         </span>
