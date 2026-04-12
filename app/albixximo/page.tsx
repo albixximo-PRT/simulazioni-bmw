@@ -2614,64 +2614,91 @@ function TeamChampionshipTable({
     return `${pos}°`
   }
 
-  function getTeamPositionInLeagueRound(
-    roundKey: RoundKey,
-    league: BmwLeagueName,
-    teamName: string
-  ): number | null {
-    const roundSnapshot = roundSnapshots?.[roundKey]
-    const leagueSnapshot = roundSnapshot?.leagues?.[league]
+  function getTeamPositionInLeagueSprint(
+  roundKey: RoundKey,
+  league: BmwLeagueName,
+  sprintKey: BmwSprintKey,
+  teamName: string
+): number | null {
+  const roundSnapshot = roundSnapshots?.[roundKey]
+  const leagueSnapshot = roundSnapshot?.leagues?.[league]
+  const sprintSnapshot =
+    sprintKey === "sprint1" ? leagueSnapshot?.sprint1 : leagueSnapshot?.sprint2
 
-    if (!leagueSnapshot || !leagueSnapshot.drivers?.length) return null
+  if (!sprintSnapshot || !sprintSnapshot.drivers?.length) return null
 
-    const teamTotals = new Map<string, number>()
+  const teamTotals = new Map<string, number>()
 
-    for (const driver of leagueSnapshot.drivers) {
-      const currentTeam = String(driver.team || "").trim()
-      if (!currentTeam || currentTeam === "-") continue
+  for (const driver of sprintSnapshot.drivers) {
+    const currentTeam = String(driver.team || "").trim()
+    if (!currentTeam || currentTeam === "-") continue
 
-      teamTotals.set(
-        currentTeam,
-        (teamTotals.get(currentTeam) || 0) + (driver.totalPoints || 0)
-      )
-    }
-
-    const sortedTeams = Array.from(teamTotals.entries())
-      .map(([team, total]) => ({ team, total }))
-      .sort((a, b) => {
-        if (b.total !== a.total) return b.total - a.total
-        return a.team.localeCompare(b.team)
-      })
-
-    const index = sortedTeams.findIndex((row) => row.team === teamName)
-    if (index === -1) return null
-
-    return index + 1
+    teamTotals.set(
+      currentTeam,
+      (teamTotals.get(currentTeam) || 0) + (driver.totalPoints || 0)
+    )
   }
 
-  function renderRoundLeaguePositions(teamName: string, roundKey: RoundKey) {
-    const leagues: BmwLeagueName[] = ["PRO", "PRO-AMA", "AMA"]
+  const sortedTeams = Array.from(teamTotals.entries())
+    .map(([team, total]) => ({ team, total }))
+    .sort((a, b) => {
+      if (b.total !== a.total) return b.total - a.total
+      return a.team.localeCompare(b.team)
+    })
 
+  const index = sortedTeams.findIndex((row) => row.team === teamName)
+  if (index === -1) return null
+
+  return index + 1
+}
+
+function renderSprintRowLabel(label: "S1" | "S2") {
+  return (
+    <span
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        minWidth: exporting ? 26 : 22,
+        padding: exporting ? "2px 6px" : "2px 5px",
+        borderRadius: 999,
+        border: "1px solid rgba(255,255,255,0.12)",
+        background: "rgba(255,255,255,0.06)",
+        fontSize: exporting ? 10 : 9,
+        fontWeight: 900,
+        letterSpacing: 0.3,
+        color: "rgba(255,255,255,0.86)",
+        flexShrink: 0,
+      }}
+    >
+      {label}
+    </span>
+  )
+}
+
+  function renderRoundLeaguePositions(teamName: string, roundKey: RoundKey) {
+  const leagues: BmwLeagueName[] = ["PRO", "PRO-AMA", "AMA"]
+
+  const renderSprintPositions = (sprintKey: BmwSprintKey, sprintLabel: "S1" | "S2") => {
     return (
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+          gridTemplateColumns: exporting ? "34px repeat(3, 1fr)" : "30px repeat(3, 1fr)",
           gap: exporting ? 10 : 8,
-          fontSize: exporting ? 13 : 12,
-          fontWeight: 800,
-          fontFamily:
-            "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
-          lineHeight: 1.1,
-          color: "rgba(255,255,255,0.92)",
+          alignItems: "center",
         }}
       >
+        <div style={{ display: "flex", justifyContent: "center" }}>
+          {renderSprintRowLabel(sprintLabel)}
+        </div>
+
         {leagues.map((league) => {
-          const pos = getTeamPositionInLeagueRound(roundKey, league, teamName)
+          const pos = getTeamPositionInLeagueSprint(roundKey, league, sprintKey, teamName)
 
           return (
             <div
-              key={`${teamName}-${roundKey}-${league}`}
+              key={`${teamName}-${roundKey}-${sprintKey}-${league}`}
               style={{
                 display: "flex",
                 alignItems: "center",
@@ -2679,7 +2706,7 @@ function TeamChampionshipTable({
                 minHeight: exporting ? 22 : 20,
                 whiteSpace: "nowrap",
               }}
-              title={`${roundKey.toUpperCase()} ${league}`}
+              title={`${roundKey.toUpperCase()} ${sprintLabel} ${league}`}
             >
               {getOrdinalLabel(pos)}
             </div>
@@ -2688,6 +2715,25 @@ function TeamChampionshipTable({
       </div>
     )
   }
+
+  return (
+    <div
+      style={{
+        display: "grid",
+        gap: exporting ? 8 : 6,
+        fontSize: exporting ? 13 : 12,
+        fontWeight: 800,
+        fontFamily:
+          "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+        lineHeight: 1.1,
+        color: "rgba(255,255,255,0.92)",
+      }}
+    >
+      {renderSprintPositions("sprint1", "S1")}
+      {renderSprintPositions("sprint2", "S2")}
+    </div>
+  )
+}
   return (
     <div
       style={{
