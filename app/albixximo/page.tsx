@@ -3115,11 +3115,15 @@ function TeamChampionshipTable({
                       <td
                         key={`${team.team}-detail-${round}`}
                         style={{
-                          padding: exporting ? "4px 4px" : "5px 4px",
-                          textAlign: "center",
-                          borderBottom: "1px solid rgba(255,255,255,0.08)",
-                          width: exporting ? 170 : 145,
-                        }}
+  padding: exporting ? "4px 4px" : "5px 4px",
+  textAlign: "center",
+  borderBottom: "1px solid rgba(255,255,255,0.08)",
+
+  // 🔥 QUESTA È LA MODIFICA
+  borderLeft: "1px solid rgba(255,255,255,0.08)",
+
+  width: exporting ? 170 : 145,
+}}
                       >
                         <div
                           style={{
@@ -3168,6 +3172,7 @@ function TeamChampionshipTable({
                         padding: exporting ? "6px 4px" : "7px 4px",
                         textAlign: "center",
                         borderBottom: "1px solid rgba(255,255,255,0.08)",
+                        borderLeft: "1px solid rgba(255,255,255,0.08)",
                         fontSize: exporting ? 14 : 13,
                         fontWeight: 900,
                         fontFamily:
@@ -3187,6 +3192,7 @@ function TeamChampionshipTable({
                       padding: exporting ? "6px 4px" : "7px 4px",
                       textAlign: "center",
                       borderBottom: "1px solid rgba(255,255,255,0.08)",
+                      borderLeft: "1px solid rgba(255,255,255,0.12)",
                     }}
                   >
                     <span
