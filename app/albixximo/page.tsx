@@ -6488,50 +6488,50 @@ async function downloadGeneralTeamsHtmlExport(customTexts?: {
     }
 
     .title-line {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  row-gap: 8px;
-  flex-wrap: wrap;
-  white-space: normal;
-  min-width: 0;
-}
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      row-gap: 8px;
+      flex-wrap: wrap;
+      white-space: normal;
+      min-width: 0;
+    }
 
     .main-title {
-  font-size: clamp(26px, 4vw, 34px);
-  font-weight: 900;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  line-height: 1.05;
-  text-shadow: 0 0 18px rgba(255,215,0,0.22);
-  white-space: normal;
-  overflow-wrap: anywhere;
-  word-break: break-word;
-  min-width: 0;
-  max-width: 100%;
-}
+      font-size: clamp(26px, 4vw, 34px);
+      font-weight: 900;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      line-height: 1.05;
+      text-shadow: 0 0 18px rgba(255,215,0,0.22);
+      white-space: normal;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+      min-width: 0;
+      max-width: 100%;
+    }
 
     .side-label {
-  font-size: 14px;
-  padding: 6px 10px;
-  border-radius: 999px;
-  border: 1px solid rgba(255,255,255,0.14);
-  background: rgba(255,255,255,0.06);
-  letter-spacing: 0.6px;
-  text-transform: uppercase;
-  white-space: normal;
-  overflow-wrap: anywhere;
-  max-width: 100%;
-  flex-shrink: 0;
-}
+      font-size: 14px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(255,255,255,0.06);
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+      white-space: normal;
+      overflow-wrap: anywhere;
+      max-width: 100%;
+      flex-shrink: 0;
+    }
 
     .subtitle {
-  margin-top: 5px;
-  font-size: 13px;
-  opacity: 0.9;
-  white-space: normal;
-  overflow-wrap: anywhere;
-}
+      margin-top: 5px;
+      font-size: 13px;
+      opacity: 0.9;
+      white-space: normal;
+      overflow-wrap: anywhere;
+    }
 
     .title-bar {
       margin-top: 8px;
@@ -6688,25 +6688,25 @@ async function downloadGeneralTeamsHtmlExport(customTexts?: {
       z-index: 2;
       background: rgba(10,12,18,0.96);
       backdrop-filter: blur(10px);
-      padding: 14px 10px;
+      padding: 18px 14px;
       text-align: left;
-      font-size: 12px;
-      opacity: 0.82;
+      font-size: 13px;
+      opacity: 0.88;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
 
     tbody td {
-      padding: 14px 10px;
+      padding: 20px 14px;
       border-bottom: 1px solid rgba(255,255,255,0.08);
       vertical-align: middle;
-      font-size: 13px;
+      font-size: 14px;
     }
 
-    .col-pos { width: 56px; }
-    .col-team { width: 58%; }
-    .col-round { width: 7%; }
+    .col-pos { width: 70px; }
+    .col-team { width: 54%; }
+    .col-round { width: 9%; }
     .col-total { width: 10%; }
 
     .row-p1 {
@@ -6732,10 +6732,10 @@ async function downloadGeneralTeamsHtmlExport(customTexts?: {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      min-width: 30px;
-      height: 28px;
-      padding: 0 10px;
-      border-radius: 10px;
+      min-width: 36px;
+      height: 32px;
+      padding: 0 12px;
+      border-radius: 12px;
       border: 1px solid rgba(255,255,255,0.12);
       background: rgba(0,0,0,0.22);
       font-weight: 900;
@@ -6750,7 +6750,7 @@ async function downloadGeneralTeamsHtmlExport(customTexts?: {
     .team-wrap {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 14px;
       min-width: 0;
     }
 
@@ -6765,7 +6765,7 @@ async function downloadGeneralTeamsHtmlExport(customTexts?: {
 
     .stripe {
       width: 6px;
-      height: 24px;
+      height: 28px;
       border-radius: 2px;
       display: inline-block;
     }
@@ -6786,19 +6786,19 @@ async function downloadGeneralTeamsHtmlExport(customTexts?: {
     }
 
     .team-name {
-      font-size: 18px;
+      font-size: 19px;
       font-weight: 800;
       letter-spacing: 0.03em;
       color: rgba(255,255,255,0.92);
       white-space: normal;
-      line-height: 1.2;
+      line-height: 1.28;
       word-break: break-word;
     }
 
     .round-cell {
       text-align: center;
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-      font-size: 14px;
+      font-size: 15px;
       font-weight: 900;
       line-height: 1;
       color: #ffffff;
@@ -6812,13 +6812,13 @@ async function downloadGeneralTeamsHtmlExport(customTexts?: {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      min-width: 54px;
-      height: 30px;
-      padding: 0 12px;
+      min-width: 60px;
+      height: 34px;
+      padding: 0 14px;
       border-radius: 999px;
       font-weight: 900;
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-      font-size: 15px;
+      font-size: 16px;
       line-height: 1;
     }
 
@@ -6857,55 +6857,59 @@ async function downloadGeneralTeamsHtmlExport(customTexts?: {
     }
 
     @media (max-width: 1100px) {
-  .main-title {
-    font-size: 28px;
-  }
+      .main-title {
+        font-size: 28px;
+      }
 
-  .header-logo {
-    height: 84px;
-  }
+      .header-logo {
+        height: 84px;
+      }
 
-  .col-team {
-    width: 52%;
-  }
+      .col-team {
+        width: 50%;
+      }
 
-  .col-round {
-    width: 8%;
-  }
+      .col-round {
+        width: 10%;
+      }
 
-  .col-total {
-    width: 12%;
-  }
+      .col-total {
+        width: 12%;
+      }
 
-  .team-name {
-    font-size: 16px;
-  }
+      .team-name {
+        font-size: 17px;
+      }
 
-  .round-cell {
-    font-size: 13px;
-  }
-}
+      .round-cell {
+        font-size: 14px;
+      }
 
-@media (max-width: 980px) {
-  .header {
-    flex-wrap: wrap;
-    align-items: flex-start;
-  }
+      tbody td {
+        padding: 18px 12px;
+      }
+    }
 
-  .header-right {
-    width: 100%;
-    justify-content: flex-start;
-  }
+    @media (max-width: 980px) {
+      .header {
+        flex-wrap: wrap;
+        align-items: flex-start;
+      }
 
-  .header-logo {
-    height: 84px;
-    max-width: 100%;
-  }
+      .header-right {
+        width: 100%;
+        justify-content: flex-start;
+      }
 
-  .page {
-    padding: 16px;
-  }
-}
+      .header-logo {
+        height: 84px;
+        max-width: 100%;
+      }
+
+      .page {
+        padding: 16px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -6914,7 +6918,7 @@ async function downloadGeneralTeamsHtmlExport(customTexts?: {
       <div class="header-left">
         <div class="title-line">
           <div class="main-title">${escapeHtml(texts.mainTitle)}</div>
-<span class="side-label">${escapeHtml(texts.sideLabel)}</span>
+          <span class="side-label">${escapeHtml(texts.sideLabel)}</span>
         </div>
         <div class="subtitle">${escapeHtml(texts.subtitle)}</div>
         <div class="title-bar"></div>
