@@ -2663,7 +2663,6 @@ function renderMiniRoundDetail(
     whiteSpace: "nowrap",
   })
 
-  // ===== STATI =====
   if (upper === "DNF-I") {
     return (
       <span
@@ -2710,7 +2709,6 @@ function renderMiniRoundDetail(
     return <>{detail.text || "-"}</>
   }
 
-  // ===== PODIO =====
   const isP1 = upper === "1°"
   const isP2 = upper === "2°"
   const isP3 = upper === "3°"
@@ -2773,10 +2771,25 @@ function renderMiniRoundDetail(
             }}
           >
             {detail.pole && (
-              <span style={{ color: "#ffd700" }}>★</span>
+              <span
+                style={{
+                  color: "#ffd700",
+                  textShadow: "0 0 6px rgba(255,215,0,0.45)",
+                }}
+              >
+                ★
+              </span>
             )}
+
             {detail.bestLap && (
-              <span style={{ color: "#b67cff" }}>★</span>
+              <span
+                style={{
+                  color: "#b67cff",
+                  textShadow: "0 0 6px rgba(160,90,255,0.45)",
+                }}
+              >
+                ★
+              </span>
             )}
           </span>
         )}
@@ -2784,47 +2797,60 @@ function renderMiniRoundDetail(
     )
   }
 
-  // ===== POSIZIONI NORMALI (4° in poi) =====
   return (
     <span
       style={{
+        position: "relative",
         display: "inline-flex",
-        alignItems: "flex-start",
+        alignItems: "center",
+        justifyContent: "center",
+        minWidth: exporting ? 24 : 20,
         fontSize: exporting ? 11 : 10,
         fontWeight: 900,
         lineHeight: 1,
         whiteSpace: "nowrap",
       }}
     >
-      <span>
-        {detail.text?.replace("°", "")}
-        <span style={{ position: "relative" }}>
-          °
-          {(detail.pole || detail.bestLap) && (
+      <span>{detail.text || "-"}</span>
+
+      {(detail.pole || detail.bestLap) && (
+        <span
+          style={{
+            position: "absolute",
+            top: exporting ? -5 : -4,
+            right:
+              detail.pole && detail.bestLap
+                ? (exporting ? -12 : -10)
+                : (exporting ? -8 : -7),
+            display: "flex",
+            gap: 1,
+            fontSize: exporting ? 9 : 8,
+            lineHeight: 1,
+          }}
+        >
+          {detail.pole && (
             <span
               style={{
-                position: "absolute",
-                top: exporting ? -6 : -5,
-                left:
-                  detail.pole && detail.bestLap
-                    ? (exporting ? 6 : 5)
-                    : (exporting ? 5 : 4),
-                display: "flex",
-                gap: 1,
-                fontSize: exporting ? 8 : 7,
-                lineHeight: 1,
+                color: "#ffd700",
+                textShadow: "0 0 6px rgba(255,215,0,0.45)",
               }}
             >
-              {detail.pole && (
-                <span style={{ color: "#ffd700" }}>★</span>
-              )}
-              {detail.bestLap && (
-                <span style={{ color: "#b67cff" }}>★</span>
-              )}
+              ★
+            </span>
+          )}
+
+          {detail.bestLap && (
+            <span
+              style={{
+                color: "#b67cff",
+                textShadow: "0 0 6px rgba(160,90,255,0.45)",
+              }}
+            >
+              ★
             </span>
           )}
         </span>
-      </span>
+      )}
     </span>
   )
 }
