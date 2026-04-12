@@ -124,12 +124,23 @@ type BmwSprintSnapshot = {
 
   finalRows: DisplayRow[]
   finalCsv: string
+  unionMeta: UnionMeta
+
+  savedGara: string
+  savedLega: string
 
   winner: string
   bestQuali: string
   bestRaceLap: string
 
   drivers: BmwSprintDriver[]
+
+  penalties: PenaltyMap
+  lapOverrides: Record<string, string>
+  dnfOverrides: DnfOverrideMap
+  manualPilotOverrides: Record<number, string>
+  manualAutoOverrides: Record<number, string>
+  manualDistaccoOverrides: Record<number, string>
 }
 
 type BmwRoundDriver = {
@@ -735,6 +746,16 @@ function tempoLikeGt7(r: ExtractRow) {
 
 function normalizePilot(s: string) {
   return (s || "").trim().toLowerCase()
+}
+
+function getSavedSourcePos(row: any): number {
+  const saved = Number(row?.sourcePosGara)
+  if (Number.isFinite(saved) && saved > 0) return saved
+
+  const pos = Number(row?.posGara)
+  if (Number.isFinite(pos) && pos > 0) return pos
+
+  return 0
 }
 
 function getPrtRowStableKey(sourcePosGara: number) {
@@ -2938,6 +2959,24 @@ const [loginError, setLoginError] = useState("")
   const [showSprint2UploadConfirm, setShowSprint2UploadConfirm] = useState(false)
   const [showSprintResetConfirm, setShowSprintResetConfirm] = useState(false)
   const [sprint2Ready, setSprint2Ready] = useState(false)
+  const [showReopenLeagueModal, setShowReopenLeagueModal] = useState(false)
+  const [isReopenedSavedSprint, setIsReopenedSavedSprint] = useState(false)
+const [reopenedSprintKey, setReopenedSprintKey] = useState<"sprint1" | "sprint2" | null>(null)
+const [selectedLeagueToReopen, setSelectedLeagueToReopen] = useState<BmwLeagueName | null>(null)
+const [showResetLeagueModal, setShowResetLeagueModal] = useState(false)
+const [selectedLeagueToReset, setSelectedLeagueToReset] = useState<BmwLeagueName | null>(null)
+const [showResetLeagueSuccessModal, setShowResetLeagueSuccessModal] = useState(false)
+const [lastResetLeagueName, setLastResetLeagueName] = useState<BmwLeagueName | null>(null)
+const [showResetAllLeaguesModal, setShowResetAllLeaguesModal] = useState(false)
+const [showResetAllLeaguesSuccessModal, setShowResetAllLeaguesSuccessModal] = useState(false)
+const [showSaveLeagueSuccessModal, setShowSaveLeagueSuccessModal] = useState(false)
+const [lastSavedLeagueName, setLastSavedLeagueName] = useState<BmwLeagueName | null>(null)
+const [lastSaveLeagueMode, setLastSaveLeagueMode] = useState<"save" | "overwrite">("save")
+const [showSprintSaveSuccessModal, setShowSprintSaveSuccessModal] = useState(false)
+const [lastSavedSprintNumber, setLastSavedSprintNumber] = useState<1 | 2 | null>(null)
+const [lastSprintSaveMode, setLastSprintSaveMode] = useState<"save" | "overwrite">("save")
+const [showConfirmSaveLeagueModal, setShowConfirmSaveLeagueModal] = useState(false)
+const [pendingSaveLeagueMode, setPendingSaveLeagueMode] = useState<"save" | "overwrite">("save")
   const [manualGaraOverride, setManualGaraOverride] = useState("")
   const [manualLegaOverride, setManualLegaOverride] = useState("")
 
@@ -2950,6 +2989,8 @@ const [loginError, setLoginError] = useState("")
 const [manualPilotDraft, setManualPilotDraft] = useState<Record<number, string>>({})
 const [showDistaccoModal, setShowDistaccoModal] = useState(false)
 const [manualDistaccoDraft, setManualDistaccoDraft] = useState<Record<number, string>>({})
+const [showConfirmFinalizeRoundModal, setShowConfirmFinalizeRoundModal] = useState(false)
+const [finalizeRoundMode, setFinalizeRoundMode] = useState<"save" | "overwrite">("save")
 const [showMissingPilotWarning, setShowMissingPilotWarning] = useState(false)
 
     const [exportTexts, setExportTexts] = useState({
@@ -2963,6 +3004,9 @@ const [showMissingPilotWarning, setShowMissingPilotWarning] = useState(false)
 
   const [currentRound, setCurrentRound] = useState<1 | 2 | 3 | 4>(1)
 const [currentSprint, setCurrentSprint] = useState<1 | 2>(1)
+const [showRoundSelector, setShowRoundSelector] = useState(false)
+const [pendingRoundChange, setPendingRoundChange] = useState<1 | 2 | 3 | 4 | null>(null)
+const [showRoundChangeConfirmModal, setShowRoundChangeConfirmModal] = useState(false)
 
 const [roundSnapshots, setRoundSnapshots] = useState<
   Partial<Record<RoundKey, BmwRoundSnapshot>>
@@ -3834,56 +3878,58 @@ const normalizedGaraForOutput = useMemo(() => {
 }, [])
 
   const previewRows = useMemo<DisplayRow[]>(() => {
-    const csvRows = parseCsvRows(csv)
+  const csvRows = parseCsvRows(csv)
 
-    if (csvRows.length === 0) {
-      return rows.map((r) => ({
-        ...r,
-        sourcePosGara: r.posGara,
-      }))
-    }
+  if (csvRows.length === 0) {
+    return rows.map((r: any) => ({
+      ...r,
+      sourcePosGara: getSavedSourcePos(r),
+    }))
+  }
 
-    const byPilot = new Map<string, ExtractRow>()
-    const byPos = new Map<number, ExtractRow>()
+  const byPilot = new Map<string, ExtractRow>()
+  const byPos = new Map<number, ExtractRow>()
 
-    for (const r of csvRows) {
-      byPilot.set(normalizePilot(r.pilota), r)
-      byPos.set(r.posGara, r)
-    }
+  for (const r of csvRows) {
+    byPilot.set(normalizePilot(r.pilota), r)
+    byPos.set(r.posGara, r)
+  }
 
-    if (rows.length === 0) {
-      return csvRows.map((r) => ({
-        ...r,
-        sourcePosGara: r.posGara,
-      }))
-    }
+  if (rows.length === 0) {
+    return csvRows.map((r) => ({
+      ...r,
+      sourcePosGara: r.posGara,
+    }))
+  }
 
-    return rows.map((r) => {
-      const fromPilot = byPilot.get(normalizePilot(r.pilota))
-      const fromPos = byPos.get(r.posGara)
-      const merged = fromPilot || fromPos
+  return rows.map((r: any) => {
+    const preservedSourcePos = getSavedSourcePos(r)
 
-      if (!merged) {
-        return {
-          ...r,
-          sourcePosGara: r.posGara,
-        }
-      }
+    const fromPilot = byPilot.get(normalizePilot(r.pilota))
+    const fromPos = byPos.get(r.posGara)
+    const merged = fromPilot || fromPos
 
+    if (!merged) {
       return {
         ...r,
-        sourcePosGara: r.posGara,
-        posGara: merged.posGara || r.posGara,
-        pilota: merged.pilota || r.pilota,
-        auto: merged.auto || r.auto,
-        tempoTotaleGara: merged.tempoTotaleGara || r.tempoTotaleGara,
-        distaccoDalPrimo: merged.distaccoDalPrimo || r.distaccoDalPrimo,
-        migliorGiroGara: merged.migliorGiroGara || r.migliorGiroGara,
-        tempoQualifica: merged.tempoQualifica || r.tempoQualifica,
-        pole: merged.pole || r.pole,
+        sourcePosGara: preservedSourcePos,
       }
-    })
-  }, [rows, csv])
+    }
+
+    return {
+      ...r,
+      sourcePosGara: preservedSourcePos,
+      posGara: merged.posGara || r.posGara,
+      pilota: merged.pilota || r.pilota,
+      auto: merged.auto || r.auto,
+      tempoTotaleGara: merged.tempoTotaleGara || r.tempoTotaleGara,
+      distaccoDalPrimo: merged.distaccoDalPrimo || r.distaccoDalPrimo,
+      migliorGiroGara: merged.migliorGiroGara || r.migliorGiroGara,
+      tempoQualifica: merged.tempoQualifica || r.tempoQualifica,
+      pole: merged.pole || r.pole,
+    }
+  })
+}, [rows, csv])
 
   const displayRows = useMemo<DisplayRow[]>(() => {
   const mappedRows = previewRows.map((r) => ({
@@ -4489,27 +4535,55 @@ if (hasEmptyAuto) {
 }, [finalRows, bestRaceLap])
 
 const currentBmwSprintSnapshot = useMemo<BmwSprintSnapshot | null>(() => {
-  if (finalRows.length === 0) return null
+  if (displayRows.length === 0) return null
 
   return {
     sprint: currentSprint === 1 ? "sprint1" : "sprint2",
     hasQualifying: currentSprint === 1,
     savedAt: new Date().toISOString(),
-    finalRows,
-    finalCsv,
+
+    // SALVIAMO LA BASE, NON IL POST-PENALITÀ
+    finalRows: displayRows,
+    finalCsv: csv,
+    unionMeta: {
+      ...unionMeta,
+      gara: normalizedGaraForOutput,
+      lega: effectiveLegaResolved,
+    },
+
+    savedGara: normalizedGaraForOutput,
+    savedLega: effectiveLegaResolved,
+
     winner,
     bestQuali: currentSprint === 1 ? bestQuali : "",
     bestRaceLap,
+
     drivers: bmwSprintDriversPreview,
+
+    penalties,
+    lapOverrides,
+    dnfOverrides,
+    manualPilotOverrides,
+    manualAutoOverrides,
+    manualDistaccoOverrides,
   }
 }, [
   currentSprint,
-  finalRows,
-  finalCsv,
+  displayRows,
+  csv,
+  unionMeta,
+  normalizedGaraForOutput,
+  effectiveLegaResolved,
   winner,
   bestQuali,
   bestRaceLap,
   bmwSprintDriversPreview,
+  penalties,
+  lapOverrides,
+  dnfOverrides,
+  manualPilotOverrides,
+  manualAutoOverrides,
+  manualDistaccoOverrides,
 ])
 
 const bmwLeagueDriversPreview = useMemo(() => {
@@ -4561,6 +4635,86 @@ const roundLeagueStatus = useMemo(() => {
 const isCurrentRoundReady = useMemo(() => {
   return isRoundSnapshotReady(currentRoundSnapshot)
 }, [currentRoundSnapshot])
+
+const isCurrentRoundAlreadySaved = useMemo(() => {
+  return currentRoundSnapshot?.status === "consolidated"
+}, [currentRoundSnapshot])
+
+const savedLeaguesInCurrentRound = useMemo(() => {
+  if (!currentRoundSnapshot?.leagues) return []
+
+  return (["PRO", "PRO-AMA", "AMA"] as BmwLeagueName[])
+    .map((league) => ({
+      league,
+      snapshot: currentRoundSnapshot.leagues?.[league] || null,
+    }))
+    .filter((item) => !!item.snapshot)
+}, [currentRoundSnapshot])
+
+const hasSavedLeaguesInCurrentRound = savedLeaguesInCurrentRound.length > 0
+
+const currentRoundHasUnsavedWork = useMemo(() => {
+  const hasLiveExtraction =
+    rows.length > 0 ||
+    finalRows.length > 0 ||
+    csv.trim().length > 0 ||
+    files.length > 0
+
+  const hasSavedSprintWork =
+    !!savedSprintPreviews.sprint1 || !!savedSprintPreviews.sprint2
+
+  const hasManualWork =
+    Object.keys(penalties).length > 0 ||
+    Object.keys(lapOverrides).length > 0 ||
+    Object.keys(dnfOverrides).length > 0 ||
+    Object.keys(manualPilotOverrides).length > 0 ||
+    Object.keys(manualAutoOverrides).length > 0 ||
+    Object.keys(manualDistaccoOverrides).length > 0
+
+  const currentSnapshot = roundSnapshots[getRoundKey(currentRound)]
+  const currentRoundIncomplete = !!currentSnapshot && !isRoundSnapshotReady(currentSnapshot)
+
+  return hasLiveExtraction || hasSavedSprintWork || hasManualWork || currentRoundIncomplete
+}, [
+  rows,
+  finalRows,
+  csv,
+  files,
+  savedSprintPreviews,
+  penalties,
+  lapOverrides,
+  dnfOverrides,
+  manualPilotOverrides,
+  manualAutoOverrides,
+  manualDistaccoOverrides,
+  roundSnapshots,
+  currentRound,
+])
+
+function requestRoundChange(nextRound: 1 | 2 | 3 | 4) {
+  if (nextRound === currentRound) return
+
+  if (!currentRoundHasUnsavedWork) {
+    setCurrentRound(nextRound)
+    return
+  }
+
+  setPendingRoundChange(nextRound)
+  setShowRoundChangeConfirmModal(true)
+}
+
+function confirmRoundChange() {
+  if (pendingRoundChange == null) return
+
+  setCurrentRound(pendingRoundChange)
+  setPendingRoundChange(null)
+  setShowRoundChangeConfirmModal(false)
+}
+
+function cancelRoundChange() {
+  setPendingRoundChange(null)
+  setShowRoundChangeConfirmModal(false)
+}
 
 async function performExportTablePng() {
     if (!exportRef.current || finalRows.length === 0) return
@@ -6375,6 +6529,8 @@ function renderPointsHtmlForExport(row: DisplayRow, bestRaceLap: string) {
 setManualDistaccoDraft({})
 setShowPilotModal(false)
 setShowDistaccoModal(false)
+setIsReopenedSavedSprint(false)
+    setReopenedSprintKey(null)
 
     try {
       const fd = new FormData()
@@ -6684,26 +6840,75 @@ function handleBackupImportChange(e: React.ChangeEvent<HTMLInputElement>) {
   function saveCurrentSprint() {
   if (!currentBmwSprintSnapshot) return
 
-  setSavedSprintPreviews((prev) => {
-    if (currentSprint === 1) {
-      return {
-        ...prev,
-        sprint1: currentBmwSprintSnapshot,
-      }
-    }
+  const sprintKey: BmwSprintKey = currentSprint === 1 ? "sprint1" : "sprint2"
 
-    return {
-      ...prev,
-      sprint2: currentBmwSprintSnapshot,
-    }
-  })
+  const wasAlreadySaved =
+    currentSprint === 1
+      ? !!savedSprintPreviews.sprint1
+      : !!savedSprintPreviews.sprint2
 
-  if (currentSprint === 1) {
-    setShowSprintInfo(true)
+  const nextSavedSprintPreviews = {
+    ...savedSprintPreviews,
+    [sprintKey]: currentBmwSprintSnapshot,
   }
 
-  if (currentSprint === 2) {
-    setShowSprint2DoneInfo(true)
+  setSavedSprintPreviews(nextSavedSprintPreviews)
+
+  const currentLeagueName = getCurrentBmwLeagueName()
+  const roundKey = getRoundKey(currentRound)
+
+  if (currentLeagueName && roundSnapshots[roundKey]?.leagues?.[currentLeagueName]) {
+    setRoundSnapshots((prev) => {
+      const currentRoundSnapshotLocal = prev[roundKey]
+      const currentLeagueSnapshot = currentRoundSnapshotLocal?.leagues?.[currentLeagueName]
+
+      if (!currentRoundSnapshotLocal || !currentLeagueSnapshot) return prev
+
+      const updatedSprint1 =
+        sprintKey === "sprint1"
+          ? currentBmwSprintSnapshot
+          : currentLeagueSnapshot.sprint1
+
+      const updatedSprint2 =
+        sprintKey === "sprint2"
+          ? currentBmwSprintSnapshot
+          : currentLeagueSnapshot.sprint2
+
+      const updatedLeagueSnapshot: BmwLeagueSnapshot = {
+        ...currentLeagueSnapshot,
+        savedAt: new Date().toISOString(),
+        status: getBmwLeagueSnapshotStatus(updatedSprint1, updatedSprint2),
+        sprint1: updatedSprint1,
+        sprint2: updatedSprint2,
+        drivers: buildBmwLeagueDriversFromSprints(updatedSprint1, updatedSprint2),
+      }
+
+      const nextLeagues: Partial<Record<BmwLeagueName, BmwLeagueSnapshot>> = {
+        ...(currentRoundSnapshotLocal.leagues || {}),
+        [currentLeagueName]: updatedLeagueSnapshot,
+      }
+
+      const nextRoundTeamResults = buildBmwRoundTeamResultsFromLeagues(nextLeagues, teams)
+
+      return {
+        ...prev,
+        [roundKey]: {
+          ...currentRoundSnapshotLocal,
+          updatedAt: new Date().toISOString(),
+          leagues: nextLeagues,
+          roundTeamResults: nextRoundTeamResults,
+        },
+      }
+    })
+  }
+
+  setLastSavedSprintNumber(currentSprint)
+  setLastSprintSaveMode(wasAlreadySaved ? "overwrite" : "save")
+  setShowSprintSaveSuccessModal(true)
+
+  if (isReopenedSavedSprint) {
+    setIsReopenedSavedSprint(false)
+    setReopenedSprintKey(null)
   }
 }
 
@@ -6718,9 +6923,220 @@ function resetSavedSprints() {
   setShowSprint2UploadConfirm(false)
   setShowSprint2DoneInfo(false)
   setShowSprintResetConfirm(true)
+  setIsReopenedSavedSprint(false)
+setReopenedSprintKey(null)
+}
+
+function openReopenLeagueModal(league: BmwLeagueName) {
+  setSelectedLeagueToReopen(league)
+  setShowReopenLeagueModal(true)
+}
+
+function closeReopenLeagueModal() {
+  setSelectedLeagueToReopen(null)
+  setShowReopenLeagueModal(false)
+}
+
+function openResetLeagueModal(league: BmwLeagueName) {
+  setSelectedLeagueToReset(league)
+  setShowResetLeagueModal(true)
+}
+
+function closeResetLeagueModal() {
+  setSelectedLeagueToReset(null)
+  setShowResetLeagueModal(false)
+}
+
+function resetSpecificLeagueInRound(league: BmwLeagueName) {
+  const roundKey = getRoundKey(currentRound)
+
+  setRoundSnapshots((prev) => {
+    const currentSnapshot = prev[roundKey]
+    if (!currentSnapshot) return prev
+
+    const nextLeagues: Partial<Record<BmwLeagueName, BmwLeagueSnapshot>> = {
+      ...(currentSnapshot.leagues || {}),
+    }
+
+    delete nextLeagues[league]
+
+    const hasAnyLeagueLeft = Object.keys(nextLeagues).length > 0
+
+    const nextSnapshots: Partial<Record<RoundKey, BmwRoundSnapshot>> = {
+      ...prev,
+    }
+
+    if (!hasAnyLeagueLeft) {
+      delete nextSnapshots[roundKey]
+    } else {
+      const nextRoundTeamResults = buildBmwRoundTeamResultsFromLeagues(nextLeagues, teams)
+
+      nextSnapshots[roundKey] = {
+        ...currentSnapshot,
+        updatedAt: new Date().toISOString(),
+        leagues: nextLeagues,
+        roundTeamResults: nextRoundTeamResults,
+      }
+    }
+
+    const nextTeams = buildTeamsFromRoundSnapshots(teams, nextSnapshots)
+    setTeams(nextTeams)
+
+    return nextSnapshots
+  })
+
+  setLastResetLeagueName(league)
+
+  if (selectedLeagueToReset === league) {
+    setSelectedLeagueToReset(null)
+  }
+
+  setShowResetLeagueModal(false)
+  setShowResetLeagueSuccessModal(true)
+}
+
+function resetAllLeaguesInCurrentRound() {
+  const roundKey = getRoundKey(currentRound)
+
+  setRoundSnapshots((prev) => {
+    const currentSnapshot = prev[roundKey]
+    if (!currentSnapshot) return prev
+
+    const nextSnapshots: Partial<Record<RoundKey, BmwRoundSnapshot>> = {
+      ...prev,
+    }
+
+    delete nextSnapshots[roundKey]
+
+    const nextTeams = buildTeamsFromRoundSnapshots(teams, nextSnapshots)
+    setTeams(nextTeams)
+
+    return nextSnapshots
+  })
+
+  setShowResetAllLeaguesModal(false)
+  setShowResetAllLeaguesSuccessModal(true)
+}
+
+function reopenSavedLeagueSprint(
+  league: BmwLeagueName,
+  sprint: BmwSprintKey
+) {
+  const leagueSnapshot = currentRoundSnapshot?.leagues?.[league]
+  if (!leagueSnapshot) {
+    setError(`Nessun salvataggio trovato per la lega ${league}.`)
+    return
+  }
+
+  const sprintSnapshot =
+    sprint === "sprint1" ? leagueSnapshot.sprint1 : leagueSnapshot.sprint2
+
+  if (!sprintSnapshot) {
+    setError(`Nessun salvataggio trovato per ${league} - ${sprint.toUpperCase()}.`)
+    return
+  }
+
+  setError("")
+
+  const restoredGara =
+    String(sprintSnapshot.savedGara || "").trim() ||
+    String(sprintSnapshot.unionMeta?.gara || "").trim()
+
+  const restoredLega =
+    String(sprintSnapshot.savedLega || "").trim().toUpperCase() ||
+    String(sprintSnapshot.unionMeta?.lega || "").trim().toUpperCase() ||
+    league
+
+  const restoredLobby = String(sprintSnapshot.unionMeta?.lobby || "").trim()
+
+  setCsv(typeof sprintSnapshot.finalCsv === "string" ? sprintSnapshot.finalCsv : "")
+setRows(
+  Array.isArray(sprintSnapshot.finalRows)
+    ? (sprintSnapshot.finalRows as unknown as ExtractRow[])
+    : []
+)
+
+  setUnionMeta({
+    gara: restoredGara,
+    lobby: restoredLobby,
+    lega: restoredLega,
+  })
+
+  setManualGaraOverride(restoredGara && restoredGara !== "-" ? restoredGara : "")
+  setManualLegaOverride(restoredLega || league)
+
+  setCurrentSprint(sprint === "sprint1" ? 1 : 2)
+  setIsReopenedSavedSprint(true)
+setReopenedSprintKey(sprint)
+
+  setPenalties(sprintSnapshot.penalties || {})
+  setLapOverrides(sprintSnapshot.lapOverrides || {})
+  setDnfOverrides(sprintSnapshot.dnfOverrides || {})
+  setManualPilotOverrides(sprintSnapshot.manualPilotOverrides || {})
+  setManualAutoOverrides(sprintSnapshot.manualAutoOverrides || {})
+  setManualDistaccoOverrides(sprintSnapshot.manualDistaccoOverrides || {})
+
+  setManualPilotDraft({})
+  setManualDistaccoDraft({})
+  setPilotModalRows([])
+
+  setShowPilotModal(false)
+  setShowDistaccoModal(false)
+  setShowDgTable(false)
+  setShowMissingPilotWarning(false)
+
+  setShowSprintInfo(false)
+  setShowSprint2DoneInfo(false)
+  setShowSprint2UploadConfirm(false)
+  setShowSprintResetConfirm(false)
+  setSprint2Ready(false)
+  setPendingSprint2Upload(false)
+
+  setShowReopenLeagueModal(false)
+  setSelectedLeagueToReopen(null)
+
+  setSavedSprintPreviews((prev) => ({
+    ...prev,
+    [sprint]: sprintSnapshot,
+  }))
+
+  setIsReopenedSavedSprint(true)
+  setReopenedSprintKey(sprint)
+
+  requestAnimationFrame(() => {
+    topPageRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    })
+  })
 }
   
-  function saveOrUpdateCurrentRound() {
+function openConfirmSaveLeagueModal() {
+  const leagueName = getCurrentBmwLeagueName()
+
+  if (!leagueName) {
+    setError("Lega BMW non valida. Deve essere PRO, PRO-AMA oppure AMA.")
+    return
+  }
+
+  if (!savedSprintPreviews.sprint1 || !savedSprintPreviews.sprint2) {
+    setError("Devi prima salvare Sprint 1 e Sprint 2 prima di salvare la lega nel round.")
+    return
+  }
+
+  const roundKey = getRoundKey(currentRound)
+  const alreadyExists = !!roundSnapshots[roundKey]?.leagues?.[leagueName]
+
+  setPendingSaveLeagueMode(alreadyExists ? "overwrite" : "save")
+  setShowConfirmSaveLeagueModal(true)
+}  
+
+function openConfirmFinalizeRoundModal() {
+  setFinalizeRoundMode(isCurrentRoundAlreadySaved ? "overwrite" : "save")
+  setShowConfirmFinalizeRoundModal(true)
+}
+
+function saveOrUpdateCurrentRound() {
   const roundKey = getRoundKey(currentRound)
   const leagueName = getCurrentBmwLeagueName()
 
@@ -6733,6 +7149,10 @@ function resetSavedSprints() {
     setError("Devi prima salvare Sprint 1 e Sprint 2 prima di salvare la lega nel round.")
     return
   }
+
+  setShowConfirmSaveLeagueModal(false)
+
+  const alreadyExists = !!roundSnapshots[roundKey]?.leagues?.[leagueName]
 
   setRoundSnapshots((prev) => {
     const now = new Date().toISOString()
@@ -6774,6 +7194,10 @@ function resetSavedSprints() {
       },
     }
   })
+
+  setLastSavedLeagueName(leagueName)
+  setLastSaveLeagueMode(alreadyExists ? "overwrite" : "save")
+  setShowSaveLeagueSuccessModal(true)
 }
 
 function finalizeCurrentRound() {
@@ -6829,40 +7253,52 @@ function resetCurrentLeagueInRound() {
     return
   }
 
-  setRoundSnapshots((prev) => {
-    const currentSnapshot = prev[roundKey]
-    if (!currentSnapshot) return prev
+  const currentSnapshot = roundSnapshots[roundKey]
+  if (!currentSnapshot) {
+    window.location.reload()
+    return
+  }
 
-    const nextLeagues: Partial<Record<BmwLeagueName, BmwLeagueSnapshot>> = {
-      ...(currentSnapshot.leagues || {}),
+  const nextLeagues: Partial<Record<BmwLeagueName, BmwLeagueSnapshot>> = {
+    ...(currentSnapshot.leagues || {}),
+  }
+
+  delete nextLeagues[leagueName]
+
+  const hasAnyLeagueLeft = Object.keys(nextLeagues).length > 0
+
+  const nextSnapshots: Partial<Record<RoundKey, BmwRoundSnapshot>> = {
+    ...roundSnapshots,
+  }
+
+  if (!hasAnyLeagueLeft) {
+    delete nextSnapshots[roundKey]
+  } else {
+    const nextRoundTeamResults = buildBmwRoundTeamResultsFromLeagues(nextLeagues, teams)
+
+    nextSnapshots[roundKey] = {
+      ...currentSnapshot,
+      updatedAt: new Date().toISOString(),
+      leagues: nextLeagues,
+      roundTeamResults: nextRoundTeamResults,
     }
+  }
 
-    delete nextLeagues[leagueName]
+  const nextTeams = buildTeamsFromRoundSnapshots(teams, nextSnapshots)
 
-    const hasAnyLeagueLeft = Object.keys(nextLeagues).length > 0
+  setRoundSnapshots(nextSnapshots)
+  setTeams(nextTeams)
 
-    const nextSnapshots: Partial<Record<RoundKey, BmwRoundSnapshot>> = {
-      ...prev,
-    }
+  localStorage.setItem(
+    BMW_EVENT_STORAGE_KEY,
+    JSON.stringify({
+      teams: nextTeams,
+      currentRound,
+      roundSnapshots: nextSnapshots,
+    })
+  )
 
-    if (!hasAnyLeagueLeft) {
-      delete nextSnapshots[roundKey]
-    } else {
-      const nextRoundTeamResults = buildBmwRoundTeamResultsFromLeagues(nextLeagues, teams)
-
-      nextSnapshots[roundKey] = {
-        ...currentSnapshot,
-        updatedAt: new Date().toISOString(),
-        leagues: nextLeagues,
-        roundTeamResults: nextRoundTeamResults,
-      }
-    }
-
-    const nextTeams = buildTeamsFromRoundSnapshots(teams, nextSnapshots)
-    setTeams(nextTeams)
-
-    return nextSnapshots
-  })
+  window.location.reload()
 }
 
 function resetEntireCurrentRound() {
@@ -7063,13 +7499,13 @@ function resetDistaccoCorrections() {
 function resetAllManualCorrections() {
   setManualPilotOverrides({})
   setManualPilotDraft({})
+  setManualAutoOverrides({})
+  setPilotModalRows([])
   setShowPilotModal(false)
 
   setManualDistaccoOverrides({})
   setManualDistaccoDraft({})
   setShowDistaccoModal(false)
-
-  
 }
 
   const showMeta = prtMode || unionMode
@@ -7387,53 +7823,100 @@ if (!authorized) {
       )}
     </div>
 
-    <button
-      onClick={() => setShowReq((v) => !v)}
-      style={{
-        padding: "10px 12px",
-        borderRadius: 12,
-        border: "1px solid rgba(255,255,255,0.14)",
-        background: "rgba(0,0,0,0.18)",
-        color: "white",
-        cursor: "pointer",
-        fontWeight: 900,
-        letterSpacing: 0.4,
-        textTransform: "uppercase",
-        fontSize: 12,
-      }}
-      title="Mostra/Nascondi requisiti"
-    >
-      {showReq ? "Nascondi requisiti" : "Requisiti"}
-    </button>
-  </div>
+    <div style={{ position: "relative" }}>
+  <button
+    onClick={() => setShowRoundSelector((v) => !v)}
+    style={{
+      padding: "10px 14px",
+      borderRadius: 12,
+      border: "1px solid rgba(255,255,255,0.14)",
+      background: "rgba(0,0,0,0.18)",
+      color: "white",
+      cursor: "pointer",
+      fontWeight: 900,
+      letterSpacing: 0.4,
+      textTransform: "uppercase",
+      fontSize: 12,
+      minWidth: 120,
+    }}
+    title="Seleziona round attivo"
+  >
+    {`Round R${currentRound} ▾`}
+  </button>
 
-  {showReq && (
-    <div style={{ marginTop: 10, fontSize: 13, opacity: 0.82, lineHeight: 1.45 }}>
-      <div>
-        Minimo richiesto: <b>Qualifica 1–8</b> e <b>Gara 1–8</b>. Gli screen <b>9–N</b> sono opzionali.
-      </div>
-      <div style={{ marginTop: 8, opacity: 0.85 }}>
-        <b>Nota CSV:</b> la tabella resta in formato visuale GT7, mentre il CSV scaricato è in formato compatibile con il tuo sheet.
-      </div>
-      <div style={{ marginTop: 8, opacity: 0.85 }}>
-        <b>Penalità DG:</b> applicabili ai piloti con tempo gara numerico. Per i doppiati inserisci manualmente il gap finale dal leader.
-      </div>
+  {showRoundSelector && (
+    <div
+      style={{
+        position: "absolute",
+        top: "calc(100% + 8px)",
+        right: 0,
+        minWidth: 140,
+        padding: 8,
+        borderRadius: 14,
+        border: "1px solid rgba(255,255,255,0.12)",
+        background: "linear-gradient(180deg, rgba(18,22,31,0.98), rgba(8,10,15,0.98))",
+        boxShadow: "0 20px 40px rgba(0,0,0,0.35)",
+        display: "grid",
+        gap: 6,
+        zIndex: 1000,
+      }}
+    >
+      {[1, 2, 3, 4].map((round) => {
+        const isActive = currentRound === round
+
+        return (
+          <button
+            key={round}
+            onClick={() => {
+              requestRoundChange(round as 1 | 2 | 3 | 4)
+              setShowRoundSelector(false)
+            }}
+            style={{
+              padding: "10px 12px",
+              borderRadius: 10,
+              border: isActive
+                ? "1px solid rgba(255,215,0,0.35)"
+                : "1px solid rgba(255,255,255,0.10)",
+              background: isActive
+                ? "linear-gradient(180deg, rgba(255,215,0,0.18), rgba(255,215,0,0.08))"
+                : "rgba(255,255,255,0.05)",
+              color: "white",
+              cursor: "pointer",
+              fontWeight: 800,
+              textTransform: "uppercase",
+              fontSize: 12,
+              letterSpacing: 0.4,
+            }}
+          >
+            {isActive ? `R${round} • attivo` : `Vai a R${round}`}
+          </button>
+        )
+      })}
     </div>
   )}
 </div>
+  </div>
+
+  {false && showReq && (
+  <div style={{ marginTop: 10, fontSize: 13, opacity: 0.82, lineHeight: 1.45 }}>
+    ...
+  </div>
+)}
+</div>
 
           <div style={{ padding: 18, display: "grid", gap: 16 }}>
-            <div
-              style={{
-                borderRadius: 16,
-                border: "1px solid rgba(255,255,255,0.10)",
-                background: "rgba(0,0,0,0.18)",
-                padding: 14,
-                display: "grid",
-                gap: 12,
-                boxShadow: "0 10px 30px rgba(0,0,0,0.20)",
-              }}
-            >
+
+  <div
+    style={{
+      borderRadius: 16,
+      border: "1px solid rgba(255,255,255,0.10)",
+      background: "rgba(0,0,0,0.18)",
+      padding: 14,
+      display: "grid",
+      gap: 12,
+      boxShadow: "0 10px 30px rgba(0,0,0,0.20)",
+    }}
+  >
               <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
                 <div style={{ fontWeight: 900, opacity: 0.95 }}>Caricamento immagini</div>
 
@@ -7694,12 +8177,6 @@ if (!authorized) {
   >
     Importa backup
   </button>
-
-  {!canRun && (
-    <div style={{ fontSize: 12, opacity: 0.75 }}>
-      Seleziona almeno 2 immagini (Quali + Gara).
-    </div>
-  )}
 </div>
 
 {sprint2Ready && (
@@ -8657,6 +9134,209 @@ if (!authorized) {
   </div>
 )}
 
+{hasSavedLeaguesInCurrentRound && (
+  <div
+    style={{
+      borderRadius: 16,
+      border: "1px solid rgba(255,255,255,0.10)",
+      background: "rgba(0,0,0,0.18)",
+      padding: 14,
+      display: "grid",
+      gap: 12,
+      boxShadow: "0 10px 30px rgba(0,0,0,0.20)",
+    }}
+  >
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "space-between",
+        gap: 12,
+        flexWrap: "wrap",
+        alignItems: "center",
+      }}
+    >
+      <div style={{ display: "grid", gap: 4 }}>
+        <div style={{ fontWeight: 900, opacity: 0.96 }}>
+          Archivio leghe salvate nel Round corrente
+        </div>
+        <div style={{ fontSize: 12, opacity: 0.74 }}>
+          Riapri rapidamente una lega già salvata, scegli la sprint da caricare e modifica direttamente la sessione prima di sovrascriverla.
+        </div>
+      </div>
+
+      <div
+        style={{
+          padding: "8px 12px",
+          borderRadius: 12,
+          border: "1px solid rgba(255,255,255,0.10)",
+          background: "rgba(255,255,255,0.05)",
+          fontSize: 12,
+          fontWeight: 900,
+          textTransform: "uppercase",
+          letterSpacing: 0.4,
+        }}
+      >
+        Round {currentRound}
+      </div>
+    </div>
+
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+        gap: 12,
+      }}
+    >
+      {(["PRO", "PRO-AMA", "AMA"] as BmwLeagueName[]).map((league) => {
+        const snapshot = currentRoundSnapshot?.leagues?.[league] || null
+        const hasSprint1 = !!snapshot?.sprint1
+        const hasSprint2 = !!snapshot?.sprint2
+        const isComplete = hasSprint1 && hasSprint2
+
+        return (
+          <div
+            key={league}
+            style={{
+              borderRadius: 14,
+              border: snapshot
+                ? "1px solid rgba(255,255,255,0.12)"
+                : "1px solid rgba(255,255,255,0.08)",
+              background: snapshot
+                ? "rgba(255,255,255,0.05)"
+                : "rgba(255,255,255,0.03)",
+              padding: 12,
+              display: "grid",
+              gap: 10,
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                gap: 10,
+              }}
+            >
+              <div style={{ fontWeight: 900, letterSpacing: 0.4 }}>
+                {league}
+              </div>
+
+              <div
+                style={{
+                  padding: "6px 10px",
+                  borderRadius: 999,
+                  border: "1px solid rgba(255,255,255,0.10)",
+                  background: !snapshot
+                    ? "rgba(255,255,255,0.05)"
+                    : isComplete
+                      ? "rgba(34,197,94,0.14)"
+                      : "rgba(245,158,11,0.14)",
+                  fontSize: 11,
+                  fontWeight: 900,
+                  textTransform: "uppercase",
+                }}
+              >
+                {!snapshot ? "vuota" : isComplete ? "completa" : "parziale"}
+              </div>
+            </div>
+
+            <div
+              style={{
+                display: "grid",
+                gap: 6,
+                fontSize: 12,
+                opacity: 0.82,
+              }}
+            >
+              <div>
+                Sprint 1: <b>{hasSprint1 ? "salvata" : "non salvata"}</b>
+              </div>
+              <div>
+                Sprint 2: <b>{hasSprint2 ? "salvata" : "non salvata"}</b>
+              </div>
+            </div>
+
+            <div
+              style={{
+                display: "grid",
+                gap: 8,
+              }}
+            >
+              <button
+                onClick={() => openReopenLeagueModal(league)}
+                disabled={!snapshot}
+                style={{
+                  padding: "10px 12px",
+                  borderRadius: 10,
+                  border: "1px solid rgba(160,90,255,0.30)",
+                  background: snapshot ? "rgba(160,90,255,0.20)" : "rgba(255,255,255,0.06)",
+                  color: "white",
+                  cursor: snapshot ? "pointer" : "not-allowed",
+                  fontWeight: 800,
+                  textTransform: "uppercase",
+                  fontSize: 12,
+                  opacity: snapshot ? 1 : 0.5,
+                  boxShadow: snapshot ? "0 0 18px rgba(160,90,255,0.10)" : "none",
+                }}
+              >
+                Riapri lega
+              </button>
+
+              <button
+                onClick={() => openResetLeagueModal(league)}
+                disabled={!snapshot}
+                style={{
+                  padding: "10px 12px",
+                  borderRadius: 10,
+                  border: "1px solid rgba(239,68,68,0.30)",
+                  background: snapshot ? "rgba(239,68,68,0.16)" : "rgba(255,255,255,0.06)",
+                  color: "white",
+                  cursor: snapshot ? "pointer" : "not-allowed",
+                  fontWeight: 800,
+                  textTransform: "uppercase",
+                  fontSize: 12,
+                  opacity: snapshot ? 1 : 0.5,
+                  boxShadow: snapshot ? "0 0 18px rgba(239,68,68,0.08)" : "none",
+                }}
+              >
+                Resetta lega
+              </button>
+            </div>
+          </div>
+        )
+      })}
+    </div>
+
+    <div
+      style={{
+        marginTop: 4,
+        display: "flex",
+        justifyContent: "stretch",
+      }}
+    >
+      <button
+        onClick={() => setShowResetAllLeaguesModal(true)}
+        style={{
+          width: "100%",
+          padding: "12px 16px",
+          borderRadius: 12,
+          border: "1px solid rgba(239,68,68,0.30)",
+          background: "rgba(239,68,68,0.16)",
+          color: "white",
+          cursor: "pointer",
+          fontWeight: 900,
+          textTransform: "uppercase",
+          letterSpacing: 0.5,
+          fontSize: 12,
+          boxShadow: "0 0 18px rgba(239,68,68,0.08)",
+        }}
+      >
+        Resetta tutte le leghe del round corrente → ROUND {currentRound}
+      </button>
+    </div>
+  </div>
+)}
+
 {bmwSprintDriversPreview.length > 0 && (
   <div
     style={{
@@ -8724,22 +9404,28 @@ if (!authorized) {
 <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
 
     <button
-      onClick={saveCurrentSprint}
-      style={{
-        padding: "10px 14px",
-        borderRadius: 12,
-        border: "1px solid rgba(34,197,94,0.30)",
-        background: "rgba(34,197,94,0.16)",
-        color: "white",
-        cursor: "pointer",
-        fontWeight: 900,
-        letterSpacing: 0.4,
-        textTransform: "uppercase",
-        fontSize: 12,
-      }}
-    >
-      {currentSprint === 1 ? "SALVA SPRINT 1" : "SALVA SPRINT 2"}
-    </button>
+  onClick={saveCurrentSprint}
+  style={{
+    padding: "10px 14px",
+    borderRadius: 12,
+    border: "1px solid rgba(34,197,94,0.30)",
+    background: "rgba(34,197,94,0.16)",
+    color: "white",
+    cursor: "pointer",
+    fontWeight: 900,
+    letterSpacing: 0.4,
+    textTransform: "uppercase",
+    fontSize: 12,
+  }}
+>
+  {isReopenedSavedSprint
+    ? currentSprint === 1
+      ? "SOVRASCRIVI SPRINT 1"
+      : "SOVRASCRIVI SPRINT 2"
+    : currentSprint === 1
+      ? "SALVA SPRINT 1"
+      : "SALVA SPRINT 2"}
+</button>
 
     <button
       onClick={resetSavedSprints}
@@ -8927,7 +9613,7 @@ if (!authorized) {
         </div>
 
         <button
-  onClick={saveOrUpdateCurrentRound}
+  onClick={openConfirmSaveLeagueModal}
   style={{
     padding: "10px 14px",
     borderRadius: 12,
@@ -9083,15 +9769,17 @@ if (!authorized) {
     >
       <div style={{ display: "grid", gap: 4 }}>
         <div style={{ fontWeight: 900, opacity: 0.96 }}>
-          ✅ Round completo
+          {isCurrentRoundAlreadySaved ? "✅ Round già salvato" : "✅ Round completo"}
         </div>
         <div style={{ fontSize: 12, opacity: 0.78 }}>
-          PRO, PRO-AMA e AMA sono state salvate. Ora puoi consolidare il round e metterlo in classifica generale.
+          {isCurrentRoundAlreadySaved
+            ? "Questo round è già presente in classifica generale. Se hai modificato una lega, puoi sovrascriverlo."
+            : "PRO, PRO-AMA e AMA sono state salvate. Ora puoi consolidare il round e metterlo in classifica generale."}
         </div>
       </div>
 
       <button
-        onClick={finalizeCurrentRound}
+        onClick={openConfirmFinalizeRoundModal}
         style={{
           padding: "12px 16px",
           borderRadius: 14,
@@ -9105,7 +9793,9 @@ if (!authorized) {
           boxShadow: "0 0 22px rgba(34,197,94,0.12)",
         }}
       >
-        Salva Round in classifica
+        {isCurrentRoundAlreadySaved
+          ? "Sovrascrivi Round in classifica"
+          : "Salva Round in classifica"}
       </button>
     </div>
   </div>
@@ -10074,6 +10764,1001 @@ if (!authorized) {
           }}
         >
           Applica correzioni
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+{showReopenLeagueModal && selectedLeagueToReopen && (
+  <div
+    style={{
+      position: "fixed",
+      inset: 0,
+      background: "rgba(0,0,0,0.72)",
+      backdropFilter: "blur(6px)",
+      display: "grid",
+      placeItems: "center",
+      zIndex: 9999,
+      padding: 20,
+    }}
+  >
+    <div
+      style={{
+        width: "100%",
+        maxWidth: 560,
+        borderRadius: 22,
+        border: "1px solid rgba(255,255,255,0.12)",
+        background: "linear-gradient(180deg, rgba(18,22,31,0.98), rgba(8,10,15,0.98))",
+        boxShadow: "0 20px 80px rgba(0,0,0,0.55)",
+        padding: 22,
+        display: "grid",
+        gap: 16,
+      }}
+    >
+      <div>
+        <div style={{ fontSize: 22, fontWeight: 900 }}>
+          Riapri lega salvata
+        </div>
+        <div style={{ marginTop: 6, fontSize: 13, opacity: 0.76 }}>
+          Lega selezionata: <b>{selectedLeagueToReopen}</b>
+        </div>
+      </div>
+
+      <div
+        style={{
+          fontSize: 14,
+          lineHeight: 1.55,
+          opacity: 0.88,
+        }}
+      >
+        Scegli quale sprint vuoi riaprire. Verrà ripristinata l’ultima versione salvata di quella lega, completa di penalità e correzioni manuali.
+      </div>
+
+      <div style={{ display: "grid", gap: 10 }}>
+        <button
+          onClick={() => reopenSavedLeagueSprint(selectedLeagueToReopen, "sprint1")}
+          disabled={!currentRoundSnapshot?.leagues?.[selectedLeagueToReopen]?.sprint1}
+          style={{
+            padding: "12px 16px",
+            borderRadius: 14,
+            border: "1px solid rgba(255,215,0,0.30)",
+            background: currentRoundSnapshot?.leagues?.[selectedLeagueToReopen]?.sprint1
+              ? "rgba(255,215,0,0.18)"
+              : "rgba(255,255,255,0.06)",
+            color: "white",
+            cursor: currentRoundSnapshot?.leagues?.[selectedLeagueToReopen]?.sprint1
+              ? "pointer"
+              : "not-allowed",
+            fontWeight: 900,
+            textTransform: "uppercase",
+            letterSpacing: 0.5,
+            opacity: currentRoundSnapshot?.leagues?.[selectedLeagueToReopen]?.sprint1 ? 1 : 0.5,
+          }}
+        >
+          Apri Sprint 1
+        </button>
+
+        <button
+          onClick={() => reopenSavedLeagueSprint(selectedLeagueToReopen, "sprint2")}
+          disabled={!currentRoundSnapshot?.leagues?.[selectedLeagueToReopen]?.sprint2}
+          style={{
+            padding: "12px 16px",
+            borderRadius: 14,
+            border: "1px solid rgba(34,197,94,0.30)",
+            background: currentRoundSnapshot?.leagues?.[selectedLeagueToReopen]?.sprint2
+              ? "rgba(34,197,94,0.16)"
+              : "rgba(255,255,255,0.06)",
+            color: "white",
+            cursor: currentRoundSnapshot?.leagues?.[selectedLeagueToReopen]?.sprint2
+              ? "pointer"
+              : "not-allowed",
+            fontWeight: 900,
+            textTransform: "uppercase",
+            letterSpacing: 0.5,
+            opacity: currentRoundSnapshot?.leagues?.[selectedLeagueToReopen]?.sprint2 ? 1 : 0.5,
+          }}
+        >
+          Apri Sprint 2
+        </button>
+      </div>
+
+      <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, flexWrap: "wrap" }}>
+        <button
+          onClick={closeReopenLeagueModal}
+          style={{
+            padding: "12px 16px",
+            borderRadius: 14,
+            border: "1px solid rgba(255,255,255,0.14)",
+            background: "rgba(255,255,255,0.06)",
+            color: "white",
+            cursor: "pointer",
+            fontWeight: 900,
+            textTransform: "uppercase",
+            letterSpacing: 0.5,
+          }}
+        >
+          Chiudi
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+{showResetLeagueModal && selectedLeagueToReset && (
+  <div
+    style={{
+      position: "fixed",
+      inset: 0,
+      background: "rgba(0,0,0,0.72)",
+      backdropFilter: "blur(6px)",
+      display: "grid",
+      placeItems: "center",
+      zIndex: 9999,
+      padding: 20,
+    }}
+  >
+    <div
+      style={{
+        width: "100%",
+        maxWidth: 560,
+        borderRadius: 22,
+        border: "1px solid rgba(255,255,255,0.12)",
+        background: "linear-gradient(180deg, rgba(18,22,31,0.98), rgba(8,10,15,0.98))",
+        boxShadow: "0 20px 80px rgba(0,0,0,0.55)",
+        padding: 22,
+        display: "grid",
+        gap: 16,
+      }}
+    >
+      <div>
+        <div style={{ fontSize: 22, fontWeight: 900 }}>
+          Resetta lega salvata
+        </div>
+        <div style={{ marginTop: 6, fontSize: 13, opacity: 0.76 }}>
+          Lega selezionata: <b>{selectedLeagueToReset}</b>
+        </div>
+      </div>
+
+      <div
+        style={{
+          fontSize: 14,
+          lineHeight: 1.55,
+          opacity: 0.88,
+        }}
+      >
+        Stai per cancellare la memoria salvata di questa lega nel round corrente.
+        <br /><br />
+        Verranno rimossi:
+        <br />• Sprint 1 salvata
+        <br />• Sprint 2 salvata
+        <br />• preview driver/lega collegata
+      </div>
+
+      <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, flexWrap: "wrap" }}>
+        <button
+          onClick={closeResetLeagueModal}
+          style={{
+            padding: "12px 16px",
+            borderRadius: 14,
+            border: "1px solid rgba(255,255,255,0.14)",
+            background: "rgba(255,255,255,0.06)",
+            color: "white",
+            cursor: "pointer",
+            fontWeight: 900,
+            textTransform: "uppercase",
+            letterSpacing: 0.5,
+          }}
+        >
+          Annulla
+        </button>
+
+        <button
+          onClick={() => resetSpecificLeagueInRound(selectedLeagueToReset)}
+          style={{
+            padding: "12px 16px",
+            borderRadius: 14,
+            border: "1px solid rgba(239,68,68,0.30)",
+            background: "rgba(239,68,68,0.18)",
+            color: "white",
+            cursor: "pointer",
+            fontWeight: 900,
+            textTransform: "uppercase",
+            letterSpacing: 0.5,
+            boxShadow: "0 0 22px rgba(239,68,68,0.10)",
+          }}
+        >
+          Conferma reset
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+{showResetAllLeaguesModal && (
+  <div
+    style={{
+      position: "fixed",
+      inset: 0,
+      background: "rgba(0,0,0,0.72)",
+      backdropFilter: "blur(6px)",
+      display: "grid",
+      placeItems: "center",
+      zIndex: 9999,
+      padding: 20,
+    }}
+  >
+    <div
+      style={{
+        width: "100%",
+        maxWidth: 560,
+        borderRadius: 22,
+        border: "1px solid rgba(255,255,255,0.12)",
+        background: "linear-gradient(180deg, rgba(18,22,31,0.98), rgba(8,10,15,0.98))",
+        boxShadow: "0 20px 80px rgba(0,0,0,0.55)",
+        padding: 22,
+        display: "grid",
+        gap: 16,
+      }}
+    >
+      <div>
+        <div style={{ fontSize: 22, fontWeight: 900 }}>
+          Reset totale leghe del round
+        </div>
+        <div style={{ marginTop: 6, fontSize: 13, opacity: 0.76 }}>
+          Round selezionato: <b>{currentRound}</b>
+        </div>
+      </div>
+
+      <div
+        style={{
+          fontSize: 14,
+          lineHeight: 1.55,
+          opacity: 0.88,
+        }}
+      >
+        Stai per eliminare tutte le leghe salvate del round corrente.
+        <br /><br />
+        Verranno rimossi:
+        <br />• PRO
+        <br />• PRO-AMA
+        <br />• AMA
+        <br /><br />
+        Verrà eliminato anche il round corrente dai salvataggi.
+      </div>
+
+      <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, flexWrap: "wrap" }}>
+        <button
+          onClick={() => setShowResetAllLeaguesModal(false)}
+          style={{
+            padding: "12px 16px",
+            borderRadius: 14,
+            border: "1px solid rgba(255,255,255,0.14)",
+            background: "rgba(255,255,255,0.06)",
+            color: "white",
+            cursor: "pointer",
+            fontWeight: 900,
+            textTransform: "uppercase",
+            letterSpacing: 0.5,
+          }}
+        >
+          Annulla
+        </button>
+
+        <button
+          onClick={resetAllLeaguesInCurrentRound}
+          style={{
+            padding: "12px 16px",
+            borderRadius: 14,
+            border: "1px solid rgba(239,68,68,0.30)",
+            background: "rgba(239,68,68,0.18)",
+            color: "white",
+            cursor: "pointer",
+            fontWeight: 900,
+            textTransform: "uppercase",
+            letterSpacing: 0.5,
+            boxShadow: "0 0 22px rgba(239,68,68,0.10)",
+          }}
+        >
+          Conferma reset totale
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+{showResetAllLeaguesSuccessModal && (
+  <div
+    style={{
+      position: "fixed",
+      inset: 0,
+      background: "rgba(0,0,0,0.72)",
+      backdropFilter: "blur(6px)",
+      display: "grid",
+      placeItems: "center",
+      zIndex: 9999,
+      padding: 20,
+    }}
+  >
+    <div
+      style={{
+        width: "100%",
+        maxWidth: 560,
+        borderRadius: 22,
+        border: "1px solid rgba(255,255,255,0.12)",
+        background: "linear-gradient(180deg, rgba(18,22,31,0.98), rgba(8,10,15,0.98))",
+        boxShadow: "0 20px 80px rgba(0,0,0,0.55)",
+        padding: 22,
+        display: "grid",
+        gap: 16,
+      }}
+    >
+      <div>
+        <div style={{ fontSize: 22, fontWeight: 900 }}>
+          Reset totale completato
+        </div>
+        <div style={{ marginTop: 6, fontSize: 13, opacity: 0.76 }}>
+          Tutte le leghe del round corrente sono state eliminate.
+        </div>
+      </div>
+
+      <div
+        style={{
+          fontSize: 14,
+          lineHeight: 1.55,
+          opacity: 0.88,
+        }}
+      >
+        Premi <b>RESET HARD</b> per tornare alla schermata iniziale.
+      </div>
+
+      <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, flexWrap: "wrap" }}>
+        <button
+          onClick={() => setShowResetAllLeaguesSuccessModal(false)}
+          style={{
+            padding: "12px 16px",
+            borderRadius: 14,
+            border: "1px solid rgba(255,255,255,0.14)",
+            background: "rgba(255,255,255,0.06)",
+            color: "white",
+            cursor: "pointer",
+            fontWeight: 900,
+            textTransform: "uppercase",
+            letterSpacing: 0.5,
+          }}
+        >
+          Chiudi
+        </button>
+
+        <button
+          onClick={resetAll}
+          style={{
+            padding: "12px 16px",
+            borderRadius: 14,
+            border: "1px solid rgba(239,68,68,0.30)",
+            background: "rgba(239,68,68,0.18)",
+            color: "white",
+            cursor: "pointer",
+            fontWeight: 900,
+            textTransform: "uppercase",
+            letterSpacing: 0.5,
+            boxShadow: "0 0 22px rgba(239,68,68,0.10)",
+          }}
+        >
+          RESET HARD
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+{showResetLeagueSuccessModal && (
+  <div
+    style={{
+      position: "fixed",
+      inset: 0,
+      background: "rgba(0,0,0,0.72)",
+      backdropFilter: "blur(6px)",
+      display: "grid",
+      placeItems: "center",
+      zIndex: 9999,
+      padding: 20,
+    }}
+  >
+    <div
+      style={{
+        width: "100%",
+        maxWidth: 560,
+        borderRadius: 22,
+        border: "1px solid rgba(255,255,255,0.12)",
+        background: "linear-gradient(180deg, rgba(18,22,31,0.98), rgba(8,10,15,0.98))",
+        boxShadow: "0 20px 80px rgba(0,0,0,0.55)",
+        padding: 22,
+        display: "grid",
+        gap: 16,
+      }}
+    >
+      <div>
+        <div style={{ fontSize: 22, fontWeight: 900 }}>
+          Reset lega completato
+        </div>
+        <div style={{ marginTop: 6, fontSize: 13, opacity: 0.76 }}>
+          Lega eliminata: <b>{lastResetLeagueName || "-"}</b>
+        </div>
+      </div>
+
+      <div
+        style={{
+          fontSize: 14,
+          lineHeight: 1.55,
+          opacity: 0.88,
+        }}
+      >
+        I dati della lega selezionata sono stati eliminati con successo.
+        <br /><br />
+        Premi <b>RESET</b> per tornare alla schermata iniziale e reinserire i dati della lega.
+      </div>
+
+      <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, flexWrap: "wrap" }}>
+        <button
+          onClick={() => {
+            setShowResetLeagueSuccessModal(false)
+            setLastResetLeagueName(null)
+          }}
+          style={{
+            padding: "12px 16px",
+            borderRadius: 14,
+            border: "1px solid rgba(255,255,255,0.14)",
+            background: "rgba(255,255,255,0.06)",
+            color: "white",
+            cursor: "pointer",
+            fontWeight: 900,
+            textTransform: "uppercase",
+            letterSpacing: 0.5,
+          }}
+        >
+          Chiudi
+        </button>
+
+        <button
+          onClick={resetAll}
+          style={{
+            padding: "12px 16px",
+            borderRadius: 14,
+            border: "1px solid rgba(239,68,68,0.30)",
+            background: "rgba(239,68,68,0.18)",
+            color: "white",
+            cursor: "pointer",
+            fontWeight: 900,
+            textTransform: "uppercase",
+            letterSpacing: 0.5,
+            boxShadow: "0 0 22px rgba(239,68,68,0.10)",
+          }}
+        >
+          RESET
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+{showConfirmSaveLeagueModal && (
+  <div
+    style={{
+      position: "fixed",
+      inset: 0,
+      background: "rgba(0,0,0,0.72)",
+      backdropFilter: "blur(6px)",
+      display: "grid",
+      placeItems: "center",
+      zIndex: 9999,
+      padding: 20,
+    }}
+  >
+    <div
+      style={{
+        width: "100%",
+        maxWidth: 560,
+        borderRadius: 22,
+        border: "1px solid rgba(255,255,255,0.12)",
+        background: "linear-gradient(180deg, rgba(18,22,31,0.98), rgba(8,10,15,0.98))",
+        boxShadow: "0 20px 80px rgba(0,0,0,0.55)",
+        padding: 22,
+        display: "grid",
+        gap: 16,
+      }}
+    >
+      <div>
+        <div style={{ fontSize: 22, fontWeight: 900 }}>
+          {pendingSaveLeagueMode === "overwrite"
+            ? "Sovrascrivi lega nel round"
+            : "Salva lega nel round"}
+        </div>
+        <div style={{ marginTop: 6, fontSize: 13, opacity: 0.76 }}>
+          Lega selezionata: <b>{effectiveLegaResolved || "-"}</b>
+        </div>
+      </div>
+
+      <div
+        style={{
+          fontSize: 14,
+          lineHeight: 1.55,
+          opacity: 0.88,
+        }}
+      >
+        {pendingSaveLeagueMode === "overwrite"
+          ? "Stai per sovrascrivere i dati già salvati di questa lega nel round corrente."
+          : "Stai per salvare i dati di questa lega nel round corrente."}
+      </div>
+
+      <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, flexWrap: "wrap" }}>
+        <button
+          onClick={() => setShowConfirmSaveLeagueModal(false)}
+          style={{
+            padding: "12px 16px",
+            borderRadius: 14,
+            border: "1px solid rgba(255,255,255,0.14)",
+            background: "rgba(255,255,255,0.06)",
+            color: "white",
+            cursor: "pointer",
+            fontWeight: 900,
+            textTransform: "uppercase",
+            letterSpacing: 0.5,
+          }}
+        >
+          Annulla
+        </button>
+
+        <button
+          onClick={saveOrUpdateCurrentRound}
+          style={{
+            padding: "12px 16px",
+            borderRadius: 14,
+            border: "1px solid rgba(34,197,94,0.30)",
+            background: "rgba(34,197,94,0.16)",
+            color: "white",
+            cursor: "pointer",
+            fontWeight: 900,
+            textTransform: "uppercase",
+            letterSpacing: 0.5,
+            boxShadow: "0 0 22px rgba(34,197,94,0.12)",
+          }}
+        >
+          Conferma
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+{showSaveLeagueSuccessModal && (
+  <div
+    style={{
+      position: "fixed",
+      inset: 0,
+      background: "rgba(0,0,0,0.72)",
+      backdropFilter: "blur(6px)",
+      display: "grid",
+      placeItems: "center",
+      zIndex: 9999,
+      padding: 20,
+    }}
+  >
+    <div
+      style={{
+        width: "100%",
+        maxWidth: 560,
+        borderRadius: 22,
+        border: "1px solid rgba(255,255,255,0.12)",
+        background: "linear-gradient(180deg, rgba(18,22,31,0.98), rgba(8,10,15,0.98))",
+        boxShadow: "0 20px 80px rgba(0,0,0,0.55)",
+        padding: 22,
+        display: "grid",
+        gap: 16,
+      }}
+    >
+      <div>
+        <div style={{ fontSize: 22, fontWeight: 900 }}>
+          {lastSaveLeagueMode === "overwrite"
+            ? "Lega sovrascritta correttamente"
+            : "Lega salvata correttamente"}
+        </div>
+        <div style={{ marginTop: 6, fontSize: 13, opacity: 0.76 }}>
+          Lega: <b>{lastSavedLeagueName || "-"}</b>
+        </div>
+      </div>
+
+      <div
+        style={{
+          fontSize: 14,
+          lineHeight: 1.55,
+          opacity: 0.88,
+        }}
+      >
+        {lastSaveLeagueMode === "overwrite"
+          ? "I dati della lega sono stati aggiornati correttamente nel round corrente."
+          : "I dati della lega sono stati salvati correttamente nel round corrente."}
+      </div>
+
+      <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, flexWrap: "wrap" }}>
+        <button
+          onClick={() => {
+            setShowSaveLeagueSuccessModal(false)
+            setLastSavedLeagueName(null)
+            setLastSaveLeagueMode("save")
+          }}
+          style={{
+            padding: "12px 16px",
+            borderRadius: 14,
+            border: "1px solid rgba(34,197,94,0.30)",
+            background: "rgba(34,197,94,0.16)",
+            color: "white",
+            cursor: "pointer",
+            fontWeight: 900,
+            textTransform: "uppercase",
+            letterSpacing: 0.5,
+            boxShadow: "0 0 22px rgba(34,197,94,0.12)",
+          }}
+        >
+          OK
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+{showConfirmFinalizeRoundModal && (
+  <div
+    style={{
+      position: "fixed",
+      inset: 0,
+      background: "rgba(0,0,0,0.72)",
+      backdropFilter: "blur(6px)",
+      display: "grid",
+      placeItems: "center",
+      zIndex: 9999,
+      padding: 20,
+    }}
+  >
+    <div
+      style={{
+        width: "100%",
+        maxWidth: 560,
+        borderRadius: 22,
+        border: "1px solid rgba(255,255,255,0.12)",
+        background: "linear-gradient(180deg, rgba(18,22,31,0.98), rgba(8,10,15,0.98))",
+        boxShadow: "0 20px 80px rgba(0,0,0,0.55)",
+        padding: 22,
+        display: "grid",
+        gap: 16,
+      }}
+    >
+      <div>
+        <div style={{ fontSize: 22, fontWeight: 900 }}>
+          {finalizeRoundMode === "overwrite"
+            ? "Sovrascrivi Round in classifica"
+            : "Salva Round in classifica"}
+        </div>
+        <div style={{ marginTop: 6, fontSize: 13, opacity: 0.76 }}>
+          Round selezionato: <b>R{currentRound}</b>
+        </div>
+      </div>
+
+      <div
+        style={{
+          fontSize: 14,
+          lineHeight: 1.55,
+          opacity: 0.88,
+        }}
+      >
+        {finalizeRoundMode === "overwrite"
+          ? "Stai per aggiornare un round già presente in classifica generale con i dati correnti delle tre leghe."
+          : "Stai per salvare questo round in classifica generale usando i dati correnti delle tre leghe."}
+      </div>
+
+      <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, flexWrap: "wrap" }}>
+        <button
+          onClick={() => setShowConfirmFinalizeRoundModal(false)}
+          style={{
+            padding: "12px 16px",
+            borderRadius: 14,
+            border: "1px solid rgba(255,255,255,0.14)",
+            background: "rgba(255,255,255,0.06)",
+            color: "white",
+            cursor: "pointer",
+            fontWeight: 900,
+            textTransform: "uppercase",
+            letterSpacing: 0.5,
+          }}
+        >
+          Annulla
+        </button>
+
+        <button
+          onClick={() => {
+            finalizeCurrentRound()
+            setShowConfirmFinalizeRoundModal(false)
+          }}
+          style={{
+            padding: "12px 16px",
+            borderRadius: 14,
+            border: "1px solid rgba(34,197,94,0.30)",
+            background: "rgba(34,197,94,0.16)",
+            color: "white",
+            cursor: "pointer",
+            fontWeight: 900,
+            textTransform: "uppercase",
+            letterSpacing: 0.5,
+            boxShadow: "0 0 22px rgba(34,197,94,0.12)",
+          }}
+        >
+          {finalizeRoundMode === "overwrite"
+            ? "Conferma sovrascrittura"
+            : "Conferma salvataggio"}
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+{showSprintSaveSuccessModal && (
+  <div
+    style={{
+      position: "fixed",
+      inset: 0,
+      background: "rgba(0,0,0,0.72)",
+      backdropFilter: "blur(6px)",
+      display: "grid",
+      placeItems: "center",
+      zIndex: 9999,
+      padding: 20,
+    }}
+  >
+    <div
+      style={{
+        width: "100%",
+        maxWidth: 560,
+        borderRadius: 22,
+        border: "1px solid rgba(255,255,255,0.12)",
+        background: "linear-gradient(180deg, rgba(18,22,31,0.98), rgba(8,10,15,0.98))",
+        boxShadow: "0 20px 80px rgba(0,0,0,0.55)",
+        padding: 22,
+        display: "grid",
+        gap: 16,
+      }}
+    >
+      <div>
+        <div style={{ fontSize: 22, fontWeight: 900 }}>
+          {lastSprintSaveMode === "overwrite"
+            ? `Sprint ${lastSavedSprintNumber || "-"} sovrascritta correttamente`
+            : `Sprint ${lastSavedSprintNumber || "-"} salvata correttamente`}
+        </div>
+
+        <div style={{ marginTop: 6, fontSize: 13, opacity: 0.76 }}>
+          {lastSprintSaveMode === "overwrite"
+            ? "La sprint salvata è stata aggiornata con successo."
+            : "La sprint è stata memorizzata con successo."}
+        </div>
+      </div>
+
+      <div
+        style={{
+          fontSize: 14,
+          lineHeight: 1.55,
+          opacity: 0.88,
+        }}
+      >
+        {lastSprintSaveMode === "overwrite" ? (
+          <>
+            I dati della <b>Sprint {lastSavedSprintNumber || "-"}</b> sono stati
+            sovrascritti correttamente.
+          </>
+        ) : lastSavedSprintNumber === 1 ? (
+          <>
+            Hai salvato correttamente la <b>Sprint 1</b>.
+            <br /><br />
+            Ora puoi caricare i due screen gara della <b>Sprint 2</b> oppure
+            chiudere il popup e continuare più tardi.
+          </>
+        ) : (
+          <>
+            Hai salvato correttamente la <b>Sprint 2</b>.
+            <br /><br />
+            Si è generata un’ulteriore tabella chiamata <b>Preview classifica TEAM</b>.
+          </>
+        )}
+      </div>
+
+      <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, flexWrap: "wrap" }}>
+        <button
+          onClick={() => {
+            setShowSprintSaveSuccessModal(false)
+            setLastSavedSprintNumber(null)
+            setLastSprintSaveMode("save")
+          }}
+          style={{
+            padding: "12px 16px",
+            borderRadius: 14,
+            border: "1px solid rgba(255,255,255,0.14)",
+            background: "rgba(255,255,255,0.06)",
+            color: "white",
+            cursor: "pointer",
+            fontWeight: 900,
+            textTransform: "uppercase",
+            letterSpacing: 0.5,
+          }}
+        >
+          Chiudi
+        </button>
+
+        {lastSprintSaveMode === "save" && lastSavedSprintNumber === 1 && (
+          <button
+            onClick={() => {
+              setShowSprintSaveSuccessModal(false)
+              setLastSavedSprintNumber(null)
+              setLastSprintSaveMode("save")
+              setPendingSprint2Upload(true)
+              fileInputRef.current?.click()
+            }}
+            style={{
+              padding: "12px 16px",
+              borderRadius: 14,
+              border: "1px solid rgba(34,197,94,0.30)",
+              background: "rgba(34,197,94,0.16)",
+              color: "white",
+              cursor: "pointer",
+              fontWeight: 900,
+              textTransform: "uppercase",
+              letterSpacing: 0.5,
+              boxShadow: "0 0 22px rgba(34,197,94,0.12)",
+            }}
+          >
+            CARICA I DUE FILE DELLA SPRINT 2
+          </button>
+        )}
+
+        {lastSprintSaveMode === "save" && lastSavedSprintNumber === 2 && (
+          <button
+            onClick={() => {
+              setShowSprintSaveSuccessModal(false)
+              setLastSavedSprintNumber(null)
+              setLastSprintSaveMode("save")
+
+              requestAnimationFrame(() => {
+                teamPreviewRef.current?.scrollIntoView({
+                  behavior: "smooth",
+                  block: "start",
+                })
+              })
+            }}
+            style={{
+              padding: "12px 16px",
+              borderRadius: 14,
+              border: "1px solid rgba(34,197,94,0.30)",
+              background: "rgba(34,197,94,0.16)",
+              color: "white",
+              cursor: "pointer",
+              fontWeight: 900,
+              textTransform: "uppercase",
+              letterSpacing: 0.5,
+              boxShadow: "0 0 22px rgba(34,197,94,0.12)",
+            }}
+          >
+            PROSEGUI
+          </button>
+        )}
+
+        {lastSprintSaveMode === "overwrite" && (
+          <button
+            onClick={() => {
+              setShowSprintSaveSuccessModal(false)
+              setLastSavedSprintNumber(null)
+              setLastSprintSaveMode("save")
+            }}
+            style={{
+              padding: "12px 16px",
+              borderRadius: 14,
+              border: "1px solid rgba(34,197,94,0.30)",
+              background: "rgba(34,197,94,0.16)",
+              color: "white",
+              cursor: "pointer",
+              fontWeight: 900,
+              textTransform: "uppercase",
+              letterSpacing: 0.5,
+              boxShadow: "0 0 22px rgba(34,197,94,0.12)",
+            }}
+          >
+            OK
+          </button>
+        )}
+      </div>
+    </div>
+  </div>
+)}
+
+{showRoundChangeConfirmModal && pendingRoundChange && (
+  <div
+    style={{
+      position: "fixed",
+      inset: 0,
+      background: "rgba(0,0,0,0.72)",
+      backdropFilter: "blur(6px)",
+      display: "grid",
+      placeItems: "center",
+      zIndex: 9999,
+      padding: 20,
+    }}
+  >
+    <div
+      style={{
+        width: "100%",
+        maxWidth: 580,
+        borderRadius: 22,
+        border: "1px solid rgba(255,255,255,0.12)",
+        background: "linear-gradient(180deg, rgba(18,22,31,0.98), rgba(8,10,15,0.98))",
+        boxShadow: "0 20px 80px rgba(0,0,0,0.55)",
+        padding: 22,
+        display: "grid",
+        gap: 16,
+      }}
+    >
+      <div>
+        <div style={{ fontSize: 22, fontWeight: 900 }}>
+          Cambio Round
+        </div>
+        <div style={{ marginTop: 6, fontSize: 13, opacity: 0.76 }}>
+          Da <b>R{currentRound}</b> a <b>R{pendingRoundChange}</b>
+        </div>
+      </div>
+
+      <div
+        style={{
+          fontSize: 14,
+          lineHeight: 1.55,
+          opacity: 0.88,
+        }}
+      >
+        Stai lasciando un round che contiene dati in lavorazione o non ancora completati.
+        <br /><br />
+        <b>I dati già salvati non verranno cancellati.</b>
+        <br />
+        Cambierai solo il round attivo di lavoro.
+      </div>
+
+      <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, flexWrap: "wrap" }}>
+        <button
+          onClick={cancelRoundChange}
+          style={{
+            padding: "12px 16px",
+            borderRadius: 14,
+            border: "1px solid rgba(255,255,255,0.14)",
+            background: "rgba(255,255,255,0.06)",
+            color: "white",
+            cursor: "pointer",
+            fontWeight: 900,
+            textTransform: "uppercase",
+            letterSpacing: 0.5,
+          }}
+        >
+          Annulla
+        </button>
+
+        <button
+          onClick={confirmRoundChange}
+          style={{
+            padding: "12px 16px",
+            borderRadius: 14,
+            border: "1px solid rgba(255,215,0,0.30)",
+            background: "rgba(255,215,0,0.18)",
+            color: "white",
+            cursor: "pointer",
+            fontWeight: 900,
+            textTransform: "uppercase",
+            letterSpacing: 0.5,
+            boxShadow: "0 0 22px rgba(255,215,0,0.10)",
+          }}
+        >
+          Continua e cambia round
         </button>
       </div>
     </div>
