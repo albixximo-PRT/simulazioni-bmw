@@ -2824,54 +2824,82 @@ function TeamChampionshipTable({
               </th>
 
               {[1, 2, 3, 4].map((round) => (
-                <th
-                  key={`head-round-${round}`}
-                  style={{
-                    padding: exporting ? "8px 4px" : "10px 4px",
-                    textAlign: "center",
-                    fontSize: exporting ? 11 : 11,
-                    opacity: 0.9,
-                    width: exporting ? 170 : 145,
-                  }}
-                >
-                  <div
-                    style={{
-                      display: "grid",
-                      gap: exporting ? 4 : 3,
-                      justifyItems: "center",
-                    }}
-                  >
-                    <div
-                      style={{
-                        fontWeight: 900,
-                        fontSize: exporting ? 12 : 11,
-                        lineHeight: 1,
-                      }}
-                    >
-                      {`R${round}`}
-                    </div>
+  <th
+    key={`head-round-${round}`}
+    style={{
+      padding: exporting ? "8px 4px" : "10px 4px",
+      textAlign: "center",
+      fontSize: exporting ? 11 : 11,
+      opacity: 0.9,
+      width: exporting ? 170 : 145,
+    }}
+  >
+    <div
+      style={{
+        display: "grid",
+        gap: exporting ? 4 : 3,
+        justifyItems: "center",
+      }}
+    >
+      <div
+        style={{
+          fontWeight: 900,
+          fontSize: exporting ? 12 : 11,
+          lineHeight: 1,
+          letterSpacing: 0.25,
+          textTransform: "uppercase",
+          whiteSpace: "nowrap",
+        }}
+      >
+        {`ROUND ${round}`}
+      </div>
 
-                    <div
-                      style={{
-                        display: "grid",
-                        gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-                        gap: exporting ? 4 : 3,
-                        width: "100%",
-                        maxWidth: exporting ? 132 : 118,
-                        fontSize: exporting ? 10 : 9,
-                        opacity: 0.72,
-                        fontWeight: 900,
-                        lineHeight: 1,
-                        letterSpacing: 0.15,
-                      }}
-                    >
-                      <div style={{ textAlign: "center" }}>PRO</div>
-                      <div style={{ textAlign: "center" }}>PAMA</div>
-                      <div style={{ textAlign: "center" }}>AMA</div>
-                    </div>
-                  </div>
-                </th>
-              ))}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+          gap: exporting ? 4 : 3,
+          width: "100%",
+          maxWidth: exporting ? 132 : 118,
+          fontSize: exporting ? 10 : 9,
+          fontWeight: 900,
+          lineHeight: 1,
+          letterSpacing: 0.15,
+        }}
+      >
+        <div
+          style={{
+            textAlign: "center",
+            color: "#6fd3ff",
+            textShadow: "0 0 8px rgba(111,211,255,0.22)",
+          }}
+        >
+          PRO
+        </div>
+
+        <div
+          style={{
+            textAlign: "center",
+            color: "#8b5dff",
+            textShadow: "0 0 8px rgba(139,93,255,0.20)",
+          }}
+        >
+          PAMA
+        </div>
+
+        <div
+          style={{
+            textAlign: "center",
+            color: "#ff6666",
+            textShadow: "0 0 8px rgba(255,102,102,0.18)",
+          }}
+        >
+          AMA
+        </div>
+      </div>
+    </div>
+  </th>
+))}
 
               {(["r1", "r2", "r3", "r4"] as RoundKey[]).map((roundKey) => (
                 <th
