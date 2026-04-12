@@ -2665,7 +2665,7 @@ function TeamChampionshipTable({
         <table
           style={{
             width: "100%",
-            minWidth: exporting ? 1800 : 1200,
+            minWidth: exporting ? 1900 : 1300,
             borderCollapse: "collapse",
             tableLayout: "fixed",
           }}
@@ -2701,61 +2701,61 @@ function TeamChampionshipTable({
 
               <th
                 style={{
-                  padding: exporting ? "7px 6px" : "10px 8px",
+                  padding: exporting ? "10px 8px" : "12px 10px",
                   textAlign: "center",
-                  fontSize: exporting ? 11 : 11,
-                  opacity: 0.86,
-                  width: exporting ? 150 : 120,
+                  fontSize: exporting ? 12 : 12,
+                  opacity: 0.9,
+                  width: exporting ? 200 : 160,
                 }}
               >
-                <div style={{ display: "grid", gap: 4 }}>
+                <div style={{ display: "grid", gap: 6 }}>
                   <div style={{ fontWeight: 900 }}>R1</div>
-                  <div style={{ fontSize: 10, opacity: 0.7 }}>PRO PAMA AMA</div>
+                  <div style={{ fontSize: 11, opacity: 0.7 }}>PRO PAMA AMA</div>
                 </div>
               </th>
 
               <th
                 style={{
-                  padding: exporting ? "7px 6px" : "10px 8px",
+                  padding: exporting ? "10px 8px" : "12px 10px",
                   textAlign: "center",
-                  fontSize: exporting ? 11 : 11,
-                  opacity: 0.86,
-                  width: exporting ? 150 : 120,
+                  fontSize: exporting ? 12 : 12,
+                  opacity: 0.9,
+                  width: exporting ? 200 : 160,
                 }}
               >
-                <div style={{ display: "grid", gap: 4 }}>
+                <div style={{ display: "grid", gap: 6 }}>
                   <div style={{ fontWeight: 900 }}>R2</div>
-                  <div style={{ fontSize: 10, opacity: 0.7 }}>PRO PAMA AMA</div>
+                  <div style={{ fontSize: 11, opacity: 0.7 }}>PRO PAMA AMA</div>
                 </div>
               </th>
 
               <th
                 style={{
-                  padding: exporting ? "7px 6px" : "10px 8px",
+                  padding: exporting ? "10px 8px" : "12px 10px",
                   textAlign: "center",
-                  fontSize: exporting ? 11 : 11,
-                  opacity: 0.86,
-                  width: exporting ? 150 : 120,
+                  fontSize: exporting ? 12 : 12,
+                  opacity: 0.9,
+                  width: exporting ? 200 : 160,
                 }}
               >
-                <div style={{ display: "grid", gap: 4 }}>
+                <div style={{ display: "grid", gap: 6 }}>
                   <div style={{ fontWeight: 900 }}>R3</div>
-                  <div style={{ fontSize: 10, opacity: 0.7 }}>PRO PAMA AMA</div>
+                  <div style={{ fontSize: 11, opacity: 0.7 }}>PRO PAMA AMA</div>
                 </div>
               </th>
 
               <th
                 style={{
-                  padding: exporting ? "7px 6px" : "10px 8px",
+                  padding: exporting ? "10px 8px" : "12px 10px",
                   textAlign: "center",
-                  fontSize: exporting ? 11 : 11,
-                  opacity: 0.86,
-                  width: exporting ? 150 : 120,
+                  fontSize: exporting ? 12 : 12,
+                  opacity: 0.9,
+                  width: exporting ? 200 : 160,
                 }}
               >
-                <div style={{ display: "grid", gap: 4 }}>
+                <div style={{ display: "grid", gap: 6 }}>
                   <div style={{ fontWeight: 900 }}>R4</div>
-                  <div style={{ fontSize: 10, opacity: 0.7 }}>PRO PAMA AMA</div>
+                  <div style={{ fontSize: 11, opacity: 0.7 }}>PRO PAMA AMA</div>
                 </div>
               </th>
 
@@ -2910,17 +2910,18 @@ function TeamChampionshipTable({
                     <td
                       key={`detail-round-${team.team}-${round}`}
                       style={{
-                        padding: exporting ? "7px 6px" : "10px 8px",
+                        padding: exporting ? "8px 8px" : "12px 10px",
                         borderBottom: "1px solid rgba(255,255,255,0.08)",
                         textAlign: "center",
+                        width: exporting ? 200 : 160,
                       }}
                     >
                       <div
                         style={{
                           display: "grid",
-                          gridTemplateColumns: "repeat(3, 1fr)",
-                          gap: 4,
-                          fontSize: exporting ? 12 : 11,
+                          gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+                          gap: 8,
+                          fontSize: exporting ? 13 : 12,
                           fontWeight: 800,
                           fontFamily:
                             "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
