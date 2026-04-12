@@ -2591,595 +2591,237 @@ const resolvedTeamName = showTeamInsteadOfAuto
 
 function TeamChampionshipTable({
   teams,
+  roundSnapshots,
   exporting = false,
   currentRound,
-  roundSnapshots,
   title = "Classifica Generale TEAM BMW CUP",
 }: {
   teams: TeamEntry[]
+  roundSnapshots: Partial<Record<RoundKey, BmwRoundSnapshot>>
   exporting?: boolean
   currentRound: 1 | 2 | 3 | 4
-  roundSnapshots: Partial<Record<RoundKey, BmwRoundSnapshot>>
   title?: string
 }) {
 
-    function getLeagueShortLabel(league: BmwLeagueName) {
-    if (league === "PRO") return "PRO"
-    if (league === "PRO-AMA") return "PAMA"
-    return "AMA"
-  }
-
-  function getOrdinalLabel(pos: number | null) {
-    if (!pos || pos <= 0) return "-"
-    return `${pos}°`
-  }
-
-  function getTeamPositionInLeagueSprint(
-  roundKey: RoundKey,
-  league: BmwLeagueName,
-  sprintKey: BmwSprintKey,
-  teamName: string
-): number | null {
-  const roundSnapshot = roundSnapshots?.[roundKey]
-  const leagueSnapshot = roundSnapshot?.leagues?.[league]
-  const sprintSnapshot =
-    sprintKey === "sprint1" ? leagueSnapshot?.sprint1 : leagueSnapshot?.sprint2
-
-  if (!sprintSnapshot || !sprintSnapshot.drivers?.length) return null
-
-  const teamTotals = new Map<string, number>()
-
-  for (const driver of sprintSnapshot.drivers) {
-    const currentTeam = String(driver.team || "").trim()
-    if (!currentTeam || currentTeam === "-") continue
-
-    teamTotals.set(
-      currentTeam,
-      (teamTotals.get(currentTeam) || 0) + (driver.totalPoints || 0)
-    )
-  }
-
-  const sortedTeams = Array.from(teamTotals.entries())
-    .map(([team, total]) => ({ team, total }))
-    .sort((a, b) => {
-      if (b.total !== a.total) return b.total - a.total
-      return a.team.localeCompare(b.team)
-    })
-
-  const index = sortedTeams.findIndex((row) => row.team === teamName)
-  if (index === -1) return null
-
-  return index + 1
-}
-
-function renderSprintRowLabel(label: "S1" | "S2") {
   return (
-    <span
+    <div
       style={{
-        display: "inline-flex",
-        alignItems: "center",
-        justifyContent: "center",
-        minWidth: exporting ? 26 : 22,
-        padding: exporting ? "2px 6px" : "2px 5px",
-        borderRadius: 999,
+        borderRadius: 20,
         border: "1px solid rgba(255,255,255,0.12)",
-        background: "rgba(255,255,255,0.06)",
-        fontSize: exporting ? 10 : 9,
-        fontWeight: 900,
-        letterSpacing: 0.3,
-        color: "rgba(255,255,255,0.86)",
-        flexShrink: 0,
-      }}
-    >
-      {label}
-    </span>
-  )
-}
-
-  function renderRoundLeaguePositions(teamName: string, roundKey: RoundKey) {
-  const leagues: BmwLeagueName[] = ["PRO", "PRO-AMA", "AMA"]
-
-  const renderSprintPositions = (sprintKey: BmwSprintKey, sprintLabel: "S1" | "S2") => {
-    return (
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: exporting ? "34px repeat(3, 1fr)" : "30px repeat(3, 1fr)",
-          gap: exporting ? 10 : 8,
-          alignItems: "center",
-        }}
-      >
-        <div style={{ display: "flex", justifyContent: "center" }}>
-          {renderSprintRowLabel(sprintLabel)}
-        </div>
-
-        {leagues.map((league) => {
-          const pos = getTeamPositionInLeagueSprint(roundKey, league, sprintKey, teamName)
-
-          return (
-            <div
-              key={`${teamName}-${roundKey}-${sprintKey}-${league}`}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                minHeight: exporting ? 22 : 20,
-                whiteSpace: "nowrap",
-              }}
-              title={`${roundKey.toUpperCase()} ${sprintLabel} ${league}`}
-            >
-              {getOrdinalLabel(pos)}
-            </div>
-          )
-        })}
-      </div>
-    )
-  }
-
-  return (
-    <div
-      style={{
-        display: "grid",
-        gap: exporting ? 8 : 6,
-        fontSize: exporting ? 13 : 12,
-        fontWeight: 800,
-        fontFamily:
-          "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
-        lineHeight: 1.1,
-        color: "rgba(255,255,255,0.92)",
-      }}
-    >
-      {renderSprintPositions("sprint1", "S1")}
-      {renderSprintPositions("sprint2", "S2")}
-    </div>
-  )
-}
-  return (
-    <div
-      style={{
-        borderRadius: exporting ? 20 : 16,
-        border: "1px solid rgba(255,255,255,0.10)",
-        background: "rgba(0,0,0,0.22)",
+        background: "rgba(255,255,255,0.04)",
         overflow: "hidden",
-        boxShadow: exporting ? "0 12px 40px rgba(0,0,0,0.28)" : undefined,
       }}
     >
       <div
         style={{
-          padding: exporting ? "10px 14px" : "12px 14px",
-          borderBottom: "1px solid rgba(255,255,255,0.10)",
-          display: "flex",
-          justifyContent: "space-between",
-          gap: 12,
-          flexWrap: "wrap",
-          alignItems: "center",
-          background:
-            "linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))",
+          padding: exporting ? "10px 14px" : "12px 16px",
+          fontWeight: 900,
+          fontSize: exporting ? 16 : 14,
+          letterSpacing: 0.4,
         }}
       >
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: exporting ? 10 : 8,
-            flexWrap: "wrap",
-            minWidth: 0,
-          }}
-        >
-          <div
-            style={{
-              fontWeight: 900,
-              fontSize: exporting ? 18 : 16,
-              letterSpacing: 0.4,
-              whiteSpace: "nowrap",
-            }}
-          >
-            {title}
-          </div>
-        </div>
-
-        <div
-          style={{
-            padding: exporting ? "7px 12px" : "8px 12px",
-            borderRadius: 999,
-            border: "1px solid rgba(255,255,255,0.12)",
-            background: "rgba(255,255,255,0.05)",
-            fontSize: exporting ? 12 : 11,
-            fontWeight: 900,
-            letterSpacing: 0.5,
-            textTransform: "uppercase",
-            opacity: 0.9,
-          }}
-        >
-          Team classificati: {teams.length}
-        </div>
+        {title}
       </div>
 
-      <div style={{ overflowX: "auto", height: "100%" }}>
-        <table
-          style={{
-            width: "100%",
-            minWidth: exporting ? 2100 : 1420,
-            borderCollapse: "collapse",
-            tableLayout: "fixed",
-          }}
-        >
-          <thead
-            style={{
-              background: "rgba(10,12,18,0.92)",
-            }}
-          >
-            <tr>
-              <th
-                style={{
-                  padding: exporting ? "9px 10px" : "12px 10px",
-                  textAlign: "center",
-                  fontSize: exporting ? 13 : 12,
-                  opacity: 0.82,
-                  width: exporting ? 90 : 70,
-                }}
-              >
-                Pos
-              </th>
+      <table
+        style={{
+          width: "100%",
+          minWidth: exporting ? 1860 : 1320,
+          borderCollapse: "collapse",
+          tableLayout: "fixed",
+        }}
+      >
+        <thead>
+          <tr>
+            {/* POS */}
+            <th
+              style={{
+                padding: exporting ? "8px 6px" : "10px 6px",
+                textAlign: "center",
+                fontSize: 12,
+                opacity: 0.8,
+                width: exporting ? 54 : 44,
+              }}
+            >
+              Pos
+            </th>
 
-              <th
-                style={{
-                  padding: exporting ? "9px 12px" : "12px 14px",
-                  textAlign: "left",
-                  fontSize: exporting ? 13 : 12,
-                  opacity: 0.82,
-                  width: exporting ? 320 : 250,
-                }}
-              >
-                Team
-              </th>
+            {/* TEAM */}
+            <th
+              style={{
+                padding: exporting ? "8px 10px" : "10px 12px",
+                textAlign: "left",
+                fontSize: 12,
+                opacity: 0.8,
+                width: exporting ? 250 : 210,
+              }}
+            >
+              Team
+            </th>
 
+            {/* ROUNDS DETAIL */}
+            {[1, 2, 3, 4].map((round) => (
               <th
+                key={`head-round-${round}`}
                 style={{
-                  padding: exporting ? "10px 8px" : "12px 10px",
+                  padding: exporting ? "8px 6px" : "10px 8px",
                   textAlign: "center",
-                  fontSize: exporting ? 12 : 12,
-                  opacity: 0.9,
-                  width: exporting ? 220 : 170,
+                  fontSize: 12,
+                  width: exporting ? 180 : 145,
                 }}
               >
-                <div style={{ display: "grid", gap: 6 }}>
-                  <div style={{ fontWeight: 900 }}>R1</div>
-                  <div
-  style={{
-    fontSize: exporting ? 11 : 10,
-    opacity: 0.72,
-    display: "grid",
-    gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-    gap: exporting ? 10 : 8,
-    textAlign: "center",
-  }}
->
-  <span>PRO</span>
-  <span>PAMA</span>
-  <span>AMA</span>
-</div>
+                <div style={{ display: "grid", gap: 4 }}>
+                  <div style={{ fontWeight: 900 }}>R{round}</div>
+                  <div style={{ fontSize: 10, opacity: 0.7 }}>
+                    PRO PAMA AMA
+                  </div>
                 </div>
               </th>
+            ))}
 
+            {/* PUNTI ROUNDS */}
+            {(["r1", "r2", "r3", "r4"] as RoundKey[]).map((r) => (
               <th
+                key={r}
                 style={{
-                  padding: exporting ? "10px 8px" : "12px 10px",
+                  padding: exporting ? "7px 4px" : "10px 8px",
                   textAlign: "center",
-                  fontSize: exporting ? 12 : 12,
-                  opacity: 0.9,
-                  width: exporting ? 220 : 170,
+                  fontSize: 12,
+                  width: exporting ? 78 : 74,
                 }}
               >
-                <div style={{ display: "grid", gap: 6 }}>
-                  <div style={{ fontWeight: 900 }}>R2</div>
-                  <div
-  style={{
-    fontSize: exporting ? 11 : 10,
-    opacity: 0.72,
-    display: "grid",
-    gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-    gap: exporting ? 10 : 8,
-    textAlign: "center",
-  }}
->
-  <span>PRO</span>
-  <span>PAMA</span>
-  <span>AMA</span>
-</div>
-                </div>
+                {r.toUpperCase()}
               </th>
+            ))}
 
-              <th
-                style={{
-                  padding: exporting ? "10px 8px" : "12px 10px",
-                  textAlign: "center",
-                  fontSize: exporting ? 12 : 12,
-                  opacity: 0.9,
-                  width: exporting ? 220 : 170,
-                }}
-              >
-                <div style={{ display: "grid", gap: 6 }}>
-                  <div style={{ fontWeight: 900 }}>R3</div>
-                  <div
-  style={{
-    fontSize: exporting ? 11 : 10,
-    opacity: 0.72,
-    display: "grid",
-    gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-    gap: exporting ? 10 : 8,
-    textAlign: "center",
-  }}
->
-  <span>PRO</span>
-  <span>PAMA</span>
-  <span>AMA</span>
-</div>
-                </div>
-              </th>
+            {/* TOT */}
+            <th
+              style={{
+                padding: exporting ? "7px 6px" : "10px 10px",
+                textAlign: "center",
+                fontSize: 12,
+                width: exporting ? 92 : 88,
+              }}
+            >
+              TOT
+            </th>
+          </tr>
+        </thead>
 
-              <th
-                style={{
-                  padding: exporting ? "10px 8px" : "12px 10px",
-                  textAlign: "center",
-                  fontSize: exporting ? 12 : 12,
-                  opacity: 0.9,
-                  width: exporting ? 220 : 170,
-                }}
-              >
-                <div style={{ display: "grid", gap: 6 }}>
-                  <div style={{ fontWeight: 900 }}>R4</div>
-                  <div
-  style={{
-    fontSize: exporting ? 11 : 10,
-    opacity: 0.72,
-    display: "grid",
-    gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-    gap: exporting ? 10 : 8,
-    textAlign: "center",
-  }}
->
-  <span>PRO</span>
-  <span>PAMA</span>
-  <span>AMA</span>
-</div>
-                </div>
-              </th>
+        <tbody>
+          {teams.map((team, index) => {
+            const pos = index + 1
+            const isP1 = pos === 1
 
-              {(["r1", "r2", "r3", "r4"] as RoundKey[]).map((roundKey) => (
-                <th
-                  key={roundKey}
+            return (
+              <tr key={team.team}>
+                {/* POS */}
+                <td
                   style={{
-                    padding: exporting ? "7px 6px" : "12px 10px",
+                    padding: exporting ? "6px 4px" : "8px 4px",
                     textAlign: "center",
-                    fontSize: exporting ? 12 : 12,
-                    opacity: 0.82,
-                    width: exporting ? 92 : 90,
+                    borderBottom: "1px solid rgba(255,255,255,0.08)",
                   }}
                 >
-                  {roundKey.toUpperCase()}
-                </th>
-              ))}
+                  <PosBadge pos={pos} />
+                </td>
 
-              <th
-                style={{
-                  padding: exporting ? "7px 8px" : "12px 12px",
-                  textAlign: "center",
-                  fontSize: exporting ? 13 : 12,
-                  opacity: 0.92,
-                  width: exporting ? 110 : 110,
-                }}
-              >
-                TOT
-              </th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {teams.map((team, idx) => {
-              const pos = idx + 1
-              const isP1 = pos === 1
-              const isP2 = pos === 2
-              const isP3 = pos === 3
-
-              const rowBg = isP1
-                ? "linear-gradient(90deg, rgba(255,215,0,0.12) 0%, rgba(255,215,0,0.05) 28%, rgba(255,255,255,0.02) 70%)"
-                : isP2
-                  ? "linear-gradient(90deg, rgba(220,220,220,0.10) 0%, rgba(220,220,220,0.04) 28%, rgba(255,255,255,0.02) 70%)"
-                  : isP3
-                    ? "linear-gradient(90deg, rgba(205,127,50,0.12) 0%, rgba(205,127,50,0.05) 28%, rgba(255,255,255,0.02) 70%)"
-                    : idx % 2 === 0
-                      ? "rgba(255,255,255,0.02)"
-                      : "rgba(0,0,0,0.10)"
-
-              const totalBadgeBg = isP1
-                ? "linear-gradient(180deg, rgba(255,215,0,1), rgba(255,200,0,0.95))"
-                : isP2
-                  ? "linear-gradient(180deg, rgba(220,220,220,0.96), rgba(185,185,185,0.96))"
-                  : isP3
-                    ? "linear-gradient(180deg, rgba(205,127,50,0.96), rgba(168,102,38,0.96))"
-                    : "linear-gradient(180deg, rgba(255,255,255,0.14), rgba(255,255,255,0.06))"
-
-              const totalBadgeColor = isP1 || isP2 || isP3 ? "rgba(0,0,0,0.95)" : "#ffffff"
-
-              return (
-                <tr key={`${team.team}-${idx}`} style={{ background: rowBg }}>
-                  <td
+                {/* TEAM */}
+                <td
+                  style={{
+                    padding: exporting ? "8px 10px" : "10px 12px",
+                    borderBottom: "1px solid rgba(255,255,255,0.08)",
+                  }}
+                >
+                  <span
                     style={{
-                      padding: exporting ? "12px 12px" : "10px 8px",
-                      borderBottom: "1px solid rgba(255,255,255,0.08)",
-                      textAlign: "center",
+                      fontSize: exporting ? 16 : 13,
+                      fontWeight: 900,
+                      whiteSpace: "nowrap",
                     }}
                   >
-                    <div style={{ display: "flex", justifyContent: "center" }}>
-                      <PosBadge pos={pos} />
-                    </div>
-                  </td>
+                    {team.team}
+                  </span>
+                </td>
 
+                {/* ROUND DETAIL */}
+                {[1, 2, 3, 4].map((round) => (
                   <td
+                    key={`${team.team}-detail-${round}`}
                     style={{
-                      padding: exporting ? "10px 12px" : "12px 14px",
+                      padding: exporting ? "5px 6px" : "8px 8px",
+                      textAlign: "center",
                       borderBottom: "1px solid rgba(255,255,255,0.08)",
+                      width: exporting ? 180 : 145,
                     }}
                   >
                     <div
                       style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: exporting ? 8 : 9,
-                        minWidth: 0,
+                        display: "grid",
+                        gridTemplateColumns: "repeat(3, 1fr)",
+                        gap: 6,
+                        fontSize: exporting ? 12 : 11,
+                        fontWeight: 800,
+                        lineHeight: 1,
                       }}
                     >
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 2,
-                          flexShrink: 0,
-                          transform: "skewX(-16deg)",
-                          transformOrigin: "center",
-                        }}
-                      >
-                        <span
-                          style={{
-                            width: exporting ? 5 : 4,
-                            height: exporting ? 17 : 14,
-                            borderRadius: 2,
-                            background: "linear-gradient(180deg, #6fd3ff 0%, #3bb4e6 100%)",
-                            boxShadow: "0 0 6px rgba(91,192,255,0.4)",
-                          }}
-                        />
-                        <span
-                          style={{
-                            width: exporting ? 5 : 4,
-                            height: exporting ? 17 : 14,
-                            borderRadius: 2,
-                            background: "linear-gradient(180deg, #8b5dff 0%, #6a3dff 100%)",
-                            boxShadow: "0 0 6px rgba(124,77,255,0.4)",
-                          }}
-                        />
-                        <span
-                          style={{
-                            width: exporting ? 5 : 4,
-                            height: exporting ? 17 : 14,
-                            borderRadius: 2,
-                            background: "linear-gradient(180deg, #ff6666 0%, #ff2f2f 100%)",
-                            boxShadow: "0 0 6px rgba(255,59,59,0.4)",
-                          }}
-                        />
-                      </div>
-
-                      <span
-                        style={{
-                          fontSize: exporting ? 17 : 14,
-                          fontWeight: 900,
-                          letterSpacing: exporting ? "0.035em" : "0.04em",
-                          color: exporting
-                            ? isP1
-                              ? "#fff6cc"
-                              : "#ffffff"
-                            : "rgba(255,255,255,0.92)",
-                          textShadow: exporting && isP1
-                            ? "0 0 8px rgba(255,215,0,0.30)"
-                            : "none",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          whiteSpace: "nowrap",
-                          lineHeight: 1,
-                        }}
-                      >
-                        {team.team}
-                      </span>
+                      <div>-</div>
+                      <div>-</div>
+                      <div>-</div>
                     </div>
                   </td>
+                ))}
 
-                  {(["r1", "r2", "r3", "r4"] as RoundKey[]).map((roundKey) => (
-  <td
-    key={`detail-round-${team.team}-${roundKey}`}
-    style={{
-      padding: exporting ? "8px 10px" : "12px 12px",
-      borderBottom: "1px solid rgba(255,255,255,0.08)",
-      textAlign: "center",
-      width: exporting ? 220 : 170,
-    }}
-  >
-    {renderRoundLeaguePositions(team.team, roundKey)}
-  </td>
-))}
-
-                  {(["r1", "r2", "r3", "r4"] as RoundKey[]).map((roundKey) => (
-                    <td
-                      key={`${team.team}-${roundKey}`}
-                      style={{
-                        padding: exporting ? "7px 6px" : "10px 8px",
-                        borderBottom: "1px solid rgba(255,255,255,0.08)",
-                        textAlign: "center",
-                        fontFamily:
-                          "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
-                        fontSize: exporting ? 15 : 14,
-                        fontWeight: 900,
-                        lineHeight: 1,
-                        color:
-                          (team.rounds[roundKey] || 0) > 0
-                            ? "#ffffff"
-                            : "rgba(255,255,255,0.42)",
-                      }}
-                    >
-                      {team.rounds[roundKey] || 0}
-                    </td>
-                  ))}
-
+                {/* PUNTI ROUND */}
+                {(["r1", "r2", "r3", "r4"] as RoundKey[]).map((r) => (
                   <td
+                    key={`${team.team}-${r}`}
                     style={{
-                      padding: exporting ? "8px 8px" : "10px 10px",
-                      borderBottom: "1px solid rgba(255,255,255,0.08)",
+                      padding: exporting ? "6px 4px" : "8px 6px",
                       textAlign: "center",
+                      borderBottom: "1px solid rgba(255,255,255,0.08)",
+                      fontSize: exporting ? 14 : 13,
+                      fontWeight: 900,
+                      fontFamily:
+                        "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
                     }}
                   >
-                    <span
-                      style={{
-                        display: "inline-flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        minWidth: exporting ? 58 : 62,
-                        height: exporting ? 26 : 32,
-                        padding: exporting ? "0 10px" : "0 12px",
-                        borderRadius: 999,
-                        background: totalBadgeBg,
-                        border:
-                          isP1
-                            ? "1px solid rgba(255,215,0,0.55)"
-                            : isP2
-                              ? "1px solid rgba(220,220,220,0.42)"
-                              : isP3
-                                ? "1px solid rgba(205,127,50,0.45)"
-                                : "1px solid rgba(255,255,255,0.14)",
-                        boxShadow:
-                          isP1
-                            ? "0 0 14px rgba(255,215,0,0.28)"
-                            : isP2
-                              ? "0 0 11px rgba(220,220,220,0.18)"
-                              : isP3
-                                ? "0 0 11px rgba(205,127,50,0.18)"
-                                : "0 0 8px rgba(255,255,255,0.05)",
-                        color: totalBadgeColor,
-                        fontWeight: 900,
-                        fontFamily:
-                          "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
-                        fontSize: exporting ? 16 : 15,
-                        letterSpacing: 0.2,
-                        lineHeight: 1,
-                      }}
-                    >
-                      {team.total}
-                    </span>
+                    {team.rounds[r] || 0}
                   </td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
-      </div>
+                ))}
+
+                {/* TOT */}
+                <td
+                  style={{
+                    padding: exporting ? "6px 4px" : "8px 6px",
+                    textAlign: "center",
+                    borderBottom: "1px solid rgba(255,255,255,0.08)",
+                  }}
+                >
+                  <div
+                    style={{
+                      minWidth: exporting ? 50 : 56,
+                      height: exporting ? 24 : 28,
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      borderRadius: 999,
+                      fontWeight: 900,
+                      fontSize: exporting ? 15 : 14,
+                      background: isP1
+                        ? "linear-gradient(90deg, #FFD700, #FFA500)"
+                        : "rgba(255,255,255,0.08)",
+                      color: isP1 ? "#000" : "#fff",
+                    }}
+                  >
+                    {team.total}
+                  </div>
+                </td>
+              </tr>
+            )
+          })}
+        </tbody>
+      </table>
     </div>
   )
 }
@@ -10172,8 +9814,8 @@ if (!authorized) {
         {showGeneralRoundDetails && (
       <TeamChampionshipTable
   teams={championshipTeams}
-  currentRound={currentRound}
   roundSnapshots={roundSnapshots}
+  currentRound={currentRound}
 />
     )}
   </div>
@@ -12490,8 +12132,8 @@ if (!authorized) {
 
               <TeamChampionshipTable
   teams={championshipTeams}
-  currentRound={currentRound}
   roundSnapshots={roundSnapshots}
+  currentRound={currentRound}
   exporting={true}
   title="Classifica Generale TEAM BMW CUP"
 />
