@@ -6438,9 +6438,11 @@ async function downloadGeneralTeamsHtmlExport(customTexts?: {
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
       color: white;
       background:
-        radial-gradient(1200px 600px at 15% 10%, rgba(255,215,0,0.14), transparent 50%),
-        radial-gradient(900px 500px at 85% 20%, rgba(160,90,255,0.16), transparent 50%),
+        radial-gradient(80% 52% at 18% 4%, rgba(255,215,0,0.12), transparent 72%),
+        radial-gradient(78% 50% at 82% 8%, rgba(160,90,255,0.12), transparent 72%),
         linear-gradient(180deg, #0b0d12 0%, #07080c 100%);
+      background-repeat: no-repeat;
+      background-attachment: scroll;
       min-height: 100vh;
       overflow-y: auto;
       overflow-x: auto;
@@ -6482,8 +6484,8 @@ async function downloadGeneralTeamsHtmlExport(customTexts?: {
       inset: 0;
       pointer-events: none;
       background:
-        radial-gradient(900px 220px at 10% 10%, rgba(255,215,0,0.18), transparent 60%),
-        radial-gradient(700px 220px at 90% 0%, rgba(160,90,255,0.18), transparent 55%);
+        radial-gradient(65% 120% at 12% 0%, rgba(255,215,0,0.16), transparent 68%),
+        radial-gradient(58% 120% at 88% 0%, rgba(160,90,255,0.16), transparent 68%);
       opacity: 0.9;
     }
 
@@ -6610,6 +6612,18 @@ async function downloadGeneralTeamsHtmlExport(customTexts?: {
       align-items: center;
       overflow-x: auto;
       overflow-y: hidden;
+      position: relative;
+    }
+
+    .summary::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(55% 140% at 18% 0%, rgba(255,215,0,0.08), transparent 72%),
+        radial-gradient(55% 140% at 82% 0%, rgba(160,90,255,0.08), transparent 72%);
+      opacity: 0.9;
     }
 
     .header-badge {
@@ -6619,6 +6633,8 @@ async function downloadGeneralTeamsHtmlExport(customTexts?: {
       flex-wrap: nowrap;
       white-space: nowrap;
       flex: 0 0 auto;
+      position: relative;
+      z-index: 1;
     }
 
     .header-badge-label {
@@ -6679,6 +6695,8 @@ async function downloadGeneralTeamsHtmlExport(customTexts?: {
       background: linear-gradient(to bottom, transparent, rgba(210,215,225,0.9), transparent);
       box-shadow: 0 0 6px rgba(210,215,225,0.35);
       flex-shrink: 0;
+      position: relative;
+      z-index: 1;
     }
 
     .table-card {
@@ -7126,6 +7144,34 @@ async function downloadGeneralTeamsHtmlExport(customTexts?: {
       opacity: 0.72;
       padding: 0 4px;
     }
+
+    @media (max-width: 980px) {
+      body {
+        background:
+          radial-gradient(95% 40% at 20% 0%, rgba(255,215,0,0.10), transparent 75%),
+          radial-gradient(95% 40% at 80% 2%, rgba(160,90,255,0.10), transparent 75%),
+          linear-gradient(180deg, #0b0d12 0%, #07080c 100%);
+      }
+
+      .header {
+        flex-wrap: wrap;
+        align-items: flex-start;
+      }
+
+      .header-right {
+        width: 100%;
+        justify-content: flex-start;
+      }
+
+      .header-logo {
+        height: 84px;
+        max-width: 100%;
+      }
+
+      .page {
+        padding: 14px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -7327,131 +7373,56 @@ function renderMiniRoundDetailHtml(
 
   const upper = String(detail.text || "").trim().toUpperCase()
 
-  const miniPill = (
-    text: string,
-    background: string,
-    border: string,
-    color: string
-  ) => `
-    <span
-      style="
-        display:inline-flex;
-        align-items:center;
-        justify-content:center;
-        min-width:40px;
-        height:18px;
-        padding:0 7px;
-        border-radius:999px;
-        background:${background};
-        border:${border};
-        color:${color};
-        font-size:9px;
-        font-weight:900;
-        line-height:1;
-        letter-spacing:0.2px;
-        text-transform:uppercase;
-        white-space:nowrap;
-      "
-    >
-      ${escapeHtml(text)}
-    </span>
-  `
-
   if (upper === "DNF-I") {
-    return miniPill(
-      "DNF-I",
-      "rgba(64,224,208,0.92)",
-      "1px solid rgba(64,224,208,0.55)",
-      "rgba(0,0,0,0.92)"
-    )
+    return `<span class="mini-pill mini-teal">DNF-I</span>`
   }
 
   if (upper === "DNF-V") {
-    return miniPill(
-      "DNF-V",
-      "rgba(64,224,208,0.92)",
-      "1px solid rgba(64,224,208,0.55)",
-      "rgba(0,0,0,0.92)"
-    )
+    return `<span class="mini-pill mini-teal">DNF-V</span>`
   }
 
   if (upper === "DNP") {
-    return miniPill(
-      "DNP",
-      "rgba(64,224,208,0.92)",
-      "1px solid rgba(64,224,208,0.55)",
-      "rgba(0,0,0,0.92)"
-    )
+    return `<span class="mini-pill mini-teal">DNP</span>`
   }
 
   if (upper === "-") {
-    return `<span>${escapeHtml(detail.text || "-")}</span>`
+    return `<span class="mini-text">-</span>`
   }
 
-  const isP1 = upper === "1°"
-  const isP2 = upper === "2°"
-  const isP3 = upper === "3°"
+  const starsClass =
+    detail.pole && detail.bestLap ? "mini-stars double" : "mini-stars"
 
   const starsHtml =
     detail.pole || detail.bestLap
       ? `
-        <span
-          style="
-            position:absolute;
-            top:-5px;
-            right:${detail.pole && detail.bestLap ? "-12px" : "-8px"};
-            display:flex;
-            gap:1px;
-            font-size:9px;
-            line-height:1;
-          "
-        >
-          ${detail.pole ? `<span style="color:#ffd700;text-shadow:0 0 6px rgba(255,215,0,0.45);">★</span>` : ""}
-          ${detail.bestLap ? `<span style="color:#b67cff;text-shadow:0 0 6px rgba(160,90,255,0.45);">★</span>` : ""}
+        <span class="${starsClass}">
+          ${detail.pole ? `<span class="star-gold">★</span>` : ""}
+          ${detail.bestLap ? `<span class="star-violet">★</span>` : ""}
         </span>
       `
       : ""
 
-  if (isP1 || isP2 || isP3) {
-    const background = isP1
-      ? "linear-gradient(180deg, rgba(255,215,0,1), rgba(255,200,0,0.95))"
-      : isP2
-        ? "linear-gradient(180deg, rgba(220,220,220,0.96), rgba(185,185,185,0.96))"
-        : "linear-gradient(180deg, rgba(205,127,50,0.96), rgba(168,102,38,0.96))"
-
-    const border = isP1
-      ? "1px solid rgba(255,215,0,0.55)"
-      : isP2
-        ? "1px solid rgba(220,220,220,0.42)"
-        : "1px solid rgba(205,127,50,0.45)"
-
-    const glow = isP1
-      ? "0 0 12px rgba(255,215,0,0.25)"
-      : isP2
-        ? "0 0 10px rgba(220,220,220,0.18)"
-        : "0 0 10px rgba(205,127,50,0.18)"
-
+  if (upper === "1°") {
     return `
-      <span
-        style="
-          position:relative;
-          display:inline-flex;
-          align-items:center;
-          justify-content:center;
-          min-width:32px;
-          height:20px;
-          padding:0 8px;
-          border-radius:999px;
-          background:${background};
-          border:${border};
-          box-shadow:${glow};
-          color:rgba(0,0,0,0.95);
-          font-size:10px;
-          font-weight:900;
-          line-height:1;
-          white-space:nowrap;
-        "
-      >
+      <span class="mini-pos mini-pos-p1">
+        <span>${escapeHtml(detail.text)}</span>
+        ${starsHtml}
+      </span>
+    `
+  }
+
+  if (upper === "2°") {
+    return `
+      <span class="mini-pos mini-pos-p2">
+        <span>${escapeHtml(detail.text)}</span>
+        ${starsHtml}
+      </span>
+    `
+  }
+
+  if (upper === "3°") {
+    return `
+      <span class="mini-pos mini-pos-p3">
         <span>${escapeHtml(detail.text)}</span>
         ${starsHtml}
       </span>
@@ -7459,19 +7430,7 @@ function renderMiniRoundDetailHtml(
   }
 
   return `
-    <span
-      style="
-        position:relative;
-        display:inline-flex;
-        align-items:center;
-        justify-content:center;
-        min-width:24px;
-        font-size:11px;
-        font-weight:900;
-        line-height:1;
-        white-space:nowrap;
-      "
-    >
+    <span class="mini-text-wrap">
       <span>${escapeHtml(detail.text || "-")}</span>
       ${starsHtml}
     </span>
