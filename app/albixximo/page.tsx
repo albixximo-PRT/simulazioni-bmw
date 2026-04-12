@@ -1521,7 +1521,7 @@ function SummaryStrip({
               <Separator exporting={exporting} />
               <HeaderBadge
                 label="SPRINT"
-                value={currentSprint === 1 ? "S1" : "S2"}
+                value={String(currentSprint)}
                 variant={currentSprint === 1 ? "sprint1" : "sprint2"}
                 exporting={exporting}
               />
@@ -8067,7 +8067,7 @@ if (!authorized) {
           <Separator />
           <HeaderBadge
             label="SPRINT"
-            value={currentSprint === 1 ? "S1" : "S2"}
+            value={String(currentSprint)}
             variant={currentSprint === 1 ? "sprint1" : "sprint2"}
           />
         </>
