@@ -2619,8 +2619,26 @@ const resolvedTeamName = showTeamInsteadOfAuto
   )
 }
 
-function renderMiniRoundDetail(value: string, exporting = false) {
-  const upper = String(value || "").trim().toUpperCase()
+function renderMiniRoundDetail(
+  value:
+    | string
+    | {
+        text: string
+        pole?: boolean
+        bestLap?: boolean
+      },
+  exporting = false
+) {
+  const detail =
+    typeof value === "string"
+      ? { text: value, pole: false, bestLap: false }
+      : {
+          text: String(value?.text || "").trim(),
+          pole: !!value?.pole,
+          bestLap: !!value?.bestLap,
+        }
+
+  const upper = String(detail.text || "").trim().toUpperCase()
 
   const miniPillStyle = (
     background: string,
@@ -2687,7 +2705,154 @@ function renderMiniRoundDetail(value: string, exporting = false) {
     )
   }
 
-  return <>{value || "-"}</>
+  if (upper === "-") {
+    return <>{detail.text || "-"}</>
+  }
+
+  const isP1 = upper === "1°"
+  const isP2 = upper === "2°"
+  const isP3 = upper === "3°"
+
+  if (isP1 || isP2 || isP3) {
+    const background = isP1
+      ? "linear-gradient(180deg, rgba(255,215,0,1), rgba(255,200,0,0.95))"
+      : isP2
+        ? "linear-gradient(180deg, rgba(220,220,220,0.96), rgba(185,185,185,0.96))"
+        : "linear-gradient(180deg, rgba(205,127,50,0.96), rgba(168,102,38,0.96))"
+
+    const border = isP1
+      ? "1px solid rgba(255,215,0,0.55)"
+      : isP2
+        ? "1px solid rgba(220,220,220,0.42)"
+        : "1px solid rgba(205,127,50,0.45)"
+
+    const glow = isP1
+      ? "0 0 12px rgba(255,215,0,0.25)"
+      : isP2
+        ? "0 0 10px rgba(220,220,220,0.18)"
+        : "0 0 10px rgba(205,127,50,0.18)"
+
+    return (
+      <span
+        style={{
+          position: "relative",
+          display: "inline-flex",
+          alignItems: "center",
+          justifyContent: "center",
+          minWidth: exporting ? 32 : 28,
+          height: exporting ? 20 : 18,
+          padding: exporting ? "0 8px" : "0 7px",
+          borderRadius: 999,
+          background,
+          border,
+          boxShadow: glow,
+          color: "rgba(0,0,0,0.95)",
+          fontSize: exporting ? 10 : 9,
+          fontWeight: 900,
+          lineHeight: 1,
+          whiteSpace: "nowrap",
+        }}
+      >
+        <span>{detail.text}</span>
+
+        {(detail.pole || detail.bestLap) && (
+          <span
+            style={{
+              position: "absolute",
+              top: exporting ? -5 : -4,
+              right:
+                detail.pole && detail.bestLap
+                  ? (exporting ? -12 : -10)
+                  : (exporting ? -8 : -7),
+              display: "flex",
+              gap: 1,
+              fontSize: exporting ? 9 : 8,
+              lineHeight: 1,
+            }}
+          >
+            {detail.pole && (
+              <span
+                style={{
+                  color: "#ffd700",
+                  textShadow: "0 0 6px rgba(255,215,0,0.45)",
+                }}
+              >
+                ★
+              </span>
+            )}
+
+            {detail.bestLap && (
+              <span
+                style={{
+                  color: "#b67cff",
+                  textShadow: "0 0 6px rgba(160,90,255,0.45)",
+                }}
+              >
+                ★
+              </span>
+            )}
+          </span>
+        )}
+      </span>
+    )
+  }
+
+  return (
+    <span
+      style={{
+        position: "relative",
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        minWidth: exporting ? 24 : 20,
+        fontSize: exporting ? 11 : 10,
+        fontWeight: 900,
+        lineHeight: 1,
+        whiteSpace: "nowrap",
+      }}
+    >
+      <span>{detail.text || "-"}</span>
+
+      {(detail.pole || detail.bestLap) && (
+        <span
+          style={{
+            position: "absolute",
+            top: exporting ? -5 : -4,
+            right:
+              detail.pole && detail.bestLap
+                ? (exporting ? -12 : -10)
+                : (exporting ? -8 : -7),
+            display: "flex",
+            gap: 1,
+            fontSize: exporting ? 9 : 8,
+            lineHeight: 1,
+          }}
+        >
+          {detail.pole && (
+            <span
+              style={{
+                color: "#ffd700",
+                textShadow: "0 0 6px rgba(255,215,0,0.45)",
+              }}
+            >
+              ★
+            </span>
+          )}
+
+          {detail.bestLap && (
+            <span
+              style={{
+                color: "#b67cff",
+                textShadow: "0 0 6px rgba(160,90,255,0.45)",
+              }}
+            >
+              ★
+            </span>
+          )}
+        </span>
+      )}
+    </span>
+  )
 }
 
 function TeamChampionshipTable({
@@ -2702,14 +2867,26 @@ function TeamChampionshipTable({
   currentRound: 1 | 2 | 3 | 4
   title?: string
   getTeamRoundDetail: (
-    teamName: string,
-    round: number,
-    sprint: "sprint1" | "sprint2"
-  ) => {
-    pro: string
-    proAma: string
-    ama: string
+  teamName: string,
+  round: number,
+  sprint: "sprint1" | "sprint2"
+) => {
+  pro: {
+    text: string
+    pole?: boolean
+    bestLap?: boolean
   }
+  proAma: {
+    text: string
+    pole?: boolean
+    bestLap?: boolean
+  }
+  ama: {
+    text: string
+    pole?: boolean
+    bestLap?: boolean
+  }
+}
 }) {
   return (
     <div
@@ -3888,29 +4065,53 @@ function getTeamRoundDetail(
   round: number,
   sprint: "sprint1" | "sprint2"
 ): {
-  pro: string
-  proAma: string
-  ama: string
+  pro: {
+    text: string
+    pole?: boolean
+    bestLap?: boolean
+  }
+  proAma: {
+    text: string
+    pole?: boolean
+    bestLap?: boolean
+  }
+  ama: {
+    text: string
+    pole?: boolean
+    bestLap?: boolean
+  }
 } {
   const roundKey = `r${round}` as RoundKey
   const roundSnapshot = roundSnapshots[roundKey]
 
+  const emptyValue = {
+    text: "-",
+    pole: false,
+    bestLap: false,
+  }
+
   if (!roundSnapshot?.leagues) {
     return {
-      pro: "-",
-      proAma: "-",
-      ama: "-",
+      pro: emptyValue,
+      proAma: emptyValue,
+      ama: emptyValue,
     }
   }
 
-  const getLeaguePos = (leagueName: BmwLeagueName): string => {
+  const getLeaguePos = (
+    leagueName: BmwLeagueName
+  ): {
+    text: string
+    pole?: boolean
+    bestLap?: boolean
+  } => {
     const leagueSnapshot = roundSnapshot.leagues?.[leagueName]
-    if (!leagueSnapshot) return "-"
+    if (!leagueSnapshot) return emptyValue
 
     const sprintSnapshot =
       sprint === "sprint1" ? leagueSnapshot.sprint1 : leagueSnapshot.sprint2
 
-    if (!sprintSnapshot?.drivers?.length) return "-"
+    if (!sprintSnapshot?.drivers?.length) return emptyValue
 
     const orderedDrivers = [...sprintSnapshot.drivers]
 
@@ -3918,16 +4119,28 @@ function getTeamRoundDetail(
       (driver) => driver.team === teamName
     )
 
-    if (foundIndex === -1) return "-"
+    if (foundIndex === -1) return emptyValue
 
     const foundDriver = orderedDrivers[foundIndex]
     const status = String(foundDriver?.status || "").trim().toLowerCase()
 
-    if (status === "dnf-i") return "DNF-I"
-    if (status === "dnf-v") return "DNF-V"
-    if (status === "dnp") return "DNP"
+    if (status === "dnf-i") {
+      return { text: "DNF-I" }
+    }
 
-    return formatStandingPosition(foundIndex + 1)
+    if (status === "dnf-v") {
+      return { text: "DNF-V" }
+    }
+
+    if (status === "dnp") {
+      return { text: "DNP" }
+    }
+
+    return {
+      text: formatStandingPosition(foundIndex + 1),
+      pole: (foundDriver?.poleBonus || 0) > 0,
+      bestLap: (foundDriver?.bestLapBonus || 0) > 0,
+    }
   }
 
   return {
