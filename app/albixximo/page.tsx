@@ -2855,48 +2855,49 @@ function TeamChampionshipTable({
       </div>
 
       <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-          gap: exporting ? 4 : 3,
-          width: "100%",
-          maxWidth: exporting ? 132 : 118,
-          fontSize: exporting ? 10 : 9,
-          fontWeight: 900,
-          lineHeight: 1,
-          letterSpacing: 0.15,
-        }}
-      >
-        <div
-          style={{
-            textAlign: "center",
-            color: "#6fd3ff",
-            textShadow: "0 0 8px rgba(111,211,255,0.22)",
-          }}
-        >
-          PRO
-        </div>
+  style={{
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: exporting ? 6 : 5,
+    width: "100%",
+    fontSize: exporting ? 10 : 9,
+    fontWeight: 900,
+    letterSpacing: 0.2,
+    lineHeight: 1,
+  }}
+>
+  <span
+    style={{
+      color: "#00cfff",
+      textShadow: "0 0 8px rgba(0,207,255,0.25)",
+    }}
+  >
+    PRO
+  </span>
 
-        <div
-          style={{
-            textAlign: "center",
-            color: "#8b5dff",
-            textShadow: "0 0 8px rgba(139,93,255,0.20)",
-          }}
-        >
-          PAMA
-        </div>
+  <span style={{ opacity: 0.35 }}>•</span>
 
-        <div
-          style={{
-            textAlign: "center",
-            color: "#ff6666",
-            textShadow: "0 0 8px rgba(255,102,102,0.18)",
-          }}
-        >
-          AMA
-        </div>
-      </div>
+  <span
+    style={{
+      color: "#9b6bff",
+      textShadow: "0 0 8px rgba(155,107,255,0.25)",
+    }}
+  >
+    PAMA
+  </span>
+
+  <span style={{ opacity: 0.35 }}>•</span>
+
+  <span
+    style={{
+      color: "#ff4d4d",
+      textShadow: "0 0 8px rgba(255,77,77,0.25)",
+    }}
+  >
+    AMA
+  </span>
+</div>
     </div>
   </th>
 ))}
