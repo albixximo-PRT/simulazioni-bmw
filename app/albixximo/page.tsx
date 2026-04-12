@@ -2591,11 +2591,13 @@ const resolvedTeamName = showTeamInsteadOfAuto
 
 function TeamChampionshipTable({
   teams,
+  roundSnapshots,
   exporting = false,
   currentRound,
   title = "Classifica Generale TEAM BMW CUP",
 }: {
   teams: TeamEntry[]
+  roundSnapshots: Partial<Record<RoundKey, BmwRoundSnapshot>>
   exporting?: boolean
   currentRound: 1 | 2 | 3 | 4
   title?: string
@@ -2665,7 +2667,7 @@ function TeamChampionshipTable({
         <table
           style={{
             width: "100%",
-            minWidth: exporting ? 1900 : 1300,
+            minWidth: exporting ? 2100 : 1420,
             borderCollapse: "collapse",
             tableLayout: "fixed",
           }}
@@ -2690,10 +2692,11 @@ function TeamChampionshipTable({
 
               <th
                 style={{
-                  padding: exporting ? "9px 10px" : "12px 12px",
+                  padding: exporting ? "9px 12px" : "12px 14px",
                   textAlign: "left",
                   fontSize: exporting ? 13 : 12,
                   opacity: 0.82,
+                  width: exporting ? 320 : 250,
                 }}
               >
                 Team
@@ -2705,7 +2708,7 @@ function TeamChampionshipTable({
                   textAlign: "center",
                   fontSize: exporting ? 12 : 12,
                   opacity: 0.9,
-                  width: exporting ? 200 : 160,
+                  width: exporting ? 220 : 170,
                 }}
               >
                 <div style={{ display: "grid", gap: 6 }}>
@@ -2720,7 +2723,7 @@ function TeamChampionshipTable({
                   textAlign: "center",
                   fontSize: exporting ? 12 : 12,
                   opacity: 0.9,
-                  width: exporting ? 200 : 160,
+                  width: exporting ? 220 : 170,
                 }}
               >
                 <div style={{ display: "grid", gap: 6 }}>
@@ -2735,7 +2738,7 @@ function TeamChampionshipTable({
                   textAlign: "center",
                   fontSize: exporting ? 12 : 12,
                   opacity: 0.9,
-                  width: exporting ? 200 : 160,
+                  width: exporting ? 220 : 170,
                 }}
               >
                 <div style={{ display: "grid", gap: 6 }}>
@@ -2750,7 +2753,7 @@ function TeamChampionshipTable({
                   textAlign: "center",
                   fontSize: exporting ? 12 : 12,
                   opacity: 0.9,
-                  width: exporting ? 200 : 160,
+                  width: exporting ? 220 : 170,
                 }}
               >
                 <div style={{ display: "grid", gap: 6 }}>
@@ -2831,7 +2834,7 @@ function TeamChampionshipTable({
 
                   <td
                     style={{
-                      padding: exporting ? "10px 10px" : "12px 12px",
+                      padding: exporting ? "10px 12px" : "12px 14px",
                       borderBottom: "1px solid rgba(255,255,255,0.08)",
                     }}
                   >
@@ -2910,17 +2913,17 @@ function TeamChampionshipTable({
                     <td
                       key={`detail-round-${team.team}-${round}`}
                       style={{
-                        padding: exporting ? "8px 8px" : "12px 10px",
+                        padding: exporting ? "8px 10px" : "12px 12px",
                         borderBottom: "1px solid rgba(255,255,255,0.08)",
                         textAlign: "center",
-                        width: exporting ? 200 : 160,
+                        width: exporting ? 220 : 170,
                       }}
                     >
                       <div
                         style={{
                           display: "grid",
                           gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-                          gap: 8,
+                          gap: 10,
                           fontSize: exporting ? 13 : 12,
                           fontWeight: 800,
                           fontFamily:
@@ -10000,9 +10003,10 @@ if (!authorized) {
 
         {showGeneralRoundDetails && (
       <TeamChampionshipTable
-        teams={championshipTeams}
-        currentRound={currentRound}
-      />
+  teams={championshipTeams}
+  roundSnapshots={roundSnapshots}
+  currentRound={currentRound}
+/>
     )}
   </div>
 )}
@@ -12317,11 +12321,12 @@ if (!authorized) {
               </div>
 
               <TeamChampionshipTable
-                teams={championshipTeams}
-                currentRound={currentRound}
-                exporting={true}
-                title="Classifica Generale TEAM BMW CUP"
-              />
+  teams={championshipTeams}
+  roundSnapshots={roundSnapshots}
+  currentRound={currentRound}
+  exporting={true}
+  title="Classifica Generale TEAM BMW CUP"
+/>
             </div>
           )}
         </div>
