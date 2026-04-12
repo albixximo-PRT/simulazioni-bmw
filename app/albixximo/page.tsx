@@ -2591,17 +2591,44 @@ const resolvedTeamName = showTeamInsteadOfAuto
 
 function TeamChampionshipTable({
   teams,
-  roundSnapshots,
   exporting = false,
   currentRound,
+  roundSnapshots,
   title = "Classifica Generale TEAM BMW CUP",
 }: {
   teams: TeamEntry[]
-  roundSnapshots: Partial<Record<RoundKey, BmwRoundSnapshot>>
   exporting?: boolean
   currentRound: 1 | 2 | 3 | 4
+  roundSnapshots: Partial<Record<RoundKey, BmwRoundSnapshot>>
   title?: string
 }) {
+  type RoundKey = "r1" | "r2" | "r3" | "r4"
+
+  function formatSprintPos(pos: number | null | undefined) {
+    if (!pos || pos <= 0) return "-"
+    return `${pos}°`
+  }
+
+  function getTeamRoundDetail(
+    teamName: string,
+    roundKey: RoundKey,
+    league: BmwLeagueName,
+    sprint: BmwSprintKey
+  ) {
+    const roundSnapshot = roundSnapshots?.[roundKey]
+    const leagueSnapshot = roundSnapshot?.leagues?.[league]
+    const sprintSnapshot =
+      sprint === "sprint1" ? leagueSnapshot?.sprint1 : leagueSnapshot?.sprint2
+
+    if (!sprintSnapshot?.drivers?.length) return "-"
+
+    const driver = sprintSnapshot.drivers.find(
+      (d) => d.team === teamName
+    )
+    if (!driver) return "-"
+
+    return formatSprintPos(driver.position)
+  }
 
   return (
     <div
@@ -2617,7 +2644,6 @@ function TeamChampionshipTable({
           padding: exporting ? "10px 14px" : "12px 16px",
           fontWeight: 900,
           fontSize: exporting ? 16 : 14,
-          letterSpacing: 0.4,
         }}
       >
         {title}
@@ -2633,45 +2659,13 @@ function TeamChampionshipTable({
       >
         <thead>
           <tr>
-            {/* POS */}
-            <th
-              style={{
-                padding: exporting ? "8px 6px" : "10px 6px",
-                textAlign: "center",
-                fontSize: 12,
-                opacity: 0.8,
-                width: exporting ? 54 : 44,
-              }}
-            >
-              Pos
-            </th>
+            <th style={{ width: 50, textAlign: "center" }}>Pos</th>
+            <th style={{ width: 230, textAlign: "left" }}>Team</th>
 
-            {/* TEAM */}
-            <th
-              style={{
-                padding: exporting ? "8px 10px" : "10px 12px",
-                textAlign: "left",
-                fontSize: 12,
-                opacity: 0.8,
-                width: exporting ? 250 : 210,
-              }}
-            >
-              Team
-            </th>
-
-            {/* ROUNDS DETAIL */}
-            {[1, 2, 3, 4].map((round) => (
-              <th
-                key={`head-round-${round}`}
-                style={{
-                  padding: exporting ? "8px 6px" : "10px 8px",
-                  textAlign: "center",
-                  fontSize: 12,
-                  width: exporting ? 180 : 145,
-                }}
-              >
-                <div style={{ display: "grid", gap: 4 }}>
-                  <div style={{ fontWeight: 900 }}>R{round}</div>
+            {[1, 2, 3, 4].map((r) => (
+              <th key={r} style={{ width: 170, textAlign: "center" }}>
+                <div>
+                  <b>R{r}</b>
                   <div style={{ fontSize: 10, opacity: 0.7 }}>
                     PRO PAMA AMA
                   </div>
@@ -2679,32 +2673,13 @@ function TeamChampionshipTable({
               </th>
             ))}
 
-            {/* PUNTI ROUNDS */}
             {(["r1", "r2", "r3", "r4"] as RoundKey[]).map((r) => (
-              <th
-                key={r}
-                style={{
-                  padding: exporting ? "7px 4px" : "10px 8px",
-                  textAlign: "center",
-                  fontSize: 12,
-                  width: exporting ? 78 : 74,
-                }}
-              >
+              <th key={r} style={{ width: 70 }}>
                 {r.toUpperCase()}
               </th>
             ))}
 
-            {/* TOT */}
-            <th
-              style={{
-                padding: exporting ? "7px 6px" : "10px 10px",
-                textAlign: "center",
-                fontSize: 12,
-                width: exporting ? 92 : 88,
-              }}
-            >
-              TOT
-            </th>
+            <th style={{ width: 90 }}>TOT</th>
           </tr>
         </thead>
 
@@ -2716,98 +2691,56 @@ function TeamChampionshipTable({
             return (
               <tr key={team.team}>
                 {/* POS */}
-                <td
-                  style={{
-                    padding: exporting ? "6px 4px" : "8px 4px",
-                    textAlign: "center",
-                    borderBottom: "1px solid rgba(255,255,255,0.08)",
-                  }}
-                >
+                <td style={{ textAlign: "center" }}>
                   <PosBadge pos={pos} />
                 </td>
 
                 {/* TEAM */}
-                <td
-                  style={{
-                    padding: exporting ? "8px 10px" : "10px 12px",
-                    borderBottom: "1px solid rgba(255,255,255,0.08)",
-                  }}
-                >
-                  <span
-                    style={{
-                      fontSize: exporting ? 16 : 13,
-                      fontWeight: 900,
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {team.team}
-                  </span>
+                <td>
+                  <b>{team.team}</b>
                 </td>
 
                 {/* ROUND DETAIL */}
-                {[1, 2, 3, 4].map((round) => (
-                  <td
-                    key={`${team.team}-detail-${round}`}
-                    style={{
-                      padding: exporting ? "5px 6px" : "8px 8px",
-                      textAlign: "center",
-                      borderBottom: "1px solid rgba(255,255,255,0.08)",
-                      width: exporting ? 180 : 145,
-                    }}
-                  >
+                {(["r1", "r2", "r3", "r4"] as RoundKey[]).map((roundKey) => (
+                  <td key={roundKey}>
                     <div
                       style={{
                         display: "grid",
-                        gridTemplateColumns: "repeat(3, 1fr)",
-                        gap: 6,
-                        fontSize: exporting ? 12 : 11,
-                        fontWeight: 800,
-                        lineHeight: 1,
+                        gridTemplateColumns: "28px repeat(3, 1fr)",
+                        gap: 4,
+                        fontSize: 11,
+                        textAlign: "center",
                       }}
                     >
-                      <div>-</div>
-                      <div>-</div>
-                      <div>-</div>
+                      {/* S1 */}
+                      <div>S1</div>
+                      <div>{getTeamRoundDetail(team.team, roundKey, "PRO", "sprint1")}</div>
+                      <div>{getTeamRoundDetail(team.team, roundKey, "PRO-AMA", "sprint1")}</div>
+                      <div>{getTeamRoundDetail(team.team, roundKey, "AMA", "sprint1")}</div>
+
+                      {/* S2 */}
+                      <div>S2</div>
+                      <div>{getTeamRoundDetail(team.team, roundKey, "PRO", "sprint2")}</div>
+                      <div>{getTeamRoundDetail(team.team, roundKey, "PRO-AMA", "sprint2")}</div>
+                      <div>{getTeamRoundDetail(team.team, roundKey, "AMA", "sprint2")}</div>
                     </div>
                   </td>
                 ))}
 
                 {/* PUNTI ROUND */}
                 {(["r1", "r2", "r3", "r4"] as RoundKey[]).map((r) => (
-                  <td
-                    key={`${team.team}-${r}`}
-                    style={{
-                      padding: exporting ? "6px 4px" : "8px 6px",
-                      textAlign: "center",
-                      borderBottom: "1px solid rgba(255,255,255,0.08)",
-                      fontSize: exporting ? 14 : 13,
-                      fontWeight: 900,
-                      fontFamily:
-                        "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
-                    }}
-                  >
+                  <td key={r} style={{ textAlign: "center", fontWeight: 900 }}>
                     {team.rounds[r] || 0}
                   </td>
                 ))}
 
                 {/* TOT */}
-                <td
-                  style={{
-                    padding: exporting ? "6px 4px" : "8px 6px",
-                    textAlign: "center",
-                    borderBottom: "1px solid rgba(255,255,255,0.08)",
-                  }}
-                >
+                <td style={{ textAlign: "center" }}>
                   <div
                     style={{
-                      minWidth: exporting ? 50 : 56,
-                      height: exporting ? 24 : 28,
-                      display: "inline-flex",
-                      alignItems: "center",
-                      justifyContent: "center",
                       borderRadius: 999,
+                      padding: "4px 10px",
                       fontWeight: 900,
-                      fontSize: exporting ? 15 : 14,
                       background: isP1
                         ? "linear-gradient(90deg, #FFD700, #FFA500)"
                         : "rgba(255,255,255,0.08)",
