@@ -6347,6 +6347,47 @@ async function downloadGeneralTeamsHtmlExport(customTexts?: {
               ? "team-total team-total-p3"
               : "team-total team-total-normal"
 
+        const roundDetailCells = [1, 2, 3, 4]
+          .map((round) => {
+            const s1 = getTeamRoundDetail(team.team, round, "sprint1")
+            const s2 = getTeamRoundDetail(team.team, round, "sprint2")
+
+            return `
+              <td class="col-round-detail">
+                <div class="round-detail-wrap">
+                  <div class="sprint-line">
+                    <div class="round-mini-grid">
+                      <div class="round-mini-cell">${renderMiniRoundDetailHtml(s1.pro)}</div>
+                      <div class="round-mini-cell">${renderMiniRoundDetailHtml(s1.proAma)}</div>
+                      <div class="round-mini-cell">${renderMiniRoundDetailHtml(s1.ama)}</div>
+                    </div>
+                  </div>
+
+                  <div class="sprint-line">
+                    <div class="round-mini-grid">
+                      <div class="round-mini-cell">${renderMiniRoundDetailHtml(s2.pro)}</div>
+                      <div class="round-mini-cell">${renderMiniRoundDetailHtml(s2.proAma)}</div>
+                      <div class="round-mini-cell">${renderMiniRoundDetailHtml(s2.ama)}</div>
+                    </div>
+                  </div>
+                </div>
+              </td>
+            `
+          })
+          .join("")
+
+        const roundTotalsHtml = (["r1", "r2", "r3", "r4"] as RoundKey[])
+          .map((roundKey) => {
+            const value = team.rounds[roundKey] || 0
+
+            return `
+              <td class="round-total-cell ${value > 0 ? "round-total-on" : "round-total-off"}">
+                ${escapeHtml(String(value))}
+              </td>
+            `
+          })
+          .join("")
+
         return `
           <tr class="${rowClass}">
             <td class="col-pos pos-cell">
@@ -6364,10 +6405,16 @@ async function downloadGeneralTeamsHtmlExport(customTexts?: {
               </div>
             </td>
 
-            <td class="col-round round-cell">${team.rounds.r1 || 0}</td>
-            <td class="col-round round-cell">${team.rounds.r2 || 0}</td>
-            <td class="col-round round-cell">${team.rounds.r3 || 0}</td>
-            <td class="col-round round-cell">${team.rounds.r4 || 0}</td>
+            <td class="col-sprint-labels">
+              <div class="sprint-labels-wrap">
+                <span class="sprint-pill sprint-pill-s1">S1</span>
+                <span class="sprint-pill sprint-pill-s2">S2</span>
+              </div>
+            </td>
+
+            ${roundDetailCells}
+
+            ${roundTotalsHtml}
 
             <td class="col-total total-cell">
               <span class="${totalClass}">${team.total}</span>
@@ -6396,12 +6443,13 @@ async function downloadGeneralTeamsHtmlExport(customTexts?: {
         linear-gradient(180deg, #0b0d12 0%, #07080c 100%);
       min-height: 100vh;
       overflow-y: auto;
-      overflow-x: hidden;
+      overflow-x: auto;
     }
 
     .page {
-      width: 100%;
-      max-width: 1700px;
+      width: max-content;
+      min-width: 100%;
+      max-width: none;
       margin: 0 auto;
       padding: 24px;
       display: grid;
@@ -6671,13 +6719,15 @@ async function downloadGeneralTeamsHtmlExport(customTexts?: {
     }
 
     .table-wrap {
-      width: 100%;
-      overflow-x: hidden;
+      width: max-content;
+      min-width: 100%;
+      overflow-x: auto;
       overflow-y: visible;
     }
 
     table {
-      width: 100%;
+      width: max-content;
+      min-width: 100%;
       border-collapse: collapse;
       table-layout: fixed;
     }
@@ -6688,9 +6738,9 @@ async function downloadGeneralTeamsHtmlExport(customTexts?: {
       z-index: 2;
       background: rgba(10,12,18,0.96);
       backdrop-filter: blur(10px);
-      padding: 18px 14px;
-      text-align: left;
-      font-size: 13px;
+      padding: 10px 8px;
+      text-align: center;
+      font-size: 11px;
       opacity: 0.88;
       white-space: nowrap;
       overflow: hidden;
@@ -6698,16 +6748,18 @@ async function downloadGeneralTeamsHtmlExport(customTexts?: {
     }
 
     tbody td {
-      padding: 20px 14px;
+      padding: 8px 8px;
       border-bottom: 1px solid rgba(255,255,255,0.08);
       vertical-align: middle;
-      font-size: 14px;
+      font-size: 13px;
     }
 
-    .col-pos { width: 70px; }
-    .col-team { width: 54%; }
-    .col-round { width: 9%; }
-    .col-total { width: 10%; }
+    .col-pos { width: 52px; }
+    .col-team { width: 250px; text-align: left; }
+    .col-sprint-labels { width: 44px; }
+    .col-round-detail { width: 170px; border-left: 1px solid rgba(255,255,255,0.08); }
+    .col-round-total { width: 74px; border-left: 1px solid rgba(255,255,255,0.08); }
+    .col-total { width: 96px; }
 
     .row-p1 {
       background: linear-gradient(90deg, rgba(255,215,0,0.12) 0%, rgba(255,215,0,0.05) 28%, rgba(255,255,255,0.02) 70%);
@@ -6745,12 +6797,13 @@ async function downloadGeneralTeamsHtmlExport(customTexts?: {
 
     .team-cell {
       min-width: 0;
+      text-align: left;
     }
 
     .team-wrap {
       display: flex;
       align-items: center;
-      gap: 14px;
+      gap: 9px;
       min-width: 0;
     }
 
@@ -6764,8 +6817,8 @@ async function downloadGeneralTeamsHtmlExport(customTexts?: {
     }
 
     .stripe {
-      width: 6px;
-      height: 28px;
+      width: 5px;
+      height: 17px;
       border-radius: 2px;
       display: inline-block;
     }
@@ -6786,40 +6839,212 @@ async function downloadGeneralTeamsHtmlExport(customTexts?: {
     }
 
     .team-name {
-      font-size: 19px;
-      font-weight: 800;
-      letter-spacing: 0.03em;
-      color: rgba(255,255,255,0.92);
-      white-space: normal;
-      line-height: 1.28;
-      word-break: break-word;
-    }
-
-    .round-cell {
-      text-align: center;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
       font-size: 15px;
       font-weight: 900;
+      letter-spacing: 0.02em;
+      color: rgba(255,255,255,0.92);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
       line-height: 1;
+    }
+
+    .sprint-labels-wrap {
+      display: grid;
+      gap: 6px;
+      justify-items: center;
+    }
+
+    .sprint-pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 28px;
+      height: 18px;
+      padding: 0 6px;
+      border-radius: 999px;
       color: #ffffff;
+      font-size: 10px;
+      font-weight: 900;
+      line-height: 1;
+      letter-spacing: 0.2px;
+    }
+
+    .sprint-pill-s1 {
+      border: 1px solid rgba(0,207,255,0.5);
+      background: rgba(0,207,255,0.22);
+      box-shadow: 0 0 10px rgba(0,207,255,0.35);
+    }
+
+    .sprint-pill-s2 {
+      border: 1px solid rgba(168,85,247,0.5);
+      background: rgba(168,85,247,0.22);
+      box-shadow: 0 0 10px rgba(168,85,247,0.35);
+    }
+
+    .round-detail-wrap {
+      display: grid;
+      gap: 6px;
+    }
+
+    .sprint-line {
+      display: block;
+    }
+
+    .round-mini-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 4px;
+      width: 100%;
+      max-width: 132px;
+      margin: 0 auto;
+      font-size: 12px;
+      font-weight: 900;
+      line-height: 1;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      color: rgba(255,255,255,0.96);
+    }
+
+    .round-mini-cell {
+      text-align: center;
+      position: relative;
+    }
+
+    .mini-pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 40px;
+      height: 18px;
+      padding: 0 7px;
+      border-radius: 999px;
+      font-size: 9px;
+      font-weight: 900;
+      line-height: 1;
+      letter-spacing: 0.2px;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .mini-teal {
+      background: rgba(64,224,208,0.92);
+      border: 1px solid rgba(64,224,208,0.55);
+      color: rgba(0,0,0,0.92);
+    }
+
+    .mini-pos {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 32px;
+      height: 20px;
+      padding: 0 8px;
+      border-radius: 999px;
+      font-size: 10px;
+      font-weight: 900;
+      line-height: 1;
+      white-space: nowrap;
+      color: rgba(0,0,0,0.95);
+    }
+
+    .mini-pos-p1 {
+      background: linear-gradient(180deg, rgba(255,215,0,1), rgba(255,200,0,0.95));
+      border: 1px solid rgba(255,215,0,0.55);
+      box-shadow: 0 0 12px rgba(255,215,0,0.25);
+    }
+
+    .mini-pos-p2 {
+      background: linear-gradient(180deg, rgba(220,220,220,0.96), rgba(185,185,185,0.96));
+      border: 1px solid rgba(220,220,220,0.42);
+      box-shadow: 0 0 10px rgba(220,220,220,0.18);
+    }
+
+    .mini-pos-p3 {
+      background: linear-gradient(180deg, rgba(205,127,50,0.96), rgba(168,102,38,0.96));
+      border: 1px solid rgba(205,127,50,0.45);
+      box-shadow: 0 0 10px rgba(205,127,50,0.18);
+    }
+
+    .mini-text {
+      font-size: 11px;
+      font-weight: 900;
+      line-height: 1;
+      white-space: nowrap;
+    }
+
+    .mini-text-wrap {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 24px;
+      font-size: 11px;
+      font-weight: 900;
+      line-height: 1;
+      white-space: nowrap;
+    }
+
+    .mini-stars {
+      position: absolute;
+      top: -5px;
+      right: -8px;
+      display: flex;
+      gap: 1px;
+      font-size: 9px;
+      line-height: 1;
+    }
+
+    .mini-stars.double {
+      right: -12px;
+    }
+
+    .star-gold {
+      color: #ffd700;
+      text-shadow: 0 0 6px rgba(255,215,0,0.45);
+    }
+
+    .star-violet {
+      color: #b67cff;
+      text-shadow: 0 0 6px rgba(160,90,255,0.45);
+    }
+
+    .round-total-cell {
+      padding: 6px 4px;
+      text-align: center;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      border-left: 1px solid rgba(255,255,255,0.08);
+      font-size: 14px;
+      font-weight: 900;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    .round-total-on {
+      color: #ffffff;
+    }
+
+    .round-total-off {
+      color: rgba(255,255,255,0.42);
     }
 
     .total-cell {
       text-align: center;
+      border-left: 1px solid rgba(255,255,255,0.12);
     }
 
     .team-total {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      min-width: 60px;
-      height: 34px;
-      padding: 0 14px;
+      min-width: 54px;
+      height: 26px;
+      padding: 0 10px;
       border-radius: 999px;
       font-weight: 900;
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
       font-size: 16px;
       line-height: 1;
+      letter-spacing: 0.2px;
     }
 
     .team-total-p1 {
@@ -6850,65 +7075,56 @@ async function downloadGeneralTeamsHtmlExport(customTexts?: {
       color: #ffffff;
     }
 
+    .header-round-title {
+      display: grid;
+      gap: 4px;
+      justify-items: center;
+    }
+
+    .header-round-top {
+      font-weight: 900;
+      font-size: 12px;
+      line-height: 1;
+      letter-spacing: 0.25px;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .header-round-bottom {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 6px;
+      width: 100%;
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: 0.2px;
+      line-height: 1;
+    }
+
+    .header-pro {
+      color: #00cfff;
+      text-shadow: 0 0 8px rgba(0,207,255,0.25);
+    }
+
+    .header-pama {
+      color: #9b6bff;
+      text-shadow: 0 0 8px rgba(155,107,255,0.25);
+    }
+
+    .header-ama {
+      color: #ff4d4d;
+      text-shadow: 0 0 8px rgba(255,77,77,0.25);
+    }
+
+    .header-dot {
+      opacity: 0.35;
+    }
+
     .footer-note {
       font-size: 12px;
       opacity: 0.72;
       padding: 0 4px;
-    }
-
-    @media (max-width: 1100px) {
-      .main-title {
-        font-size: 28px;
-      }
-
-      .header-logo {
-        height: 84px;
-      }
-
-      .col-team {
-        width: 50%;
-      }
-
-      .col-round {
-        width: 10%;
-      }
-
-      .col-total {
-        width: 12%;
-      }
-
-      .team-name {
-        font-size: 17px;
-      }
-
-      .round-cell {
-        font-size: 14px;
-      }
-
-      tbody td {
-        padding: 18px 12px;
-      }
-    }
-
-    @media (max-width: 980px) {
-      .header {
-        flex-wrap: wrap;
-        align-items: flex-start;
-      }
-
-      .header-right {
-        width: 100%;
-        justify-content: flex-start;
-      }
-
-      .header-logo {
-        height: 84px;
-        max-width: 100%;
-      }
-
-      .page {
-        padding: 16px;
-      }
     }
   </style>
 </head>
@@ -6941,12 +7157,33 @@ async function downloadGeneralTeamsHtmlExport(customTexts?: {
           <thead>
             <tr>
               <th class="col-pos">Pos</th>
-              <th class="col-team">Team</th>
-              <th class="col-round" style="text-align:center;">R1</th>
-              <th class="col-round" style="text-align:center;">R2</th>
-              <th class="col-round" style="text-align:center;">R3</th>
-              <th class="col-round" style="text-align:center;">R4</th>
-              <th class="col-total" style="text-align:center;">TOT</th>
+              <th class="col-team" style="text-align:left;">Team</th>
+              <th class="col-sprint-labels">&nbsp;</th>
+
+              ${[1, 2, 3, 4]
+                .map(
+                  (round) => `
+                <th class="col-round-detail">
+                  <div class="header-round-title">
+                    <div class="header-round-top">ROUND ${round}</div>
+                    <div class="header-round-bottom">
+                      <span class="header-pro">PRO</span>
+                      <span class="header-dot">•</span>
+                      <span class="header-pama">PAMA</span>
+                      <span class="header-dot">•</span>
+                      <span class="header-ama">AMA</span>
+                    </div>
+                  </div>
+                </th>
+              `
+                )
+                .join("")}
+
+              <th class="col-round-total">R1</th>
+              <th class="col-round-total">R2</th>
+              <th class="col-round-total">R3</th>
+              <th class="col-round-total">R4</th>
+              <th class="col-total">TOT</th>
             </tr>
           </thead>
           <tbody>
@@ -6957,7 +7194,7 @@ async function downloadGeneralTeamsHtmlExport(customTexts?: {
     </div>
 
     <div class="footer-note">
-      Export HTML Classifica Generale TEAM BMW CUP • scroll verticale
+      Export HTML Classifica Generale TEAM BMW CUP • layout round completo
     </div>
   </div>
 </body>
@@ -7067,6 +7304,207 @@ function renderPointsHtmlForExport(row: DisplayRow, bestRaceLap: string) {
       <span>${points}</span>
       ${starsHtml}
     </span>
+  `
+}
+
+function renderMiniRoundDetailHtml(
+  value:
+    | string
+    | {
+        text: string
+        pole?: boolean
+        bestLap?: boolean
+      }
+) {
+  const detail =
+    typeof value === "string"
+      ? { text: value, pole: false, bestLap: false }
+      : {
+          text: String(value?.text || "").trim(),
+          pole: !!value?.pole,
+          bestLap: !!value?.bestLap,
+        }
+
+  const upper = String(detail.text || "").trim().toUpperCase()
+
+  const miniPill = (
+    text: string,
+    background: string,
+    border: string,
+    color: string
+  ) => `
+    <span
+      style="
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-width:40px;
+        height:18px;
+        padding:0 7px;
+        border-radius:999px;
+        background:${background};
+        border:${border};
+        color:${color};
+        font-size:9px;
+        font-weight:900;
+        line-height:1;
+        letter-spacing:0.2px;
+        text-transform:uppercase;
+        white-space:nowrap;
+      "
+    >
+      ${escapeHtml(text)}
+    </span>
+  `
+
+  if (upper === "DNF-I") {
+    return miniPill(
+      "DNF-I",
+      "rgba(64,224,208,0.92)",
+      "1px solid rgba(64,224,208,0.55)",
+      "rgba(0,0,0,0.92)"
+    )
+  }
+
+  if (upper === "DNF-V") {
+    return miniPill(
+      "DNF-V",
+      "rgba(64,224,208,0.92)",
+      "1px solid rgba(64,224,208,0.55)",
+      "rgba(0,0,0,0.92)"
+    )
+  }
+
+  if (upper === "DNP") {
+    return miniPill(
+      "DNP",
+      "rgba(64,224,208,0.92)",
+      "1px solid rgba(64,224,208,0.55)",
+      "rgba(0,0,0,0.92)"
+    )
+  }
+
+  if (upper === "-") {
+    return `<span>${escapeHtml(detail.text || "-")}</span>`
+  }
+
+  const isP1 = upper === "1°"
+  const isP2 = upper === "2°"
+  const isP3 = upper === "3°"
+
+  const starsHtml =
+    detail.pole || detail.bestLap
+      ? `
+        <span
+          style="
+            position:absolute;
+            top:-5px;
+            right:${detail.pole && detail.bestLap ? "-12px" : "-8px"};
+            display:flex;
+            gap:1px;
+            font-size:9px;
+            line-height:1;
+          "
+        >
+          ${detail.pole ? `<span style="color:#ffd700;text-shadow:0 0 6px rgba(255,215,0,0.45);">★</span>` : ""}
+          ${detail.bestLap ? `<span style="color:#b67cff;text-shadow:0 0 6px rgba(160,90,255,0.45);">★</span>` : ""}
+        </span>
+      `
+      : ""
+
+  if (isP1 || isP2 || isP3) {
+    const background = isP1
+      ? "linear-gradient(180deg, rgba(255,215,0,1), rgba(255,200,0,0.95))"
+      : isP2
+        ? "linear-gradient(180deg, rgba(220,220,220,0.96), rgba(185,185,185,0.96))"
+        : "linear-gradient(180deg, rgba(205,127,50,0.96), rgba(168,102,38,0.96))"
+
+    const border = isP1
+      ? "1px solid rgba(255,215,0,0.55)"
+      : isP2
+        ? "1px solid rgba(220,220,220,0.42)"
+        : "1px solid rgba(205,127,50,0.45)"
+
+    const glow = isP1
+      ? "0 0 12px rgba(255,215,0,0.25)"
+      : isP2
+        ? "0 0 10px rgba(220,220,220,0.18)"
+        : "0 0 10px rgba(205,127,50,0.18)"
+
+    return `
+      <span
+        style="
+          position:relative;
+          display:inline-flex;
+          align-items:center;
+          justify-content:center;
+          min-width:32px;
+          height:20px;
+          padding:0 8px;
+          border-radius:999px;
+          background:${background};
+          border:${border};
+          box-shadow:${glow};
+          color:rgba(0,0,0,0.95);
+          font-size:10px;
+          font-weight:900;
+          line-height:1;
+          white-space:nowrap;
+        "
+      >
+        <span>${escapeHtml(detail.text)}</span>
+        ${starsHtml}
+      </span>
+    `
+  }
+
+  return `
+    <span
+      style="
+        position:relative;
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-width:24px;
+        font-size:11px;
+        font-weight:900;
+        line-height:1;
+        white-space:nowrap;
+      "
+    >
+      <span>${escapeHtml(detail.text || "-")}</span>
+      ${starsHtml}
+    </span>
+  `
+}
+
+function renderTeamRoundDetailHtml(
+  teamName: string,
+  round: number,
+  sprint: "sprint1" | "sprint2"
+) {
+  const detail = getTeamRoundDetail(teamName, round, sprint)
+
+  return `
+    <div
+      style="
+        display:grid;
+        grid-template-columns:repeat(3, minmax(0, 1fr));
+        gap:4px;
+        width:100%;
+        max-width:132px;
+        margin:0 auto;
+        font-size:12px;
+        font-weight:900;
+        line-height:1;
+        font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        color:rgba(255,255,255,0.96);
+      "
+    >
+      <div style="text-align:center;">${renderMiniRoundDetailHtml(detail.pro)}</div>
+      <div style="text-align:center;">${renderMiniRoundDetailHtml(detail.proAma)}</div>
+      <div style="text-align:center;">${renderMiniRoundDetailHtml(detail.ama)}</div>
+    </div>
   `
 }
 
