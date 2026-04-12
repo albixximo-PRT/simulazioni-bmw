@@ -33,7 +33,7 @@ type PenaltyEntry = {
 }
 
 type PenaltyMap = Record<string, PenaltyEntry[]>
-type DnfOverrideValue = "DNF" | "DNFV"
+type DnfOverrideValue = "DNF-I" | "DNF-V"
 type DnfOverrideMap = Record<string, DnfOverrideValue>
 
 type PenaltyEffect = "time" | "ammonition" | "dsq" | "other"
@@ -1255,9 +1255,9 @@ function renderTempoCell(tempo: string) {
 
   if (!t || t === "-") return "-"
 
-  if (upper === "DNF") return <Pill left="DNF" variant="teal" />
-  if (upper === "DNFV") return <Pill left="DNFV" variant="teal" />
-  if (upper === "DNP") return <Pill left="DNP" variant="teal" />
+  if (upper === "DNF" || upper === "DNF-I") return <Pill left="DNF-I" variant="teal" />
+if (upper === "DNFV" || upper === "DNF-V") return <Pill left="DNF-V" variant="teal" />
+if (upper === "DNP") return <Pill left="DNP" variant="teal" />
   if (upper === "BOX") return <Pill left="BOX" variant="fuchsia" />
   if (/^\d+giro$/i.test(t) || upper === "DOPPIATO") return <Pill left="DOPPIATO" variant="orange" />
   if (upper === "DSQ") return <Pill left="DSQ" variant="dsq" />
@@ -3414,8 +3414,8 @@ function getBmwDriverStatusFromRow(row: DisplayRow): BmwDriverStatus {
   const rawTempo = tempoLikeGt7(row).trim().toUpperCase()
 
   if (!rawTempo) return "finish"
-  if (rawTempo === "DNF") return "dnf-i"
-  if (rawTempo === "DNFV") return "dnf-v"
+  if (rawTempo === "DNF" || rawTempo === "DNF-I") return "dnf-i"
+  if (rawTempo === "DNFV" || rawTempo === "DNF-V") return "dnf-v"
   if (rawTempo === "DNP") return "dnp"
   if (rawTempo === "BOX") return "box"
   if (rawTempo === "DSQ") return "dnf-v"
@@ -3873,8 +3873,8 @@ function buildLiveBmwTeamStandings(
   const rawTempo = tempoLikeGt7(row).trim().toUpperCase()
 
   if (!rawTempo) return "finish"
-  if (rawTempo === "DNFV") return "dnf-v"
-  if (rawTempo === "DNF") return "dnf-i"
+  if (rawTempo === "DNFV" || rawTempo === "DNF-V") return "dnf-v"
+  if (rawTempo === "DNF" || rawTempo === "DNF-I") return "dnf-i"
   if (rawTempo === "DNP") return "dnp"
   if (rawTempo === "BOX") return "dnf-v"
   if (rawTempo === "DSQ") return "dnf-v"
@@ -4320,7 +4320,7 @@ const hasManualPilotOverrides = useMemo(() => {
       return orderedRows.map((r, i) => {
         const key = getPrtRowStableKey(r.sourcePosGara)
         const rawTempo = tempoLikeGt7(r)
-        const isBaseDnf = /^(DNF|DNFV)$/i.test(rawTempo.trim())
+        const isBaseDnf = /^(DNF|DNFV|DNF-I|DNF-V)$/i.test(rawTempo.trim())
         const dnfValue = isBaseDnf ? dnfOverrides[key] || "DNF" : null
         const rowHasDsqPenalty = hasDsqPenalty(penalties[key] || [])
 
@@ -4443,7 +4443,7 @@ const hasManualPilotOverrides = useMemo(() => {
       .map((item, idx) => {
         const key = getPrtRowStableKey(item.row.sourcePosGara)
         const rawTempo = tempoLikeGt7(item.row)
-        const isBaseDnf = /^(DNF|DNFV)$/i.test(rawTempo.trim())
+        const isBaseDnf = /^(DNF|DNFV|DNF-I|DNF-V)$/i.test(rawTempo.trim())
         const dnfValue = isBaseDnf ? dnfOverrides[key] || "DNF" : null
 
         if (dnfValue) {
@@ -7579,17 +7579,19 @@ function resetEntireCurrentRound() {
   }
 
   function setDnfOverrideValue(sourcePosGara: number, value: string) {
-    const key = getPrtRowStableKey(sourcePosGara)
-    setDnfOverrides((prev) => {
-      const next = { ...prev }
-      if (value === "DNFV") {
-        next[key] = "DNFV"
-      } else {
-        next[key] = "DNF"
-      }
-      return next
-    })
-  }
+  const key = getPrtRowStableKey(sourcePosGara)
+  setDnfOverrides((prev) => {
+    const next = { ...prev }
+
+    if (value === "DNF-V") {
+      next[key] = "DNF-V"
+    } else {
+      next[key] = "DNF-I"
+    }
+
+    return next
+  })
+}
 
   function openPilotCorrectionModal() {
   const snapshotRows = displayRows.map((row) => ({ ...row }))
@@ -8999,7 +9001,7 @@ if (!authorized) {
 
               <tbody>
                 {dgInfo.map(({ row, isDoppiato, isDnf, key, manualGap, manualGapValid }, idx) => {
-                  const dnfValue = dnfOverrides[key] || "DNF"
+                  const dnfValue = dnfOverrides[key] || "DNF-I"
                   const entries = penalties[key] || []
                   const penaltyMain = getPenaltyMainDisplay(entries)
                   const penaltyDisabled = false
@@ -9229,24 +9231,24 @@ if (!authorized) {
                       <TableCell align="center">
                         {isDnf ? (
                           <select
-                            value={dnfValue}
-                            onChange={(e) => setDnfOverrideValue(row.sourcePosGara, e.target.value)}
-                            style={{
-                              minWidth: 120,
-                              padding: "8px 10px",
-                              borderRadius: 10,
-                              border: "1px solid rgba(255,255,255,0.14)",
-                              background: "rgba(0,0,0,0.26)",
-                              color: "white",
-                            }}
-                          >
-                            <option value="DNF" style={{ background: "#11151d", color: "white" }}>
-                              DNF
-                            </option>
-                            <option value="DNFV" style={{ background: "#11151d", color: "white" }}>
-                              DNFV
-                            </option>
-                          </select>
+  value={dnfValue}
+  onChange={(e) => setDnfOverrideValue(row.sourcePosGara, e.target.value)}
+  style={{
+    minWidth: 120,
+    padding: "8px 10px",
+    borderRadius: 10,
+    border: "1px solid rgba(255,255,255,0.14)",
+    background: "rgba(0,0,0,0.26)",
+    color: "white",
+  }}
+>
+  <option value="DNF-I" style={{ background: "#11151d", color: "white" }}>
+    DNF-I
+  </option>
+  <option value="DNF-V" style={{ background: "#11151d", color: "white" }}>
+    DNF-V
+  </option>
+</select>
                         ) : (
                           "-"
                         )}
