@@ -3078,20 +3078,21 @@ function TeamChampionshipTable({
   padding: exporting ? "0 6px" : "0 5px",
   borderRadius: 999,
 
+  // 🔥 COLORI COMPLETAMENTE DIVERSI
   border:
     label === "S1"
-      ? "1px solid rgba(0,207,255,0.45)"
-      : "1px solid rgba(37,99,235,0.45)",
+      ? "1px solid rgba(0,207,255,0.5)" // AZZURRO
+      : "1px solid rgba(168,85,247,0.5)", // VIOLA
 
   background:
     label === "S1"
-      ? "linear-gradient(180deg, rgba(0,207,255,0.22), rgba(0,140,200,0.18))"
-      : "linear-gradient(180deg, rgba(37,99,235,0.22), rgba(29,78,216,0.18))",
+      ? "rgba(0,207,255,0.22)" // AZZURRO
+      : "rgba(168,85,247,0.22)", // VIOLA
 
   boxShadow:
     label === "S1"
-      ? "0 0 10px rgba(0,207,255,0.25)"
-      : "0 0 10px rgba(37,99,235,0.25)",
+      ? "0 0 10px rgba(0,207,255,0.35)"
+      : "0 0 10px rgba(168,85,247,0.35)",
 
   color: "#ffffff",
   fontSize: exporting ? 10 : 9,
