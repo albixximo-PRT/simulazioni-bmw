@@ -1882,21 +1882,21 @@ const resolvedTeamName = showTeamInsteadOfAuto
       display: "inline-flex",
       alignItems: "center",
       justifyContent: "center",
-      padding: exporting ? "5px 10px" : "6px 10px",
+      padding: exporting ? "6px 11px" : "6px 10px",
       borderRadius: 999,
-      border: "1px solid rgba(96,165,250,0.22)",
+      border: "1px solid rgba(96,165,250,0.24)",
       background:
-        "linear-gradient(180deg, rgba(96,165,250,0.12), rgba(59,130,246,0.05))",
+        "linear-gradient(180deg, rgba(96,165,250,0.13), rgba(59,130,246,0.055))",
       boxShadow: exporting
-        ? "0 0 8px rgba(96,165,250,0.06)"
+        ? "0 0 9px rgba(96,165,250,0.07)"
         : "0 0 10px rgba(96,165,250,0.08)",
-      color: "rgba(219,234,254,0.82)",
+      color: "rgba(219,234,254,0.84)",
       fontWeight: 800,
-      fontSize: exporting ? 11 : 11,
-      letterSpacing: exporting ? 0.3 : 0.4,
+      fontSize: exporting ? 12 : 11,
+      letterSpacing: exporting ? 0.35 : 0.4,
       textTransform: "uppercase",
       whiteSpace: "nowrap",
-      lineHeight: 1,
+      lineHeight: 1.1,
     }}
   >
     Griglia invertita
