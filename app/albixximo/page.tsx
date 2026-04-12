@@ -2591,17 +2591,103 @@ const resolvedTeamName = showTeamInsteadOfAuto
 
 function TeamChampionshipTable({
   teams,
-  roundSnapshots,
   exporting = false,
   currentRound,
+  roundSnapshots,
   title = "Classifica Generale TEAM BMW CUP",
 }: {
   teams: TeamEntry[]
-  roundSnapshots: Partial<Record<RoundKey, BmwRoundSnapshot>>
   exporting?: boolean
   currentRound: 1 | 2 | 3 | 4
+  roundSnapshots: Partial<Record<RoundKey, BmwRoundSnapshot>>
   title?: string
 }) {
+
+    function getLeagueShortLabel(league: BmwLeagueName) {
+    if (league === "PRO") return "PRO"
+    if (league === "PRO-AMA") return "PAMA"
+    return "AMA"
+  }
+
+  function getOrdinalLabel(pos: number | null) {
+    if (!pos || pos <= 0) return "-"
+    return `${pos}°`
+  }
+
+  function getTeamPositionInLeagueRound(
+    roundKey: RoundKey,
+    league: BmwLeagueName,
+    teamName: string
+  ): number | null {
+    const roundSnapshot = roundSnapshots?.[roundKey]
+    const leagueSnapshot = roundSnapshot?.leagues?.[league]
+
+    if (!leagueSnapshot || !leagueSnapshot.drivers?.length) return null
+
+    const teamTotals = new Map<string, number>()
+
+    for (const driver of leagueSnapshot.drivers) {
+      const currentTeam = String(driver.team || "").trim()
+      if (!currentTeam || currentTeam === "-") continue
+
+      teamTotals.set(
+        currentTeam,
+        (teamTotals.get(currentTeam) || 0) + (driver.totalPoints || 0)
+      )
+    }
+
+    const sortedTeams = Array.from(teamTotals.entries())
+      .map(([team, total]) => ({ team, total }))
+      .sort((a, b) => {
+        if (b.total !== a.total) return b.total - a.total
+        return a.team.localeCompare(b.team)
+      })
+
+    const index = sortedTeams.findIndex((row) => row.team === teamName)
+    if (index === -1) return null
+
+    return index + 1
+  }
+
+  function renderRoundLeaguePositions(teamName: string, roundKey: RoundKey) {
+    const leagues: BmwLeagueName[] = ["PRO", "PRO-AMA", "AMA"]
+
+    return (
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+          gap: exporting ? 10 : 8,
+          fontSize: exporting ? 13 : 12,
+          fontWeight: 800,
+          fontFamily:
+            "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+          lineHeight: 1.1,
+          color: "rgba(255,255,255,0.92)",
+        }}
+      >
+        {leagues.map((league) => {
+          const pos = getTeamPositionInLeagueRound(roundKey, league, teamName)
+
+          return (
+            <div
+              key={`${teamName}-${roundKey}-${league}`}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                minHeight: exporting ? 22 : 20,
+                whiteSpace: "nowrap",
+              }}
+              title={`${roundKey.toUpperCase()} ${league}`}
+            >
+              {getOrdinalLabel(pos)}
+            </div>
+          )
+        })}
+      </div>
+    )
+  }
   return (
     <div
       style={{
@@ -2713,7 +2799,20 @@ function TeamChampionshipTable({
               >
                 <div style={{ display: "grid", gap: 6 }}>
                   <div style={{ fontWeight: 900 }}>R1</div>
-                  <div style={{ fontSize: 11, opacity: 0.7 }}>PRO PAMA AMA</div>
+                  <div
+  style={{
+    fontSize: exporting ? 11 : 10,
+    opacity: 0.72,
+    display: "grid",
+    gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+    gap: exporting ? 10 : 8,
+    textAlign: "center",
+  }}
+>
+  <span>PRO</span>
+  <span>PAMA</span>
+  <span>AMA</span>
+</div>
                 </div>
               </th>
 
@@ -2728,7 +2827,20 @@ function TeamChampionshipTable({
               >
                 <div style={{ display: "grid", gap: 6 }}>
                   <div style={{ fontWeight: 900 }}>R2</div>
-                  <div style={{ fontSize: 11, opacity: 0.7 }}>PRO PAMA AMA</div>
+                  <div
+  style={{
+    fontSize: exporting ? 11 : 10,
+    opacity: 0.72,
+    display: "grid",
+    gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+    gap: exporting ? 10 : 8,
+    textAlign: "center",
+  }}
+>
+  <span>PRO</span>
+  <span>PAMA</span>
+  <span>AMA</span>
+</div>
                 </div>
               </th>
 
@@ -2743,7 +2855,20 @@ function TeamChampionshipTable({
               >
                 <div style={{ display: "grid", gap: 6 }}>
                   <div style={{ fontWeight: 900 }}>R3</div>
-                  <div style={{ fontSize: 11, opacity: 0.7 }}>PRO PAMA AMA</div>
+                  <div
+  style={{
+    fontSize: exporting ? 11 : 10,
+    opacity: 0.72,
+    display: "grid",
+    gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+    gap: exporting ? 10 : 8,
+    textAlign: "center",
+  }}
+>
+  <span>PRO</span>
+  <span>PAMA</span>
+  <span>AMA</span>
+</div>
                 </div>
               </th>
 
@@ -2758,7 +2883,20 @@ function TeamChampionshipTable({
               >
                 <div style={{ display: "grid", gap: 6 }}>
                   <div style={{ fontWeight: 900 }}>R4</div>
-                  <div style={{ fontSize: 11, opacity: 0.7 }}>PRO PAMA AMA</div>
+                  <div
+  style={{
+    fontSize: exporting ? 11 : 10,
+    opacity: 0.72,
+    display: "grid",
+    gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+    gap: exporting ? 10 : 8,
+    textAlign: "center",
+  }}
+>
+  <span>PRO</span>
+  <span>PAMA</span>
+  <span>AMA</span>
+</div>
                 </div>
               </th>
 
@@ -2909,35 +3047,19 @@ function TeamChampionshipTable({
                     </div>
                   </td>
 
-                  {[1, 2, 3, 4].map((round) => (
-                    <td
-                      key={`detail-round-${team.team}-${round}`}
-                      style={{
-                        padding: exporting ? "8px 10px" : "12px 12px",
-                        borderBottom: "1px solid rgba(255,255,255,0.08)",
-                        textAlign: "center",
-                        width: exporting ? 220 : 170,
-                      }}
-                    >
-                      <div
-                        style={{
-                          display: "grid",
-                          gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-                          gap: 10,
-                          fontSize: exporting ? 13 : 12,
-                          fontWeight: 800,
-                          fontFamily:
-                            "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
-                          lineHeight: 1.1,
-                          color: "rgba(255,255,255,0.92)",
-                        }}
-                      >
-                        <div>-</div>
-                        <div>-</div>
-                        <div>-</div>
-                      </div>
-                    </td>
-                  ))}
+                  {(["r1", "r2", "r3", "r4"] as RoundKey[]).map((roundKey) => (
+  <td
+    key={`detail-round-${team.team}-${roundKey}`}
+    style={{
+      padding: exporting ? "8px 10px" : "12px 12px",
+      borderBottom: "1px solid rgba(255,255,255,0.08)",
+      textAlign: "center",
+      width: exporting ? 220 : 170,
+    }}
+  >
+    {renderRoundLeaguePositions(team.team, roundKey)}
+  </td>
+))}
 
                   {(["r1", "r2", "r3", "r4"] as RoundKey[]).map((roundKey) => (
                     <td
@@ -10004,8 +10126,8 @@ if (!authorized) {
         {showGeneralRoundDetails && (
       <TeamChampionshipTable
   teams={championshipTeams}
-  roundSnapshots={roundSnapshots}
   currentRound={currentRound}
+  roundSnapshots={roundSnapshots}
 />
     )}
   </div>
@@ -12322,8 +12444,8 @@ if (!authorized) {
 
               <TeamChampionshipTable
   teams={championshipTeams}
-  roundSnapshots={roundSnapshots}
   currentRound={currentRound}
+  roundSnapshots={roundSnapshots}
   exporting={true}
   title="Classifica Generale TEAM BMW CUP"
 />
