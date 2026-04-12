@@ -6435,18 +6435,24 @@ async function downloadGeneralTeamsHtmlExport(customTexts?: {
     html, body { margin: 0; padding: 0; }
 
     body {
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      color: white;
-      background:
-        radial-gradient(80% 52% at 18% 4%, rgba(255,215,0,0.12), transparent 72%),
-        radial-gradient(78% 50% at 82% 8%, rgba(160,90,255,0.12), transparent 72%),
-        linear-gradient(180deg, #0b0d12 0%, #07080c 100%);
-      background-repeat: no-repeat;
-      background-attachment: scroll;
-      min-height: 100vh;
-      overflow-y: auto;
-      overflow-x: auto;
-    }
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  color: white;
+  background: linear-gradient(180deg, #0b0d12 0%, #07080c 100%);
+  min-height: 100vh;
+  overflow-y: auto;
+  overflow-x: auto;
+  position: relative;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 20% 0%, rgba(255,215,0,0.08), transparent 60%),
+    radial-gradient(circle at 80% 0%, rgba(160,90,255,0.08), transparent 60%);
+}
 
     .page {
       width: max-content;
@@ -7146,12 +7152,6 @@ async function downloadGeneralTeamsHtmlExport(customTexts?: {
     }
 
     @media (max-width: 980px) {
-      body {
-        background:
-          radial-gradient(95% 40% at 20% 0%, rgba(255,215,0,0.10), transparent 75%),
-          radial-gradient(95% 40% at 80% 2%, rgba(160,90,255,0.10), transparent 75%),
-          linear-gradient(180deg, #0b0d12 0%, #07080c 100%);
-      }
 
       .header {
         flex-wrap: wrap;
