@@ -1877,28 +1877,31 @@ const resolvedTeamName = showTeamInsteadOfAuto
     }}
   >
     {currentSprint === 2 ? (
-      <span
-        style={{
-  display: "inline-flex",
-  alignItems: "center",
-  justifyContent: "center",
-  padding: exporting ? "8px 13px" : "6px 10px",
-  borderRadius: 999,
-  border: "1px solid rgba(96,165,250,0.25)",
-  background:
-    "linear-gradient(180deg, rgba(96,165,250,0.14), rgba(59,130,246,0.06))",
-  boxShadow: "0 0 10px rgba(96,165,250,0.08)",
-  color: "rgba(219,234,254,0.85)",
-  fontWeight: 800,
-  fontSize: exporting ? 13 : 11,
-  letterSpacing: 0.4,
-  textTransform: "uppercase",
-  whiteSpace: "nowrap",
-}}
-      >
-        Griglia invertita
-      </span>
-    ) : isPole ? (
+  <span
+    style={{
+      display: "inline-flex",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: exporting ? "5px 10px" : "6px 10px",
+      borderRadius: 999,
+      border: "1px solid rgba(96,165,250,0.22)",
+      background:
+        "linear-gradient(180deg, rgba(96,165,250,0.12), rgba(59,130,246,0.05))",
+      boxShadow: exporting
+        ? "0 0 8px rgba(96,165,250,0.06)"
+        : "0 0 10px rgba(96,165,250,0.08)",
+      color: "rgba(219,234,254,0.82)",
+      fontWeight: 800,
+      fontSize: exporting ? 11 : 11,
+      letterSpacing: exporting ? 0.3 : 0.4,
+      textTransform: "uppercase",
+      whiteSpace: "nowrap",
+      lineHeight: 1,
+    }}
+  >
+    Griglia invertita
+  </span>
+) : isPole ? (
       <Pill
         left="POLE"
         right={r.tempoQualifica || undefined}
