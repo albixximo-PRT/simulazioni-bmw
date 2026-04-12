@@ -1882,7 +1882,7 @@ const resolvedTeamName = showTeamInsteadOfAuto
       display: "inline-flex",
       alignItems: "center",
       justifyContent: "center",
-      padding: exporting ? "6px 11px" : "6px 10px",
+      padding: exporting ? "6px 12px" : "6px 10px",
       borderRadius: 999,
       border: "1px solid rgba(96,165,250,0.24)",
       background:
@@ -1892,7 +1892,7 @@ const resolvedTeamName = showTeamInsteadOfAuto
         : "0 0 10px rgba(96,165,250,0.08)",
       color: "rgba(219,234,254,0.84)",
       fontWeight: 800,
-      fontSize: exporting ? 12 : 11,
+      fontSize: exporting ? 12.5 : 11,
       letterSpacing: exporting ? 0.35 : 0.4,
       textTransform: "uppercase",
       whiteSpace: "nowrap",
