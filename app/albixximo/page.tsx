@@ -929,10 +929,10 @@ function HeaderBadge({
 }: {
   label: string
   value: string
-  variant: "gold" | "violet" | "silver"
+  variant: "gold" | "violet" | "silver" | "sprint1" | "sprint2"
   exporting?: boolean
 }) {
-  const palette =
+    const palette =
     variant === "gold"
       ? {
           border: "rgba(255,215,0,0.70)",
@@ -949,13 +949,29 @@ function HeaderBadge({
             tagBorder: "rgba(210,215,225,0.24)",
             tagText: "#f3f6fb",
           }
-        : {
-            border: "rgba(160,90,255,0.70)",
-            glow: "rgba(160,90,255,0.14)",
-            tagBg: "rgba(160,90,255,0.10)",
-            tagBorder: "rgba(160,90,255,0.28)",
-            tagText: "#dfc2ff",
-          }
+        : variant === "sprint1"
+          ? {
+              border: "rgba(56,189,248,0.72)",
+              glow: "rgba(56,189,248,0.18)",
+              tagBg: "rgba(56,189,248,0.12)",
+              tagBorder: "rgba(56,189,248,0.30)",
+              tagText: "#d8f3ff",
+            }
+          : variant === "sprint2"
+            ? {
+                border: "rgba(37,99,235,0.72)",
+                glow: "rgba(37,99,235,0.18)",
+                tagBg: "rgba(37,99,235,0.12)",
+                tagBorder: "rgba(37,99,235,0.30)",
+                tagText: "#dbeafe",
+              }
+            : {
+                border: "rgba(160,90,255,0.70)",
+                glow: "rgba(160,90,255,0.14)",
+                tagBg: "rgba(160,90,255,0.10)",
+                tagBorder: "rgba(160,90,255,0.28)",
+                tagText: "#dfc2ff",
+              }
 
   const rawValue = String(value || "").trim()
   const parts = rawValue.split(/\s{2,}/)
@@ -1451,6 +1467,7 @@ function SummaryStrip({
   unionMeta,
   showMeta,
   showLobby,
+  currentSprint,
   exporting = false,
 }: {
   winner: string
@@ -1459,6 +1476,7 @@ function SummaryStrip({
   unionMeta: UnionMeta
   showMeta: boolean
   showLobby: boolean
+  currentSprint: 1 | 2
   exporting?: boolean
 }) {
   return (
@@ -1491,10 +1509,22 @@ function SummaryStrip({
             </>
           )}
 
-          {showMeta && (
+                    {showMeta && (
             <>
               <Separator exporting={exporting} />
               <HeaderBadge label="GARA" value={unionMeta.gara} variant="violet" exporting={exporting} />
+            </>
+          )}
+
+          {showMeta && (
+            <>
+              <Separator exporting={exporting} />
+              <HeaderBadge
+                label="SPRINT"
+                value={currentSprint === 1 ? "S1" : "S2"}
+                variant={currentSprint === 1 ? "sprint1" : "sprint2"}
+                exporting={exporting}
+              />
             </>
           )}
 
@@ -8025,10 +8055,21 @@ if (!authorized) {
         </>
       )}
 
-      {showMeta && (
+            {showMeta && (
         <>
           <Separator />
           <HeaderBadge label="GARA" value={normalizedGaraForOutput} variant="violet" />
+        </>
+      )}
+
+      {showMeta && (
+        <>
+          <Separator />
+          <HeaderBadge
+            label="SPRINT"
+            value={currentSprint === 1 ? "S1" : "S2"}
+            variant={currentSprint === 1 ? "sprint1" : "sprint2"}
+          />
         </>
       )}
 
@@ -12335,14 +12376,15 @@ if (!authorized) {
               />
 
               <SummaryStrip
-                winner={winner}
-                bestQuali={bestQuali}
-                bestRaceLap={bestRaceLap}
-                unionMeta={{ ...unionMeta, gara: normalizedGaraForOutput, lega: effectiveLegaResolved }}
-                showMeta={showMeta}
-                showLobby={showLobby}
-                exporting={true}
-              />
+  winner={winner}
+  bestQuali={bestQuali}
+  bestRaceLap={bestRaceLap}
+  unionMeta={{ ...unionMeta, gara: normalizedGaraForOutput, lega: effectiveLegaResolved }}
+  showMeta={showMeta}
+  showLobby={showLobby}
+  currentSprint={currentSprint}
+  exporting={true}
+/>
 
               <ResultsTable
   previewRows={finalRows}
