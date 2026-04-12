@@ -2619,6 +2619,77 @@ const resolvedTeamName = showTeamInsteadOfAuto
   )
 }
 
+function renderMiniRoundDetail(value: string, exporting = false) {
+  const upper = String(value || "").trim().toUpperCase()
+
+  const miniPillStyle = (
+    background: string,
+    border: string,
+    color: string
+  ): React.CSSProperties => ({
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    minWidth: exporting ? 40 : 34,
+    height: exporting ? 18 : 16,
+    padding: exporting ? "0 7px" : "0 6px",
+    borderRadius: 999,
+    background,
+    border,
+    color,
+    fontSize: exporting ? 9 : 8,
+    fontWeight: 900,
+    lineHeight: 1,
+    letterSpacing: 0.2,
+    textTransform: "uppercase",
+    whiteSpace: "nowrap",
+  })
+
+  if (upper === "DNF-I") {
+    return (
+      <span
+        style={miniPillStyle(
+          "rgba(64,224,208,0.92)",
+          "1px solid rgba(64,224,208,0.55)",
+          "rgba(0,0,0,0.92)"
+        )}
+      >
+        DNF-I
+      </span>
+    )
+  }
+
+  if (upper === "DNF-V") {
+    return (
+      <span
+        style={miniPillStyle(
+          "rgba(64,224,208,0.92)",
+          "1px solid rgba(64,224,208,0.55)",
+          "rgba(0,0,0,0.92)"
+        )}
+      >
+        DNF-V
+      </span>
+    )
+  }
+
+  if (upper === "DNP") {
+    return (
+      <span
+        style={miniPillStyle(
+          "rgba(64,224,208,0.92)",
+          "1px solid rgba(64,224,208,0.55)",
+          "rgba(0,0,0,0.92)"
+        )}
+      >
+        DNP
+      </span>
+    )
+  }
+
+  return <>{value || "-"}</>
+}
+
 function TeamChampionshipTable({
   teams,
   exporting = false,
@@ -3030,9 +3101,15 @@ function TeamChampionshipTable({
                                 color: "rgba(255,255,255,0.96)",
                               }}
                             >
-                              <div style={{ textAlign: "center" }}>{detail.pro}</div>
-                              <div style={{ textAlign: "center" }}>{detail.proAma}</div>
-                              <div style={{ textAlign: "center" }}>{detail.ama}</div>
+                              <div style={{ textAlign: "center" }}>
+  {renderMiniRoundDetail(detail.pro, exporting)}
+</div>
+<div style={{ textAlign: "center" }}>
+  {renderMiniRoundDetail(detail.proAma, exporting)}
+</div>
+<div style={{ textAlign: "center" }}>
+  {renderMiniRoundDetail(detail.ama, exporting)}
+</div>
                             </div>
                           ))}
                         </div>
@@ -3792,6 +3869,13 @@ function getTeamRoundDetail(
     )
 
     if (foundIndex === -1) return "-"
+
+    const foundDriver = orderedDrivers[foundIndex]
+    const status = String(foundDriver?.status || "").trim().toLowerCase()
+
+    if (status === "dnf-i") return "DNF-I"
+    if (status === "dnf-v") return "DNF-V"
+    if (status === "dnp") return "DNP"
 
     return formatStandingPosition(foundIndex + 1)
   }
