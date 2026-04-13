@@ -4701,7 +4701,7 @@ const hasManualPilotOverrides = useMemo(() => {
         const key = getPrtRowStableKey(r.sourcePosGara)
         const rawTempo = tempoLikeGt7(r)
         const isBaseDnf = /^(DNF|DNFV|DNF-I|DNF-V)$/i.test(rawTempo.trim())
-        const dnfValue = isBaseDnf ? dnfOverrides[key] || "DNF" : null
+        const dnfValue = isBaseDnf ? dnfOverrides[key] || "DNF-I" : null
         const rowHasDsqPenalty = hasDsqPenalty(penalties[key] || [])
 
         if (rowHasDsqPenalty) {
@@ -4824,7 +4824,7 @@ const hasManualPilotOverrides = useMemo(() => {
         const key = getPrtRowStableKey(item.row.sourcePosGara)
         const rawTempo = tempoLikeGt7(item.row)
         const isBaseDnf = /^(DNF|DNFV|DNF-I|DNF-V)$/i.test(rawTempo.trim())
-        const dnfValue = isBaseDnf ? dnfOverrides[key] || "DNF" : null
+        const dnfValue = isBaseDnf ? dnfOverrides[key] || "DNF-I" : null
 
         if (dnfValue) {
           return {
