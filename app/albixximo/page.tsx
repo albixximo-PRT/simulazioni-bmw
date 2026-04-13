@@ -2830,6 +2830,7 @@ function renderMiniRoundDetail(
         textAlign: "center",
         fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
         fontVariantNumeric: "tabular-nums",
+        transform: "translateY(2px)",
       }}
     >
       <span
@@ -2839,7 +2840,6 @@ function renderMiniRoundDetail(
           justifyContent: "center",
           width: "100%",
           textAlign: "center",
-          transform: "translateY(1px)",
         }}
       >
         {detail.text || "-"}
@@ -2852,8 +2852,8 @@ function renderMiniRoundDetail(
             top: exporting ? -5 : -4,
             right:
               detail.pole && detail.bestLap
-                ? (exporting ? -7 : -6)
-                : (exporting ? -4 : -3),
+                ? (exporting ? -4 : -3)
+                : (exporting ? -1 : 0),
             display: "flex",
             gap: 1,
             fontSize: exporting ? 9 : 8,
@@ -7049,13 +7049,13 @@ body::before {
   text-align: center;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-variant-numeric: tabular-nums;
-  transform: translateY(1px);
+  transform: translateY(2px);
 }
 
     .mini-stars {
   position: absolute;
   top: -5px;
-  right: -4px;
+  right: 0;
   display: flex;
   gap: 1px;
   font-size: 9px;
@@ -7063,7 +7063,7 @@ body::before {
 }
 
 .mini-stars.double {
-  right: -7px;
+  right: -3px;
 }
 
     .star-gold {
