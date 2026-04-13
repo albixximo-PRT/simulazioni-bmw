@@ -4937,6 +4937,8 @@ if (hasEmptyAuto) {
     /^\+\d{1,2}\.\d{3}$/.test(d) ||
     /^DNF$/i.test(d) ||
     /^DNFV$/i.test(d) ||
+    /^DNF-I$/i.test(d) ||
+    /^DNF-V$/i.test(d) ||
     /^DNP$/i.test(d) ||
     /^BOX$/i.test(d) ||
     /^DSQ$/i.test(d) ||
