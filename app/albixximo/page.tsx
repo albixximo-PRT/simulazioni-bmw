@@ -7052,18 +7052,32 @@ body::before {
   transform: translateY(2px);
 }
 
-    .mini-stars {
+    .mini-stars-pill {
   position: absolute;
   top: -5px;
-  right: 0;
+  right: -3px;
   display: flex;
   gap: 1px;
   font-size: 9px;
   line-height: 1;
 }
 
-.mini-stars.double {
-  right: -3px;
+.mini-stars-pill.double {
+  right: -7px;
+}
+
+.mini-stars-text {
+  position: absolute;
+  top: -5px;
+  right: 6px;
+  display: flex;
+  gap: 1px;
+  font-size: 9px;
+  line-height: 1;
+}
+
+.mini-stars-text.double {
+  right: 3px;
 }
 
     .star-gold {
