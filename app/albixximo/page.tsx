@@ -2709,23 +2709,7 @@ function renderMiniRoundDetail(
   }
 
   if (upper === "-") {
-    return (
-      <span
-        style={{
-          display: "inline-flex",
-          alignItems: "center",
-          justifyContent: "center",
-          width: exporting ? 36 : 32,
-          minWidth: exporting ? 36 : 32,
-          textAlign: "center",
-          fontFamily:
-            "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
-          fontVariantNumeric: "tabular-nums",
-        }}
-      >
-        -
-      </span>
-    )
+    return <>{detail.text || "-"}</>
   }
 
   const isP1 = upper === "1°"
@@ -2772,8 +2756,7 @@ function renderMiniRoundDetail(
           lineHeight: 1,
           whiteSpace: "nowrap",
           textAlign: "center",
-          fontFamily:
-            "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+          fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
           fontVariantNumeric: "tabular-nums",
         }}
       >
@@ -2845,8 +2828,7 @@ function renderMiniRoundDetail(
         lineHeight: 1,
         whiteSpace: "nowrap",
         textAlign: "center",
-        fontFamily:
-          "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+        fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
         fontVariantNumeric: "tabular-nums",
       }}
     >
@@ -2857,6 +2839,7 @@ function renderMiniRoundDetail(
           justifyContent: "center",
           width: "100%",
           textAlign: "center",
+          transform: "translateY(1px)",
         }}
       >
         {detail.text || "-"}
@@ -2869,8 +2852,8 @@ function renderMiniRoundDetail(
             top: exporting ? -5 : -4,
             right:
               detail.pole && detail.bestLap
-                ? (exporting ? -12 : -10)
-                : (exporting ? -8 : -7),
+                ? (exporting ? -7 : -6)
+                : (exporting ? -4 : -3),
             display: "flex",
             gap: 1,
             fontSize: exporting ? 9 : 8,
@@ -7066,21 +7049,22 @@ body::before {
   text-align: center;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-variant-numeric: tabular-nums;
+  transform: translateY(1px);
 }
 
     .mini-stars {
-      position: absolute;
-      top: -5px;
-      right: -8px;
-      display: flex;
-      gap: 1px;
-      font-size: 9px;
-      line-height: 1;
-    }
+  position: absolute;
+  top: -5px;
+  right: -4px;
+  display: flex;
+  gap: 1px;
+  font-size: 9px;
+  line-height: 1;
+}
 
-    .mini-stars.double {
-      right: -12px;
-    }
+.mini-stars.double {
+  right: -7px;
+}
 
     .star-gold {
       color: #ffd700;
