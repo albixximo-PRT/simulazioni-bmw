@@ -7055,7 +7055,7 @@ body::before {
     .mini-stars-pill {
   position: absolute;
   top: -5px;
-  right: -3px;
+  right: -8px;
   display: flex;
   gap: 1px;
   font-size: 9px;
@@ -7063,13 +7063,13 @@ body::before {
 }
 
 .mini-stars-pill.double {
-  right: -7px;
+  right: -12px;
 }
 
 .mini-stars-text {
   position: absolute;
   top: -5px;
-  right: 6px;
+  right: 1px;
   display: flex;
   gap: 1px;
   font-size: 9px;
@@ -7077,7 +7077,7 @@ body::before {
 }
 
 .mini-stars-text.double {
-  right: 3px;
+  right: -2px;
 }
 
     .star-gold {
@@ -7446,42 +7446,63 @@ function renderMiniRoundDetailHtml(
     return `<span class="mini-text">-</span>`
   }
 
-  const starsClass =
-    detail.pole && detail.bestLap ? "mini-stars double" : "mini-stars"
+  const isP1 = upper === "1°"
+  const isP2 = upper === "2°"
+  const isP3 = upper === "3°"
 
-  const starsHtml =
+  const pillStarsClass =
+    detail.pole && detail.bestLap
+      ? "mini-stars-pill double"
+      : "mini-stars-pill"
+
+  const textStarsClass =
+    detail.pole && detail.bestLap
+      ? "mini-stars-text double"
+      : "mini-stars-text"
+
+  const pillStarsHtml =
     detail.pole || detail.bestLap
       ? `
-        <span class="${starsClass}">
+        <span class="${pillStarsClass}">
           ${detail.pole ? `<span class="star-gold">★</span>` : ""}
           ${detail.bestLap ? `<span class="star-violet">★</span>` : ""}
         </span>
       `
       : ""
 
-  if (upper === "1°") {
+  const textStarsHtml =
+    detail.pole || detail.bestLap
+      ? `
+        <span class="${textStarsClass}">
+          ${detail.pole ? `<span class="star-gold">★</span>` : ""}
+          ${detail.bestLap ? `<span class="star-violet">★</span>` : ""}
+        </span>
+      `
+      : ""
+
+  if (isP1) {
     return `
       <span class="mini-pos mini-pos-p1">
         <span>${escapeHtml(detail.text)}</span>
-        ${starsHtml}
+        ${pillStarsHtml}
       </span>
     `
   }
 
-  if (upper === "2°") {
+  if (isP2) {
     return `
       <span class="mini-pos mini-pos-p2">
         <span>${escapeHtml(detail.text)}</span>
-        ${starsHtml}
+        ${pillStarsHtml}
       </span>
     `
   }
 
-  if (upper === "3°") {
+  if (isP3) {
     return `
       <span class="mini-pos mini-pos-p3">
         <span>${escapeHtml(detail.text)}</span>
-        ${starsHtml}
+        ${pillStarsHtml}
       </span>
     `
   }
@@ -7489,7 +7510,7 @@ function renderMiniRoundDetailHtml(
   return `
     <span class="mini-text-wrap">
       <span>${escapeHtml(detail.text || "-")}</span>
-      ${starsHtml}
+      ${textStarsHtml}
     </span>
   `
 }
