@@ -2709,7 +2709,23 @@ function renderMiniRoundDetail(
   }
 
   if (upper === "-") {
-    return <>{detail.text || "-"}</>
+    return (
+      <span
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          justifyContent: "center",
+          width: exporting ? 36 : 32,
+          minWidth: exporting ? 36 : 32,
+          textAlign: "center",
+          fontFamily:
+            "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+          fontVariantNumeric: "tabular-nums",
+        }}
+      >
+        -
+      </span>
+    )
   }
 
   const isP1 = upper === "1°"
@@ -2742,9 +2758,10 @@ function renderMiniRoundDetail(
           display: "inline-flex",
           alignItems: "center",
           justifyContent: "center",
-          minWidth: exporting ? 32 : 28,
+          width: exporting ? 36 : 32,
+          minWidth: exporting ? 36 : 32,
           height: exporting ? 20 : 18,
-          padding: exporting ? "0 8px" : "0 7px",
+          padding: 0,
           borderRadius: 999,
           background,
           border,
@@ -2754,9 +2771,23 @@ function renderMiniRoundDetail(
           fontWeight: 900,
           lineHeight: 1,
           whiteSpace: "nowrap",
+          textAlign: "center",
+          fontFamily:
+            "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+          fontVariantNumeric: "tabular-nums",
         }}
       >
-        <span>{detail.text}</span>
+        <span
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: "100%",
+            textAlign: "center",
+          }}
+        >
+          {detail.text}
+        </span>
 
         {(detail.pole || detail.bestLap) && (
           <span
@@ -2807,14 +2838,29 @@ function renderMiniRoundDetail(
         display: "inline-flex",
         alignItems: "center",
         justifyContent: "center",
-        minWidth: exporting ? 24 : 20,
+        width: exporting ? 36 : 32,
+        minWidth: exporting ? 36 : 32,
         fontSize: exporting ? 11 : 10,
         fontWeight: 900,
         lineHeight: 1,
         whiteSpace: "nowrap",
+        textAlign: "center",
+        fontFamily:
+          "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+        fontVariantNumeric: "tabular-nums",
       }}
     >
-      <span>{detail.text || "-"}</span>
+      <span
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          justifyContent: "center",
+          width: "100%",
+          textAlign: "center",
+        }}
+      >
+        {detail.text || "-"}
+      </span>
 
       {(detail.pole || detail.bestLap) && (
         <span
@@ -6962,20 +7008,24 @@ body::before {
     }
 
     .mini-pos {
-      position: relative;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-width: 32px;
-      height: 20px;
-      padding: 0 8px;
-      border-radius: 999px;
-      font-size: 10px;
-      font-weight: 900;
-      line-height: 1;
-      white-space: nowrap;
-      color: rgba(0,0,0,0.95);
-    }
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  min-width: 36px;
+  height: 20px;
+  padding: 0;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 900;
+  line-height: 1;
+  white-space: nowrap;
+  color: rgba(0,0,0,0.95);
+  text-align: center;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-variant-numeric: tabular-nums;
+}
 
     .mini-pos-p1 {
       background: linear-gradient(180deg, rgba(255,215,0,1), rgba(255,200,0,0.95));
@@ -7003,16 +7053,20 @@ body::before {
     }
 
     .mini-text-wrap {
-      position: relative;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-width: 24px;
-      font-size: 11px;
-      font-weight: 900;
-      line-height: 1;
-      white-space: nowrap;
-    }
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  min-width: 36px;
+  font-size: 11px;
+  font-weight: 900;
+  line-height: 1;
+  white-space: nowrap;
+  text-align: center;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-variant-numeric: tabular-nums;
+}
 
     .mini-stars {
       position: absolute;

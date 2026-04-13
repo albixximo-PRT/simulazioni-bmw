@@ -929,10 +929,10 @@ function HeaderBadge({
 }: {
   label: string
   value: string
-  variant: "gold" | "violet" | "silver"
+  variant: "gold" | "violet" | "silver" | "sprint1" | "sprint2"
   exporting?: boolean
 }) {
-  const palette =
+    const palette =
     variant === "gold"
       ? {
           border: "rgba(255,215,0,0.70)",
@@ -949,13 +949,29 @@ function HeaderBadge({
             tagBorder: "rgba(210,215,225,0.24)",
             tagText: "#f3f6fb",
           }
-        : {
-            border: "rgba(160,90,255,0.70)",
-            glow: "rgba(160,90,255,0.14)",
-            tagBg: "rgba(160,90,255,0.10)",
-            tagBorder: "rgba(160,90,255,0.28)",
-            tagText: "#dfc2ff",
-          }
+        : variant === "sprint1"
+          ? {
+              border: "rgba(56,189,248,0.72)",
+              glow: "rgba(56,189,248,0.18)",
+              tagBg: "rgba(56,189,248,0.12)",
+              tagBorder: "rgba(56,189,248,0.30)",
+              tagText: "#d8f3ff",
+            }
+          : variant === "sprint2"
+            ? {
+                border: "rgba(37,99,235,0.72)",
+                glow: "rgba(37,99,235,0.18)",
+                tagBg: "rgba(37,99,235,0.12)",
+                tagBorder: "rgba(37,99,235,0.30)",
+                tagText: "#dbeafe",
+              }
+            : {
+                border: "rgba(160,90,255,0.70)",
+                glow: "rgba(160,90,255,0.14)",
+                tagBg: "rgba(160,90,255,0.10)",
+                tagBorder: "rgba(160,90,255,0.28)",
+                tagText: "#dfc2ff",
+              }
 
   const rawValue = String(value || "").trim()
   const parts = rawValue.split(/\s{2,}/)
@@ -1255,9 +1271,9 @@ function renderTempoCell(tempo: string) {
 
   if (!t || t === "-") return "-"
 
-  if (upper === "DNF") return <Pill left="DNF" variant="teal" />
-  if (upper === "DNFV") return <Pill left="DNFV" variant="teal" />
-  if (upper === "DNP") return <Pill left="DNP" variant="teal" />
+  if (upper === "DNF" || upper === "DNF-I") return <Pill left="DNF-I" variant="teal" />
+if (upper === "DNFV" || upper === "DNF-V") return <Pill left="DNF-V" variant="teal" />
+if (upper === "DNP") return <Pill left="DNP" variant="teal" />
   if (upper === "BOX") return <Pill left="BOX" variant="fuchsia" />
   if (/^\d+giro$/i.test(t) || upper === "DOPPIATO") return <Pill left="DOPPIATO" variant="orange" />
   if (upper === "DSQ") return <Pill left="DSQ" variant="dsq" />
@@ -1451,6 +1467,7 @@ function SummaryStrip({
   unionMeta,
   showMeta,
   showLobby,
+  currentSprint,
   exporting = false,
 }: {
   winner: string
@@ -1459,6 +1476,7 @@ function SummaryStrip({
   unionMeta: UnionMeta
   showMeta: boolean
   showLobby: boolean
+  currentSprint: 1 | 2
   exporting?: boolean
 }) {
   return (
@@ -1491,10 +1509,22 @@ function SummaryStrip({
             </>
           )}
 
-          {showMeta && (
+                    {showMeta && (
             <>
               <Separator exporting={exporting} />
               <HeaderBadge label="GARA" value={unionMeta.gara} variant="violet" exporting={exporting} />
+            </>
+          )}
+
+          {showMeta && (
+            <>
+              <Separator exporting={exporting} />
+              <HeaderBadge
+                label="SPRINT"
+                value={String(currentSprint)}
+                variant={currentSprint === 1 ? "sprint1" : "sprint2"}
+                exporting={exporting}
+              />
             </>
           )}
 
@@ -1847,28 +1877,31 @@ const resolvedTeamName = showTeamInsteadOfAuto
     }}
   >
     {currentSprint === 2 ? (
-      <span
-        style={{
-  display: "inline-flex",
-  alignItems: "center",
-  justifyContent: "center",
-  padding: exporting ? "8px 13px" : "6px 10px",
-  borderRadius: 999,
-  border: "1px solid rgba(96,165,250,0.25)",
-  background:
-    "linear-gradient(180deg, rgba(96,165,250,0.14), rgba(59,130,246,0.06))",
-  boxShadow: "0 0 10px rgba(96,165,250,0.08)",
-  color: "rgba(219,234,254,0.85)",
-  fontWeight: 800,
-  fontSize: exporting ? 13 : 11,
-  letterSpacing: 0.4,
-  textTransform: "uppercase",
-  whiteSpace: "nowrap",
-}}
-      >
-        Griglia invertita
-      </span>
-    ) : isPole ? (
+  <span
+    style={{
+      display: "inline-flex",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: exporting ? "6px 12px" : "6px 10px",
+      borderRadius: 999,
+      border: "1px solid rgba(96,165,250,0.24)",
+      background:
+        "linear-gradient(180deg, rgba(96,165,250,0.13), rgba(59,130,246,0.055))",
+      boxShadow: exporting
+        ? "0 0 9px rgba(96,165,250,0.07)"
+        : "0 0 10px rgba(96,165,250,0.08)",
+      color: "rgba(219,234,254,0.84)",
+      fontWeight: 800,
+      fontSize: exporting ? 12.5 : 11,
+      letterSpacing: exporting ? 0.35 : 0.4,
+      textTransform: "uppercase",
+      whiteSpace: "nowrap",
+      lineHeight: 1.1,
+    }}
+  >
+    Griglia invertita
+  </span>
+) : isPole ? (
       <Pill
         left="POLE"
         right={r.tempoQualifica || undefined}
@@ -2589,6 +2622,242 @@ const resolvedTeamName = showTeamInsteadOfAuto
   )
 }
 
+function renderMiniRoundDetail(
+  value:
+    | string
+    | {
+        text: string
+        pole?: boolean
+        bestLap?: boolean
+      },
+  exporting = false
+) {
+  const detail =
+    typeof value === "string"
+      ? { text: value, pole: false, bestLap: false }
+      : {
+          text: String(value?.text || "").trim(),
+          pole: !!value?.pole,
+          bestLap: !!value?.bestLap,
+        }
+
+  const upper = String(detail.text || "").trim().toUpperCase()
+
+  const miniPillStyle = (
+    background: string,
+    border: string,
+    color: string
+  ): React.CSSProperties => ({
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    minWidth: exporting ? 40 : 34,
+    height: exporting ? 18 : 16,
+    padding: exporting ? "0 7px" : "0 6px",
+    borderRadius: 999,
+    background,
+    border,
+    color,
+    fontSize: exporting ? 9 : 8,
+    fontWeight: 900,
+    lineHeight: 1,
+    letterSpacing: 0.2,
+    textTransform: "uppercase",
+    whiteSpace: "nowrap",
+  })
+
+  if (upper === "DNF-I") {
+    return (
+      <span
+        style={miniPillStyle(
+          "rgba(64,224,208,0.92)",
+          "1px solid rgba(64,224,208,0.55)",
+          "rgba(0,0,0,0.92)"
+        )}
+      >
+        DNF-I
+      </span>
+    )
+  }
+
+  if (upper === "DNF-V") {
+    return (
+      <span
+        style={miniPillStyle(
+          "rgba(64,224,208,0.92)",
+          "1px solid rgba(64,224,208,0.55)",
+          "rgba(0,0,0,0.92)"
+        )}
+      >
+        DNF-V
+      </span>
+    )
+  }
+
+  if (upper === "DNP") {
+    return (
+      <span
+        style={miniPillStyle(
+          "rgba(64,224,208,0.92)",
+          "1px solid rgba(64,224,208,0.55)",
+          "rgba(0,0,0,0.92)"
+        )}
+      >
+        DNP
+      </span>
+    )
+  }
+
+  if (upper === "-") {
+    return <>{detail.text || "-"}</>
+  }
+
+  const isP1 = upper === "1°"
+  const isP2 = upper === "2°"
+  const isP3 = upper === "3°"
+
+  if (isP1 || isP2 || isP3) {
+    const background = isP1
+      ? "linear-gradient(180deg, rgba(255,215,0,1), rgba(255,200,0,0.95))"
+      : isP2
+        ? "linear-gradient(180deg, rgba(220,220,220,0.96), rgba(185,185,185,0.96))"
+        : "linear-gradient(180deg, rgba(205,127,50,0.96), rgba(168,102,38,0.96))"
+
+    const border = isP1
+      ? "1px solid rgba(255,215,0,0.55)"
+      : isP2
+        ? "1px solid rgba(220,220,220,0.42)"
+        : "1px solid rgba(205,127,50,0.45)"
+
+    const glow = isP1
+      ? "0 0 12px rgba(255,215,0,0.25)"
+      : isP2
+        ? "0 0 10px rgba(220,220,220,0.18)"
+        : "0 0 10px rgba(205,127,50,0.18)"
+
+    return (
+      <span
+        style={{
+          position: "relative",
+          display: "inline-flex",
+          alignItems: "center",
+          justifyContent: "center",
+          minWidth: exporting ? 32 : 28,
+          height: exporting ? 20 : 18,
+          padding: exporting ? "0 8px" : "0 7px",
+          borderRadius: 999,
+          background,
+          border,
+          boxShadow: glow,
+          color: "rgba(0,0,0,0.95)",
+          fontSize: exporting ? 10 : 9,
+          fontWeight: 900,
+          lineHeight: 1,
+          whiteSpace: "nowrap",
+        }}
+      >
+        <span>{detail.text}</span>
+
+        {(detail.pole || detail.bestLap) && (
+          <span
+            style={{
+              position: "absolute",
+              top: exporting ? -5 : -4,
+              right:
+                detail.pole && detail.bestLap
+                  ? (exporting ? -12 : -10)
+                  : (exporting ? -8 : -7),
+              display: "flex",
+              gap: 1,
+              fontSize: exporting ? 9 : 8,
+              lineHeight: 1,
+            }}
+          >
+            {detail.pole && (
+              <span
+                style={{
+                  color: "#ffd700",
+                  textShadow: "0 0 6px rgba(255,215,0,0.45)",
+                }}
+              >
+                ★
+              </span>
+            )}
+
+            {detail.bestLap && (
+              <span
+                style={{
+                  color: "#b67cff",
+                  textShadow: "0 0 6px rgba(160,90,255,0.45)",
+                }}
+              >
+                ★
+              </span>
+            )}
+          </span>
+        )}
+      </span>
+    )
+  }
+
+  return (
+    <span
+      style={{
+        position: "relative",
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        minWidth: exporting ? 24 : 20,
+        fontSize: exporting ? 11 : 10,
+        fontWeight: 900,
+        lineHeight: 1,
+        whiteSpace: "nowrap",
+      }}
+    >
+      <span>{detail.text || "-"}</span>
+
+      {(detail.pole || detail.bestLap) && (
+        <span
+          style={{
+            position: "absolute",
+            top: exporting ? -5 : -4,
+            right:
+              detail.pole && detail.bestLap
+                ? (exporting ? -12 : -10)
+                : (exporting ? -8 : -7),
+            display: "flex",
+            gap: 1,
+            fontSize: exporting ? 9 : 8,
+            lineHeight: 1,
+          }}
+        >
+          {detail.pole && (
+            <span
+              style={{
+                color: "#ffd700",
+                textShadow: "0 0 6px rgba(255,215,0,0.45)",
+              }}
+            >
+              ★
+            </span>
+          )}
+
+          {detail.bestLap && (
+            <span
+              style={{
+                color: "#b67cff",
+                textShadow: "0 0 6px rgba(160,90,255,0.45)",
+              }}
+            >
+              ★
+            </span>
+          )}
+        </span>
+      )}
+    </span>
+  )
+}
+
 function TeamChampionshipTable({
   teams,
   exporting = false,
@@ -2601,14 +2870,26 @@ function TeamChampionshipTable({
   currentRound: 1 | 2 | 3 | 4
   title?: string
   getTeamRoundDetail: (
-    teamName: string,
-    round: number,
-    sprint: "sprint1" | "sprint2"
-  ) => {
-    pro: string
-    proAma: string
-    ama: string
+  teamName: string,
+  round: number,
+  sprint: "sprint1" | "sprint2"
+) => {
+  pro: {
+    text: string
+    pole?: boolean
+    bestLap?: boolean
   }
+  proAma: {
+    text: string
+    pole?: boolean
+    bestLap?: boolean
+  }
+  ama: {
+    text: string
+    pole?: boolean
+    bestLap?: boolean
+  }
+}
 }) {
   return (
     <div
@@ -2723,54 +3004,83 @@ function TeamChampionshipTable({
               </th>
 
               {[1, 2, 3, 4].map((round) => (
-                <th
-                  key={`head-round-${round}`}
-                  style={{
-                    padding: exporting ? "8px 4px" : "10px 4px",
-                    textAlign: "center",
-                    fontSize: exporting ? 11 : 11,
-                    opacity: 0.9,
-                    width: exporting ? 170 : 145,
-                  }}
-                >
-                  <div
-                    style={{
-                      display: "grid",
-                      gap: exporting ? 4 : 3,
-                      justifyItems: "center",
-                    }}
-                  >
-                    <div
-                      style={{
-                        fontWeight: 900,
-                        fontSize: exporting ? 12 : 11,
-                        lineHeight: 1,
-                      }}
-                    >
-                      {`R${round}`}
-                    </div>
+  <th
+    key={`head-round-${round}`}
+    style={{
+      padding: exporting ? "8px 4px" : "10px 4px",
+      textAlign: "center",
+      fontSize: exporting ? 11 : 11,
+      opacity: 0.9,
+      width: exporting ? 170 : 145,
+    }}
+  >
+    <div
+      style={{
+        display: "grid",
+        gap: exporting ? 4 : 3,
+        justifyItems: "center",
+      }}
+    >
+      <div
+        style={{
+          fontWeight: 900,
+          fontSize: exporting ? 12 : 11,
+          lineHeight: 1,
+          letterSpacing: 0.25,
+          textTransform: "uppercase",
+          whiteSpace: "nowrap",
+        }}
+      >
+        {`ROUND ${round}`}
+      </div>
 
-                    <div
-                      style={{
-                        display: "grid",
-                        gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-                        gap: exporting ? 4 : 3,
-                        width: "100%",
-                        maxWidth: exporting ? 132 : 118,
-                        fontSize: exporting ? 10 : 9,
-                        opacity: 0.72,
-                        fontWeight: 900,
-                        lineHeight: 1,
-                        letterSpacing: 0.15,
-                      }}
-                    >
-                      <div style={{ textAlign: "center" }}>PRO</div>
-                      <div style={{ textAlign: "center" }}>PAMA</div>
-                      <div style={{ textAlign: "center" }}>AMA</div>
-                    </div>
-                  </div>
-                </th>
-              ))}
+      <div
+  style={{
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: exporting ? 6 : 5,
+    width: "100%",
+    fontSize: exporting ? 10 : 9,
+    fontWeight: 900,
+    letterSpacing: 0.2,
+    lineHeight: 1,
+  }}
+>
+  <span
+    style={{
+      color: "#00cfff",
+      textShadow: "0 0 8px rgba(0,207,255,0.25)",
+    }}
+  >
+    PRO
+  </span>
+
+  <span style={{ opacity: 0.35 }}>•</span>
+
+  <span
+    style={{
+      color: "#9b6bff",
+      textShadow: "0 0 8px rgba(155,107,255,0.25)",
+    }}
+  >
+    PAMA
+  </span>
+
+  <span style={{ opacity: 0.35 }}>•</span>
+
+  <span
+    style={{
+      color: "#ff4d4d",
+      textShadow: "0 0 8px rgba(255,77,77,0.25)",
+    }}
+  >
+    AMA
+  </span>
+</div>
+    </div>
+  </th>
+))}
 
               {(["r1", "r2", "r3", "r4"] as RoundKey[]).map((roundKey) => (
                 <th
@@ -2940,21 +3250,36 @@ function TeamChampionshipTable({
                         <span
                           key={`${team.team}-${label}`}
                           style={{
-                            display: "inline-flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            minWidth: exporting ? 28 : 24,
-                            height: exporting ? 18 : 16,
-                            padding: exporting ? "0 6px" : "0 5px",
-                            borderRadius: 999,
-                            border: "1px solid rgba(255,255,255,0.14)",
-                            background: "rgba(255,255,255,0.05)",
-                            color: "rgba(255,255,255,0.88)",
-                            fontSize: exporting ? 10 : 9,
-                            fontWeight: 900,
-                            lineHeight: 1,
-                            letterSpacing: 0.2,
-                          }}
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  minWidth: exporting ? 28 : 24,
+  height: exporting ? 18 : 16,
+  padding: exporting ? "0 6px" : "0 5px",
+  borderRadius: 999,
+
+  // 🔥 COLORI COMPLETAMENTE DIVERSI
+  border:
+    label === "S1"
+      ? "1px solid rgba(0,207,255,0.5)" // AZZURRO
+      : "1px solid rgba(168,85,247,0.5)", // VIOLA
+
+  background:
+    label === "S1"
+      ? "rgba(0,207,255,0.22)" // AZZURRO
+      : "rgba(168,85,247,0.22)", // VIOLA
+
+  boxShadow:
+    label === "S1"
+      ? "0 0 10px rgba(0,207,255,0.35)"
+      : "0 0 10px rgba(168,85,247,0.35)",
+
+  color: "#ffffff",
+  fontSize: exporting ? 10 : 9,
+  fontWeight: 900,
+  lineHeight: 1,
+  letterSpacing: 0.2,
+}}
                         >
                           {label}
                         </span>
@@ -2970,11 +3295,15 @@ function TeamChampionshipTable({
                       <td
                         key={`${team.team}-detail-${round}`}
                         style={{
-                          padding: exporting ? "4px 4px" : "5px 4px",
-                          textAlign: "center",
-                          borderBottom: "1px solid rgba(255,255,255,0.08)",
-                          width: exporting ? 170 : 145,
-                        }}
+  padding: exporting ? "4px 4px" : "5px 4px",
+  textAlign: "center",
+  borderBottom: "1px solid rgba(255,255,255,0.08)",
+
+  // 🔥 QUESTA È LA MODIFICA
+  borderLeft: "1px solid rgba(255,255,255,0.08)",
+
+  width: exporting ? 170 : 145,
+}}
                       >
                         <div
                           style={{
@@ -3000,9 +3329,15 @@ function TeamChampionshipTable({
                                 color: "rgba(255,255,255,0.96)",
                               }}
                             >
-                              <div style={{ textAlign: "center" }}>{detail.pro}</div>
-                              <div style={{ textAlign: "center" }}>{detail.proAma}</div>
-                              <div style={{ textAlign: "center" }}>{detail.ama}</div>
+                              <div style={{ textAlign: "center" }}>
+  {renderMiniRoundDetail(detail.pro, exporting)}
+</div>
+<div style={{ textAlign: "center" }}>
+  {renderMiniRoundDetail(detail.proAma, exporting)}
+</div>
+<div style={{ textAlign: "center" }}>
+  {renderMiniRoundDetail(detail.ama, exporting)}
+</div>
                             </div>
                           ))}
                         </div>
@@ -3017,6 +3352,7 @@ function TeamChampionshipTable({
                         padding: exporting ? "6px 4px" : "7px 4px",
                         textAlign: "center",
                         borderBottom: "1px solid rgba(255,255,255,0.08)",
+                        borderLeft: "1px solid rgba(255,255,255,0.08)",
                         fontSize: exporting ? 14 : 13,
                         fontWeight: 900,
                         fontFamily:
@@ -3036,6 +3372,7 @@ function TeamChampionshipTable({
                       padding: exporting ? "6px 4px" : "7px 4px",
                       textAlign: "center",
                       borderBottom: "1px solid rgba(255,255,255,0.08)",
+                      borderLeft: "1px solid rgba(255,255,255,0.12)",
                     }}
                   >
                     <span
@@ -3414,8 +3751,8 @@ function getBmwDriverStatusFromRow(row: DisplayRow): BmwDriverStatus {
   const rawTempo = tempoLikeGt7(row).trim().toUpperCase()
 
   if (!rawTempo) return "finish"
-  if (rawTempo === "DNF") return "dnf-i"
-  if (rawTempo === "DNFV") return "dnf-v"
+  if (rawTempo === "DNF" || rawTempo === "DNF-I") return "dnf-i"
+  if (rawTempo === "DNFV" || rawTempo === "DNF-V") return "dnf-v"
   if (rawTempo === "DNP") return "dnp"
   if (rawTempo === "BOX") return "box"
   if (rawTempo === "DSQ") return "dnf-v"
@@ -3731,29 +4068,53 @@ function getTeamRoundDetail(
   round: number,
   sprint: "sprint1" | "sprint2"
 ): {
-  pro: string
-  proAma: string
-  ama: string
+  pro: {
+    text: string
+    pole?: boolean
+    bestLap?: boolean
+  }
+  proAma: {
+    text: string
+    pole?: boolean
+    bestLap?: boolean
+  }
+  ama: {
+    text: string
+    pole?: boolean
+    bestLap?: boolean
+  }
 } {
   const roundKey = `r${round}` as RoundKey
   const roundSnapshot = roundSnapshots[roundKey]
 
+  const emptyValue = {
+    text: "-",
+    pole: false,
+    bestLap: false,
+  }
+
   if (!roundSnapshot?.leagues) {
     return {
-      pro: "-",
-      proAma: "-",
-      ama: "-",
+      pro: emptyValue,
+      proAma: emptyValue,
+      ama: emptyValue,
     }
   }
 
-  const getLeaguePos = (leagueName: BmwLeagueName): string => {
+  const getLeaguePos = (
+    leagueName: BmwLeagueName
+  ): {
+    text: string
+    pole?: boolean
+    bestLap?: boolean
+  } => {
     const leagueSnapshot = roundSnapshot.leagues?.[leagueName]
-    if (!leagueSnapshot) return "-"
+    if (!leagueSnapshot) return emptyValue
 
     const sprintSnapshot =
       sprint === "sprint1" ? leagueSnapshot.sprint1 : leagueSnapshot.sprint2
 
-    if (!sprintSnapshot?.drivers?.length) return "-"
+    if (!sprintSnapshot?.drivers?.length) return emptyValue
 
     const orderedDrivers = [...sprintSnapshot.drivers]
 
@@ -3761,9 +4122,28 @@ function getTeamRoundDetail(
       (driver) => driver.team === teamName
     )
 
-    if (foundIndex === -1) return "-"
+    if (foundIndex === -1) return emptyValue
 
-    return formatStandingPosition(foundIndex + 1)
+    const foundDriver = orderedDrivers[foundIndex]
+    const status = String(foundDriver?.status || "").trim().toLowerCase()
+
+    if (status === "dnf-i") {
+      return { text: "DNF-I" }
+    }
+
+    if (status === "dnf-v") {
+      return { text: "DNF-V" }
+    }
+
+    if (status === "dnp") {
+      return { text: "DNP" }
+    }
+
+    return {
+      text: formatStandingPosition(foundIndex + 1),
+      pole: (foundDriver?.poleBonus || 0) > 0,
+      bestLap: (foundDriver?.bestLapBonus || 0) > 0,
+    }
   }
 
   return {
@@ -3873,8 +4253,8 @@ function buildLiveBmwTeamStandings(
   const rawTempo = tempoLikeGt7(row).trim().toUpperCase()
 
   if (!rawTempo) return "finish"
-  if (rawTempo === "DNFV") return "dnf-v"
-  if (rawTempo === "DNF") return "dnf-i"
+  if (rawTempo === "DNFV" || rawTempo === "DNF-V") return "dnf-v"
+  if (rawTempo === "DNF" || rawTempo === "DNF-I") return "dnf-i"
   if (rawTempo === "DNP") return "dnp"
   if (rawTempo === "BOX") return "dnf-v"
   if (rawTempo === "DSQ") return "dnf-v"
@@ -4320,8 +4700,8 @@ const hasManualPilotOverrides = useMemo(() => {
       return orderedRows.map((r, i) => {
         const key = getPrtRowStableKey(r.sourcePosGara)
         const rawTempo = tempoLikeGt7(r)
-        const isBaseDnf = /^(DNF|DNFV)$/i.test(rawTempo.trim())
-        const dnfValue = isBaseDnf ? dnfOverrides[key] || "DNF" : null
+        const isBaseDnf = /^(DNF|DNFV|DNF-I|DNF-V)$/i.test(rawTempo.trim())
+        const dnfValue = isBaseDnf ? dnfOverrides[key] || "DNF-I" : null
         const rowHasDsqPenalty = hasDsqPenalty(penalties[key] || [])
 
         if (rowHasDsqPenalty) {
@@ -4443,8 +4823,8 @@ const hasManualPilotOverrides = useMemo(() => {
       .map((item, idx) => {
         const key = getPrtRowStableKey(item.row.sourcePosGara)
         const rawTempo = tempoLikeGt7(item.row)
-        const isBaseDnf = /^(DNF|DNFV)$/i.test(rawTempo.trim())
-        const dnfValue = isBaseDnf ? dnfOverrides[key] || "DNF" : null
+        const isBaseDnf = /^(DNF|DNFV|DNF-I|DNF-V)$/i.test(rawTempo.trim())
+        const dnfValue = isBaseDnf ? dnfOverrides[key] || "DNF-I" : null
 
         if (dnfValue) {
           return {
@@ -4557,6 +4937,8 @@ if (hasEmptyAuto) {
     /^\+\d{1,2}\.\d{3}$/.test(d) ||
     /^DNF$/i.test(d) ||
     /^DNFV$/i.test(d) ||
+    /^DNF-I$/i.test(d) ||
+    /^DNF-V$/i.test(d) ||
     /^DNP$/i.test(d) ||
     /^BOX$/i.test(d) ||
     /^DSQ$/i.test(d) ||
@@ -5970,6 +6352,47 @@ async function downloadGeneralTeamsHtmlExport(customTexts?: {
               ? "team-total team-total-p3"
               : "team-total team-total-normal"
 
+        const roundDetailCells = [1, 2, 3, 4]
+          .map((round) => {
+            const s1 = getTeamRoundDetail(team.team, round, "sprint1")
+            const s2 = getTeamRoundDetail(team.team, round, "sprint2")
+
+            return `
+              <td class="col-round-detail">
+                <div class="round-detail-wrap">
+                  <div class="sprint-line">
+                    <div class="round-mini-grid">
+                      <div class="round-mini-cell">${renderMiniRoundDetailHtml(s1.pro)}</div>
+                      <div class="round-mini-cell">${renderMiniRoundDetailHtml(s1.proAma)}</div>
+                      <div class="round-mini-cell">${renderMiniRoundDetailHtml(s1.ama)}</div>
+                    </div>
+                  </div>
+
+                  <div class="sprint-line">
+                    <div class="round-mini-grid">
+                      <div class="round-mini-cell">${renderMiniRoundDetailHtml(s2.pro)}</div>
+                      <div class="round-mini-cell">${renderMiniRoundDetailHtml(s2.proAma)}</div>
+                      <div class="round-mini-cell">${renderMiniRoundDetailHtml(s2.ama)}</div>
+                    </div>
+                  </div>
+                </div>
+              </td>
+            `
+          })
+          .join("")
+
+        const roundTotalsHtml = (["r1", "r2", "r3", "r4"] as RoundKey[])
+          .map((roundKey) => {
+            const value = team.rounds[roundKey] || 0
+
+            return `
+              <td class="round-total-cell ${value > 0 ? "round-total-on" : "round-total-off"}">
+                ${escapeHtml(String(value))}
+              </td>
+            `
+          })
+          .join("")
+
         return `
           <tr class="${rowClass}">
             <td class="col-pos pos-cell">
@@ -5987,10 +6410,16 @@ async function downloadGeneralTeamsHtmlExport(customTexts?: {
               </div>
             </td>
 
-            <td class="col-round round-cell">${team.rounds.r1 || 0}</td>
-            <td class="col-round round-cell">${team.rounds.r2 || 0}</td>
-            <td class="col-round round-cell">${team.rounds.r3 || 0}</td>
-            <td class="col-round round-cell">${team.rounds.r4 || 0}</td>
+            <td class="col-sprint-labels">
+              <div class="sprint-labels-wrap">
+                <span class="sprint-pill sprint-pill-s1">S1</span>
+                <span class="sprint-pill sprint-pill-s2">S2</span>
+              </div>
+            </td>
+
+            ${roundDetailCells}
+
+            ${roundTotalsHtml}
 
             <td class="col-total total-cell">
               <span class="${totalClass}">${team.total}</span>
@@ -6011,20 +6440,29 @@ async function downloadGeneralTeamsHtmlExport(customTexts?: {
     html, body { margin: 0; padding: 0; }
 
     body {
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      color: white;
-      background:
-        radial-gradient(1200px 600px at 15% 10%, rgba(255,215,0,0.14), transparent 50%),
-        radial-gradient(900px 500px at 85% 20%, rgba(160,90,255,0.16), transparent 50%),
-        linear-gradient(180deg, #0b0d12 0%, #07080c 100%);
-      min-height: 100vh;
-      overflow-y: auto;
-      overflow-x: hidden;
-    }
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  color: white;
+  background: linear-gradient(180deg, #0b0d12 0%, #07080c 100%);
+  min-height: 100vh;
+  overflow-y: auto;
+  overflow-x: auto;
+  position: relative;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 20% 0%, rgba(255,215,0,0.08), transparent 60%),
+    radial-gradient(circle at 80% 0%, rgba(160,90,255,0.08), transparent 60%);
+}
 
     .page {
-      width: 100%;
-      max-width: 1700px;
+      width: max-content;
+      min-width: 100%;
+      max-width: none;
       margin: 0 auto;
       padding: 24px;
       display: grid;
@@ -6057,8 +6495,8 @@ async function downloadGeneralTeamsHtmlExport(customTexts?: {
       inset: 0;
       pointer-events: none;
       background:
-        radial-gradient(900px 220px at 10% 10%, rgba(255,215,0,0.18), transparent 60%),
-        radial-gradient(700px 220px at 90% 0%, rgba(160,90,255,0.18), transparent 55%);
+        radial-gradient(65% 120% at 12% 0%, rgba(255,215,0,0.16), transparent 68%),
+        radial-gradient(58% 120% at 88% 0%, rgba(160,90,255,0.16), transparent 68%);
       opacity: 0.9;
     }
 
@@ -6111,50 +6549,50 @@ async function downloadGeneralTeamsHtmlExport(customTexts?: {
     }
 
     .title-line {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  row-gap: 8px;
-  flex-wrap: wrap;
-  white-space: normal;
-  min-width: 0;
-}
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      row-gap: 8px;
+      flex-wrap: wrap;
+      white-space: normal;
+      min-width: 0;
+    }
 
     .main-title {
-  font-size: clamp(26px, 4vw, 34px);
-  font-weight: 900;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  line-height: 1.05;
-  text-shadow: 0 0 18px rgba(255,215,0,0.22);
-  white-space: normal;
-  overflow-wrap: anywhere;
-  word-break: break-word;
-  min-width: 0;
-  max-width: 100%;
-}
+      font-size: clamp(26px, 4vw, 34px);
+      font-weight: 900;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      line-height: 1.05;
+      text-shadow: 0 0 18px rgba(255,215,0,0.22);
+      white-space: normal;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+      min-width: 0;
+      max-width: 100%;
+    }
 
     .side-label {
-  font-size: 14px;
-  padding: 6px 10px;
-  border-radius: 999px;
-  border: 1px solid rgba(255,255,255,0.14);
-  background: rgba(255,255,255,0.06);
-  letter-spacing: 0.6px;
-  text-transform: uppercase;
-  white-space: normal;
-  overflow-wrap: anywhere;
-  max-width: 100%;
-  flex-shrink: 0;
-}
+      font-size: 14px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(255,255,255,0.06);
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+      white-space: normal;
+      overflow-wrap: anywhere;
+      max-width: 100%;
+      flex-shrink: 0;
+    }
 
     .subtitle {
-  margin-top: 5px;
-  font-size: 13px;
-  opacity: 0.9;
-  white-space: normal;
-  overflow-wrap: anywhere;
-}
+      margin-top: 5px;
+      font-size: 13px;
+      opacity: 0.9;
+      white-space: normal;
+      overflow-wrap: anywhere;
+    }
 
     .title-bar {
       margin-top: 8px;
@@ -6185,6 +6623,18 @@ async function downloadGeneralTeamsHtmlExport(customTexts?: {
       align-items: center;
       overflow-x: auto;
       overflow-y: hidden;
+      position: relative;
+    }
+
+    .summary::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(55% 140% at 18% 0%, rgba(255,215,0,0.08), transparent 72%),
+        radial-gradient(55% 140% at 82% 0%, rgba(160,90,255,0.08), transparent 72%);
+      opacity: 0.9;
     }
 
     .header-badge {
@@ -6194,6 +6644,8 @@ async function downloadGeneralTeamsHtmlExport(customTexts?: {
       flex-wrap: nowrap;
       white-space: nowrap;
       flex: 0 0 auto;
+      position: relative;
+      z-index: 1;
     }
 
     .header-badge-label {
@@ -6254,6 +6706,8 @@ async function downloadGeneralTeamsHtmlExport(customTexts?: {
       background: linear-gradient(to bottom, transparent, rgba(210,215,225,0.9), transparent);
       box-shadow: 0 0 6px rgba(210,215,225,0.35);
       flex-shrink: 0;
+      position: relative;
+      z-index: 1;
     }
 
     .table-card {
@@ -6294,13 +6748,15 @@ async function downloadGeneralTeamsHtmlExport(customTexts?: {
     }
 
     .table-wrap {
-      width: 100%;
-      overflow-x: hidden;
+      width: max-content;
+      min-width: 100%;
+      overflow-x: auto;
       overflow-y: visible;
     }
 
     table {
-      width: 100%;
+      width: max-content;
+      min-width: 100%;
       border-collapse: collapse;
       table-layout: fixed;
     }
@@ -6311,26 +6767,28 @@ async function downloadGeneralTeamsHtmlExport(customTexts?: {
       z-index: 2;
       background: rgba(10,12,18,0.96);
       backdrop-filter: blur(10px);
-      padding: 14px 10px;
-      text-align: left;
-      font-size: 12px;
-      opacity: 0.82;
+      padding: 10px 8px;
+      text-align: center;
+      font-size: 11px;
+      opacity: 0.88;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
 
     tbody td {
-      padding: 14px 10px;
+      padding: 8px 8px;
       border-bottom: 1px solid rgba(255,255,255,0.08);
       vertical-align: middle;
       font-size: 13px;
     }
 
-    .col-pos { width: 56px; }
-    .col-team { width: 58%; }
-    .col-round { width: 7%; }
-    .col-total { width: 10%; }
+    .col-pos { width: 52px; }
+    .col-team { width: 250px; text-align: left; }
+    .col-sprint-labels { width: 44px; }
+    .col-round-detail { width: 170px; border-left: 1px solid rgba(255,255,255,0.08); }
+    .col-round-total { width: 74px; border-left: 1px solid rgba(255,255,255,0.08); }
+    .col-total { width: 96px; }
 
     .row-p1 {
       background: linear-gradient(90deg, rgba(255,215,0,0.12) 0%, rgba(255,215,0,0.05) 28%, rgba(255,255,255,0.02) 70%);
@@ -6355,10 +6813,10 @@ async function downloadGeneralTeamsHtmlExport(customTexts?: {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      min-width: 30px;
-      height: 28px;
-      padding: 0 10px;
-      border-radius: 10px;
+      min-width: 36px;
+      height: 32px;
+      padding: 0 12px;
+      border-radius: 12px;
       border: 1px solid rgba(255,255,255,0.12);
       background: rgba(0,0,0,0.22);
       font-weight: 900;
@@ -6368,12 +6826,13 @@ async function downloadGeneralTeamsHtmlExport(customTexts?: {
 
     .team-cell {
       min-width: 0;
+      text-align: left;
     }
 
     .team-wrap {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 9px;
       min-width: 0;
     }
 
@@ -6387,8 +6846,8 @@ async function downloadGeneralTeamsHtmlExport(customTexts?: {
     }
 
     .stripe {
-      width: 6px;
-      height: 24px;
+      width: 5px;
+      height: 17px;
       border-radius: 2px;
       display: inline-block;
     }
@@ -6409,26 +6868,197 @@ async function downloadGeneralTeamsHtmlExport(customTexts?: {
     }
 
     .team-name {
-      font-size: 18px;
-      font-weight: 800;
-      letter-spacing: 0.03em;
+      font-size: 15px;
+      font-weight: 900;
+      letter-spacing: 0.02em;
       color: rgba(255,255,255,0.92);
-      white-space: normal;
-      line-height: 1.2;
-      word-break: break-word;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      line-height: 1;
     }
 
-    .round-cell {
-      text-align: center;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-      font-size: 14px;
+    .sprint-labels-wrap {
+      display: grid;
+      gap: 6px;
+      justify-items: center;
+    }
+
+    .sprint-pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 28px;
+      height: 18px;
+      padding: 0 6px;
+      border-radius: 999px;
+      color: #ffffff;
+      font-size: 10px;
       font-weight: 900;
       line-height: 1;
+      letter-spacing: 0.2px;
+    }
+
+    .sprint-pill-s1 {
+      border: 1px solid rgba(0,207,255,0.5);
+      background: rgba(0,207,255,0.22);
+      box-shadow: 0 0 10px rgba(0,207,255,0.35);
+    }
+
+    .sprint-pill-s2 {
+      border: 1px solid rgba(168,85,247,0.5);
+      background: rgba(168,85,247,0.22);
+      box-shadow: 0 0 10px rgba(168,85,247,0.35);
+    }
+
+    .round-detail-wrap {
+      display: grid;
+      gap: 6px;
+    }
+
+    .sprint-line {
+      display: block;
+    }
+
+    .round-mini-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 4px;
+      width: 100%;
+      max-width: 132px;
+      margin: 0 auto;
+      font-size: 12px;
+      font-weight: 900;
+      line-height: 1;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      color: rgba(255,255,255,0.96);
+    }
+
+    .round-mini-cell {
+      text-align: center;
+      position: relative;
+    }
+
+    .mini-pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 40px;
+      height: 18px;
+      padding: 0 7px;
+      border-radius: 999px;
+      font-size: 9px;
+      font-weight: 900;
+      line-height: 1;
+      letter-spacing: 0.2px;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .mini-teal {
+      background: rgba(64,224,208,0.92);
+      border: 1px solid rgba(64,224,208,0.55);
+      color: rgba(0,0,0,0.92);
+    }
+
+    .mini-pos {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 32px;
+      height: 20px;
+      padding: 0 8px;
+      border-radius: 999px;
+      font-size: 10px;
+      font-weight: 900;
+      line-height: 1;
+      white-space: nowrap;
+      color: rgba(0,0,0,0.95);
+    }
+
+    .mini-pos-p1 {
+      background: linear-gradient(180deg, rgba(255,215,0,1), rgba(255,200,0,0.95));
+      border: 1px solid rgba(255,215,0,0.55);
+      box-shadow: 0 0 12px rgba(255,215,0,0.25);
+    }
+
+    .mini-pos-p2 {
+      background: linear-gradient(180deg, rgba(220,220,220,0.96), rgba(185,185,185,0.96));
+      border: 1px solid rgba(220,220,220,0.42);
+      box-shadow: 0 0 10px rgba(220,220,220,0.18);
+    }
+
+    .mini-pos-p3 {
+      background: linear-gradient(180deg, rgba(205,127,50,0.96), rgba(168,102,38,0.96));
+      border: 1px solid rgba(205,127,50,0.45);
+      box-shadow: 0 0 10px rgba(205,127,50,0.18);
+    }
+
+    .mini-text {
+      font-size: 11px;
+      font-weight: 900;
+      line-height: 1;
+      white-space: nowrap;
+    }
+
+    .mini-text-wrap {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 24px;
+      font-size: 11px;
+      font-weight: 900;
+      line-height: 1;
+      white-space: nowrap;
+    }
+
+    .mini-stars {
+      position: absolute;
+      top: -5px;
+      right: -8px;
+      display: flex;
+      gap: 1px;
+      font-size: 9px;
+      line-height: 1;
+    }
+
+    .mini-stars.double {
+      right: -12px;
+    }
+
+    .star-gold {
+      color: #ffd700;
+      text-shadow: 0 0 6px rgba(255,215,0,0.45);
+    }
+
+    .star-violet {
+      color: #b67cff;
+      text-shadow: 0 0 6px rgba(160,90,255,0.45);
+    }
+
+    .round-total-cell {
+      padding: 6px 4px;
+      text-align: center;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      border-left: 1px solid rgba(255,255,255,0.08);
+      font-size: 14px;
+      font-weight: 900;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    .round-total-on {
       color: #ffffff;
+    }
+
+    .round-total-off {
+      color: rgba(255,255,255,0.42);
     }
 
     .total-cell {
       text-align: center;
+      border-left: 1px solid rgba(255,255,255,0.12);
     }
 
     .team-total {
@@ -6436,13 +7066,14 @@ async function downloadGeneralTeamsHtmlExport(customTexts?: {
       align-items: center;
       justify-content: center;
       min-width: 54px;
-      height: 30px;
-      padding: 0 12px;
+      height: 26px;
+      padding: 0 10px;
       border-radius: 999px;
       font-weight: 900;
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-      font-size: 15px;
+      font-size: 16px;
       line-height: 1;
+      letter-spacing: 0.2px;
     }
 
     .team-total-p1 {
@@ -6473,62 +7104,79 @@ async function downloadGeneralTeamsHtmlExport(customTexts?: {
       color: #ffffff;
     }
 
+    .header-round-title {
+      display: grid;
+      gap: 4px;
+      justify-items: center;
+    }
+
+    .header-round-top {
+      font-weight: 900;
+      font-size: 12px;
+      line-height: 1;
+      letter-spacing: 0.25px;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .header-round-bottom {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 6px;
+      width: 100%;
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: 0.2px;
+      line-height: 1;
+    }
+
+    .header-pro {
+      color: #00cfff;
+      text-shadow: 0 0 8px rgba(0,207,255,0.25);
+    }
+
+    .header-pama {
+      color: #9b6bff;
+      text-shadow: 0 0 8px rgba(155,107,255,0.25);
+    }
+
+    .header-ama {
+      color: #ff4d4d;
+      text-shadow: 0 0 8px rgba(255,77,77,0.25);
+    }
+
+    .header-dot {
+      opacity: 0.35;
+    }
+
     .footer-note {
       font-size: 12px;
       opacity: 0.72;
       padding: 0 4px;
     }
 
-    @media (max-width: 1100px) {
-  .main-title {
-    font-size: 28px;
-  }
+    @media (max-width: 980px) {
 
-  .header-logo {
-    height: 84px;
-  }
+      .header {
+        flex-wrap: wrap;
+        align-items: flex-start;
+      }
 
-  .col-team {
-    width: 52%;
-  }
+      .header-right {
+        width: 100%;
+        justify-content: flex-start;
+      }
 
-  .col-round {
-    width: 8%;
-  }
+      .header-logo {
+        height: 84px;
+        max-width: 100%;
+      }
 
-  .col-total {
-    width: 12%;
-  }
-
-  .team-name {
-    font-size: 16px;
-  }
-
-  .round-cell {
-    font-size: 13px;
-  }
-}
-
-@media (max-width: 980px) {
-  .header {
-    flex-wrap: wrap;
-    align-items: flex-start;
-  }
-
-  .header-right {
-    width: 100%;
-    justify-content: flex-start;
-  }
-
-  .header-logo {
-    height: 84px;
-    max-width: 100%;
-  }
-
-  .page {
-    padding: 16px;
-  }
-}
+      .page {
+        padding: 14px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -6537,7 +7185,7 @@ async function downloadGeneralTeamsHtmlExport(customTexts?: {
       <div class="header-left">
         <div class="title-line">
           <div class="main-title">${escapeHtml(texts.mainTitle)}</div>
-<span class="side-label">${escapeHtml(texts.sideLabel)}</span>
+          <span class="side-label">${escapeHtml(texts.sideLabel)}</span>
         </div>
         <div class="subtitle">${escapeHtml(texts.subtitle)}</div>
         <div class="title-bar"></div>
@@ -6560,12 +7208,33 @@ async function downloadGeneralTeamsHtmlExport(customTexts?: {
           <thead>
             <tr>
               <th class="col-pos">Pos</th>
-              <th class="col-team">Team</th>
-              <th class="col-round" style="text-align:center;">R1</th>
-              <th class="col-round" style="text-align:center;">R2</th>
-              <th class="col-round" style="text-align:center;">R3</th>
-              <th class="col-round" style="text-align:center;">R4</th>
-              <th class="col-total" style="text-align:center;">TOT</th>
+              <th class="col-team" style="text-align:left;">Team</th>
+              <th class="col-sprint-labels">&nbsp;</th>
+
+              ${[1, 2, 3, 4]
+                .map(
+                  (round) => `
+                <th class="col-round-detail">
+                  <div class="header-round-title">
+                    <div class="header-round-top">ROUND ${round}</div>
+                    <div class="header-round-bottom">
+                      <span class="header-pro">PRO</span>
+                      <span class="header-dot">•</span>
+                      <span class="header-pama">PAMA</span>
+                      <span class="header-dot">•</span>
+                      <span class="header-ama">AMA</span>
+                    </div>
+                  </div>
+                </th>
+              `
+                )
+                .join("")}
+
+              <th class="col-round-total">R1</th>
+              <th class="col-round-total">R2</th>
+              <th class="col-round-total">R3</th>
+              <th class="col-round-total">R4</th>
+              <th class="col-total">TOT</th>
             </tr>
           </thead>
           <tbody>
@@ -6576,7 +7245,7 @@ async function downloadGeneralTeamsHtmlExport(customTexts?: {
     </div>
 
     <div class="footer-note">
-      Export HTML Classifica Generale TEAM BMW CUP • scroll verticale
+      Export HTML Classifica Generale TEAM BMW CUP • layout round completo
     </div>
   </div>
 </body>
@@ -6686,6 +7355,120 @@ function renderPointsHtmlForExport(row: DisplayRow, bestRaceLap: string) {
       <span>${points}</span>
       ${starsHtml}
     </span>
+  `
+}
+
+function renderMiniRoundDetailHtml(
+  value:
+    | string
+    | {
+        text: string
+        pole?: boolean
+        bestLap?: boolean
+      }
+) {
+  const detail =
+    typeof value === "string"
+      ? { text: value, pole: false, bestLap: false }
+      : {
+          text: String(value?.text || "").trim(),
+          pole: !!value?.pole,
+          bestLap: !!value?.bestLap,
+        }
+
+  const upper = String(detail.text || "").trim().toUpperCase()
+
+  if (upper === "DNF-I") {
+    return `<span class="mini-pill mini-teal">DNF-I</span>`
+  }
+
+  if (upper === "DNF-V") {
+    return `<span class="mini-pill mini-teal">DNF-V</span>`
+  }
+
+  if (upper === "DNP") {
+    return `<span class="mini-pill mini-teal">DNP</span>`
+  }
+
+  if (upper === "-") {
+    return `<span class="mini-text">-</span>`
+  }
+
+  const starsClass =
+    detail.pole && detail.bestLap ? "mini-stars double" : "mini-stars"
+
+  const starsHtml =
+    detail.pole || detail.bestLap
+      ? `
+        <span class="${starsClass}">
+          ${detail.pole ? `<span class="star-gold">★</span>` : ""}
+          ${detail.bestLap ? `<span class="star-violet">★</span>` : ""}
+        </span>
+      `
+      : ""
+
+  if (upper === "1°") {
+    return `
+      <span class="mini-pos mini-pos-p1">
+        <span>${escapeHtml(detail.text)}</span>
+        ${starsHtml}
+      </span>
+    `
+  }
+
+  if (upper === "2°") {
+    return `
+      <span class="mini-pos mini-pos-p2">
+        <span>${escapeHtml(detail.text)}</span>
+        ${starsHtml}
+      </span>
+    `
+  }
+
+  if (upper === "3°") {
+    return `
+      <span class="mini-pos mini-pos-p3">
+        <span>${escapeHtml(detail.text)}</span>
+        ${starsHtml}
+      </span>
+    `
+  }
+
+  return `
+    <span class="mini-text-wrap">
+      <span>${escapeHtml(detail.text || "-")}</span>
+      ${starsHtml}
+    </span>
+  `
+}
+
+function renderTeamRoundDetailHtml(
+  teamName: string,
+  round: number,
+  sprint: "sprint1" | "sprint2"
+) {
+  const detail = getTeamRoundDetail(teamName, round, sprint)
+
+  return `
+    <div
+      style="
+        display:grid;
+        grid-template-columns:repeat(3, minmax(0, 1fr));
+        gap:4px;
+        width:100%;
+        max-width:132px;
+        margin:0 auto;
+        font-size:12px;
+        font-weight:900;
+        line-height:1;
+        font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        color:rgba(255,255,255,0.96);
+      "
+    >
+      <div style="text-align:center;">${renderMiniRoundDetailHtml(detail.pro)}</div>
+      <div style="text-align:center;">${renderMiniRoundDetailHtml(detail.proAma)}</div>
+      <div style="text-align:center;">${renderMiniRoundDetailHtml(detail.ama)}</div>
+    </div>
   `
 }
 
@@ -7579,17 +8362,19 @@ function resetEntireCurrentRound() {
   }
 
   function setDnfOverrideValue(sourcePosGara: number, value: string) {
-    const key = getPrtRowStableKey(sourcePosGara)
-    setDnfOverrides((prev) => {
-      const next = { ...prev }
-      if (value === "DNFV") {
-        next[key] = "DNFV"
-      } else {
-        next[key] = "DNF"
-      }
-      return next
-    })
-  }
+  const key = getPrtRowStableKey(sourcePosGara)
+  setDnfOverrides((prev) => {
+    const next = { ...prev }
+
+    if (value === "DNF-V") {
+      next[key] = "DNF-V"
+    } else {
+      next[key] = "DNF-I"
+    }
+
+    return next
+  })
+}
 
   function openPilotCorrectionModal() {
   const snapshotRows = displayRows.map((row) => ({ ...row }))
@@ -8023,10 +8808,21 @@ if (!authorized) {
         </>
       )}
 
-      {showMeta && (
+            {showMeta && (
         <>
           <Separator />
           <HeaderBadge label="GARA" value={normalizedGaraForOutput} variant="violet" />
+        </>
+      )}
+
+      {showMeta && (
+        <>
+          <Separator />
+          <HeaderBadge
+            label="SPRINT"
+            value={String(currentSprint)}
+            variant={currentSprint === 1 ? "sprint1" : "sprint2"}
+          />
         </>
       )}
 
@@ -8999,7 +9795,7 @@ if (!authorized) {
 
               <tbody>
                 {dgInfo.map(({ row, isDoppiato, isDnf, key, manualGap, manualGapValid }, idx) => {
-                  const dnfValue = dnfOverrides[key] || "DNF"
+                  const dnfValue = dnfOverrides[key] || "DNF-I"
                   const entries = penalties[key] || []
                   const penaltyMain = getPenaltyMainDisplay(entries)
                   const penaltyDisabled = false
@@ -9229,24 +10025,24 @@ if (!authorized) {
                       <TableCell align="center">
                         {isDnf ? (
                           <select
-                            value={dnfValue}
-                            onChange={(e) => setDnfOverrideValue(row.sourcePosGara, e.target.value)}
-                            style={{
-                              minWidth: 120,
-                              padding: "8px 10px",
-                              borderRadius: 10,
-                              border: "1px solid rgba(255,255,255,0.14)",
-                              background: "rgba(0,0,0,0.26)",
-                              color: "white",
-                            }}
-                          >
-                            <option value="DNF" style={{ background: "#11151d", color: "white" }}>
-                              DNF
-                            </option>
-                            <option value="DNFV" style={{ background: "#11151d", color: "white" }}>
-                              DNFV
-                            </option>
-                          </select>
+  value={dnfValue}
+  onChange={(e) => setDnfOverrideValue(row.sourcePosGara, e.target.value)}
+  style={{
+    minWidth: 120,
+    padding: "8px 10px",
+    borderRadius: 10,
+    border: "1px solid rgba(255,255,255,0.14)",
+    background: "rgba(0,0,0,0.26)",
+    color: "white",
+  }}
+>
+  <option value="DNF-I" style={{ background: "#11151d", color: "white" }}>
+    DNF-I
+  </option>
+  <option value="DNF-V" style={{ background: "#11151d", color: "white" }}>
+    DNF-V
+  </option>
+</select>
                         ) : (
                           "-"
                         )}
@@ -12333,14 +13129,15 @@ if (!authorized) {
               />
 
               <SummaryStrip
-                winner={winner}
-                bestQuali={bestQuali}
-                bestRaceLap={bestRaceLap}
-                unionMeta={{ ...unionMeta, gara: normalizedGaraForOutput, lega: effectiveLegaResolved }}
-                showMeta={showMeta}
-                showLobby={showLobby}
-                exporting={true}
-              />
+  winner={winner}
+  bestQuali={bestQuali}
+  bestRaceLap={bestRaceLap}
+  unionMeta={{ ...unionMeta, gara: normalizedGaraForOutput, lega: effectiveLegaResolved }}
+  showMeta={showMeta}
+  showLobby={showLobby}
+  currentSprint={currentSprint}
+  exporting={true}
+/>
 
               <ResultsTable
   previewRows={finalRows}
