@@ -8163,13 +8163,13 @@ setReopenedSprintKey(sprint)
   setSprint2Ready(false)
   setPendingSprint2Upload(false)
 
-  setShowReopenLeagueModal(false)
+    setShowReopenLeagueModal(false)
   setSelectedLeagueToReopen(null)
 
-  setSavedSprintPreviews((prev) => ({
-    ...prev,
-    [sprint]: sprintSnapshot,
-  }))
+  setSavedSprintPreviews({
+    sprint1: leagueSnapshot.sprint1 || null,
+    sprint2: leagueSnapshot.sprint2 || null,
+  })
 
   setIsReopenedSavedSprint(true)
   setReopenedSprintKey(sprint)

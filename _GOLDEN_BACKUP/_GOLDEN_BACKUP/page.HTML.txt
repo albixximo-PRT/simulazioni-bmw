@@ -2742,9 +2742,10 @@ function renderMiniRoundDetail(
           display: "inline-flex",
           alignItems: "center",
           justifyContent: "center",
-          minWidth: exporting ? 32 : 28,
+          width: exporting ? 36 : 32,
+          minWidth: exporting ? 36 : 32,
           height: exporting ? 20 : 18,
-          padding: exporting ? "0 8px" : "0 7px",
+          padding: 0,
           borderRadius: 999,
           background,
           border,
@@ -2754,9 +2755,22 @@ function renderMiniRoundDetail(
           fontWeight: 900,
           lineHeight: 1,
           whiteSpace: "nowrap",
+          textAlign: "center",
+          fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+          fontVariantNumeric: "tabular-nums",
         }}
       >
-        <span>{detail.text}</span>
+        <span
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: "100%",
+            textAlign: "center",
+          }}
+        >
+          {detail.text}
+        </span>
 
         {(detail.pole || detail.bestLap) && (
           <span
@@ -2807,14 +2821,29 @@ function renderMiniRoundDetail(
         display: "inline-flex",
         alignItems: "center",
         justifyContent: "center",
-        minWidth: exporting ? 24 : 20,
+        width: exporting ? 36 : 32,
+        minWidth: exporting ? 36 : 32,
         fontSize: exporting ? 11 : 10,
         fontWeight: 900,
         lineHeight: 1,
         whiteSpace: "nowrap",
+        textAlign: "center",
+        fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+        fontVariantNumeric: "tabular-nums",
+        transform: "translateY(2px)",
       }}
     >
-      <span>{detail.text || "-"}</span>
+      <span
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          justifyContent: "center",
+          width: "100%",
+          textAlign: "center",
+        }}
+      >
+        {detail.text || "-"}
+      </span>
 
       {(detail.pole || detail.bestLap) && (
         <span
@@ -2823,8 +2852,8 @@ function renderMiniRoundDetail(
             top: exporting ? -5 : -4,
             right:
               detail.pole && detail.bestLap
-                ? (exporting ? -12 : -10)
-                : (exporting ? -8 : -7),
+                ? (exporting ? -4 : -3)
+                : (exporting ? -1 : 0),
             display: "flex",
             gap: 1,
             fontSize: exporting ? 9 : 8,
@@ -6962,20 +6991,24 @@ body::before {
     }
 
     .mini-pos {
-      position: relative;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-width: 32px;
-      height: 20px;
-      padding: 0 8px;
-      border-radius: 999px;
-      font-size: 10px;
-      font-weight: 900;
-      line-height: 1;
-      white-space: nowrap;
-      color: rgba(0,0,0,0.95);
-    }
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  min-width: 36px;
+  height: 20px;
+  padding: 0;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 900;
+  line-height: 1;
+  white-space: nowrap;
+  color: rgba(0,0,0,0.95);
+  text-align: center;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-variant-numeric: tabular-nums;
+}
 
     .mini-pos-p1 {
       background: linear-gradient(180deg, rgba(255,215,0,1), rgba(255,200,0,0.95));
@@ -7003,30 +7036,49 @@ body::before {
     }
 
     .mini-text-wrap {
-      position: relative;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-width: 24px;
-      font-size: 11px;
-      font-weight: 900;
-      line-height: 1;
-      white-space: nowrap;
-    }
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  min-width: 36px;
+  font-size: 11px;
+  font-weight: 900;
+  line-height: 1;
+  white-space: nowrap;
+  text-align: center;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-variant-numeric: tabular-nums;
+  transform: translateY(2px);
+}
 
-    .mini-stars {
-      position: absolute;
-      top: -5px;
-      right: -8px;
-      display: flex;
-      gap: 1px;
-      font-size: 9px;
-      line-height: 1;
-    }
+    .mini-stars-pill {
+  position: absolute;
+  top: -5px;
+  right: -8px;
+  display: flex;
+  gap: 1px;
+  font-size: 9px;
+  line-height: 1;
+}
 
-    .mini-stars.double {
-      right: -12px;
-    }
+.mini-stars-pill.double {
+  right: -12px;
+}
+
+.mini-stars-text {
+  position: absolute;
+  top: -5px;
+  right: 1px;
+  display: flex;
+  gap: 1px;
+  font-size: 9px;
+  line-height: 1;
+}
+
+.mini-stars-text.double {
+  right: -2px;
+}
 
     .star-gold {
       color: #ffd700;
@@ -7394,42 +7446,63 @@ function renderMiniRoundDetailHtml(
     return `<span class="mini-text">-</span>`
   }
 
-  const starsClass =
-    detail.pole && detail.bestLap ? "mini-stars double" : "mini-stars"
+  const isP1 = upper === "1°"
+  const isP2 = upper === "2°"
+  const isP3 = upper === "3°"
 
-  const starsHtml =
+  const pillStarsClass =
+    detail.pole && detail.bestLap
+      ? "mini-stars-pill double"
+      : "mini-stars-pill"
+
+  const textStarsClass =
+    detail.pole && detail.bestLap
+      ? "mini-stars-text double"
+      : "mini-stars-text"
+
+  const pillStarsHtml =
     detail.pole || detail.bestLap
       ? `
-        <span class="${starsClass}">
+        <span class="${pillStarsClass}">
           ${detail.pole ? `<span class="star-gold">★</span>` : ""}
           ${detail.bestLap ? `<span class="star-violet">★</span>` : ""}
         </span>
       `
       : ""
 
-  if (upper === "1°") {
+  const textStarsHtml =
+    detail.pole || detail.bestLap
+      ? `
+        <span class="${textStarsClass}">
+          ${detail.pole ? `<span class="star-gold">★</span>` : ""}
+          ${detail.bestLap ? `<span class="star-violet">★</span>` : ""}
+        </span>
+      `
+      : ""
+
+  if (isP1) {
     return `
       <span class="mini-pos mini-pos-p1">
         <span>${escapeHtml(detail.text)}</span>
-        ${starsHtml}
+        ${pillStarsHtml}
       </span>
     `
   }
 
-  if (upper === "2°") {
+  if (isP2) {
     return `
       <span class="mini-pos mini-pos-p2">
         <span>${escapeHtml(detail.text)}</span>
-        ${starsHtml}
+        ${pillStarsHtml}
       </span>
     `
   }
 
-  if (upper === "3°") {
+  if (isP3) {
     return `
       <span class="mini-pos mini-pos-p3">
         <span>${escapeHtml(detail.text)}</span>
-        ${starsHtml}
+        ${pillStarsHtml}
       </span>
     `
   }
@@ -7437,7 +7510,7 @@ function renderMiniRoundDetailHtml(
   return `
     <span class="mini-text-wrap">
       <span>${escapeHtml(detail.text || "-")}</span>
-      ${starsHtml}
+      ${textStarsHtml}
     </span>
   `
 }
