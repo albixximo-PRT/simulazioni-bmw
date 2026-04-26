@@ -444,7 +444,8 @@ function getPointsForPrtRow(r: ExtractRow, bestRaceLap: string): number {
 function ensureLeagueDriversFromTeams(
   rows: DisplayRow[],
   teams: TeamEntry[],
-  currentLega: string
+  currentLega: string,
+  roundSubstitutes: Record<string, string> = {}
 ): DisplayRow[] {
   if (!rows.length) return rows
 
@@ -474,9 +475,19 @@ function ensureLeagueDriversFromTeams(
     rows.map((r) => normalizeName(String(r.pilota || "")))
   )
 
-  const missingDrivers = leagueDrivers.filter(
-    (name) => !presentNames.has(normalizeName(name))
-  )
+  const substituteByOfficial = new Map<string, string>()
+
+Object.entries(roundSubstitutes).forEach(([substituteName, officialName]) => {
+  substituteByOfficial.set(normalizeName(officialName), substituteName)
+})
+
+const leagueDriversWithSubstitutes = leagueDrivers.map((officialName) => {
+  return substituteByOfficial.get(normalizeName(officialName)) || officialName
+})
+
+const missingDrivers = leagueDriversWithSubstitutes.filter(
+  (name) => !presentNames.has(normalizeName(name))
+)
 
   if (missingDrivers.length === 0) return rows
 
@@ -4599,10 +4610,11 @@ const normalizedGaraForOutput = useMemo(() => {
     String(unionMeta.lega || "").trim().toUpperCase()
 
   return ensureLeagueDriversFromTeams(
-    mappedRows,
-    teams,
-    currentLegaForCompletion
-  )
+  mappedRows,
+  teams,
+  currentLegaForCompletion,
+  BMW_ROUND_SUBSTITUTES[getRoundKey(currentRound)] || {}
+)
 }, [
   previewRows,
   manualPilotOverrides,
