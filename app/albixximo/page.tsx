@@ -3662,38 +3662,67 @@ useEffect(() => {
   return v
 }
 
-  function findTeamByPilot(pilotName: string): TeamLookupResult {
-    const normalized = normalizeTeamPilotName(pilotName)
-    if (!normalized) return null
+ const BMW_ROUND_SUBSTITUTES: Partial<Record<RoundKey, Record<string, string>>> = {
+  r2: {
+    Margotone: "Gioski",
+    CAPITAN_FINDUS: "Albixximo",
+    "PRT-Jaiss84": "Sbrizio72",
+    Perdincibaccoli: "MaxLukex",
+    Divino991: "Simoppr",
+  },
 
-    for (const teamEntry of teams) {
-      if (normalizeTeamPilotName(teamEntry.lobby1) === normalized) {
-        return {
-          team: teamEntry.team,
-          lobby: "lobby1",
-          lega: "PRO",
-        }
-      }
+  r3: {
+    "PRT-Jaiss84": "Sbrizio72",
+  },
 
-      if (normalizeTeamPilotName(teamEntry.lobby2) === normalized) {
-        return {
-          team: teamEntry.team,
-          lobby: "lobby2",
-          lega: "PRO-AMA",
-        }
-      }
+  r4: {
+    "PRT-Jaiss84": "Sbrizio72",
+  },
+} 
 
-      if (normalizeTeamPilotName(teamEntry.lobby3) === normalized) {
-        return {
-          team: teamEntry.team,
-          lobby: "lobby3",
-          lega: "AMA",
-        }
+function findTeamByPilot(pilotName: string): TeamLookupResult {
+  const normalized = normalizeTeamPilotName(pilotName)
+  if (!normalized) return null
+
+  const roundKey = getRoundKey(currentRound)
+  const substitutes = BMW_ROUND_SUBSTITUTES[roundKey] || {}
+
+  const officialPilotName =
+    Object.entries(substitutes).find(
+      ([substituteName]) =>
+        normalizeTeamPilotName(substituteName) === normalized
+    )?.[1] || pilotName
+
+  const normalizedOfficial = normalizeTeamPilotName(officialPilotName)
+
+  for (const teamEntry of teams) {
+    if (normalizeTeamPilotName(teamEntry.lobby1) === normalizedOfficial) {
+      return {
+        team: teamEntry.team,
+        lobby: "lobby1",
+        lega: "PRO",
       }
     }
 
-    return null
+    if (normalizeTeamPilotName(teamEntry.lobby2) === normalizedOfficial) {
+      return {
+        team: teamEntry.team,
+        lobby: "lobby2",
+        lega: "PRO-AMA",
+      }
+    }
+
+    if (normalizeTeamPilotName(teamEntry.lobby3) === normalizedOfficial) {
+      return {
+        team: teamEntry.team,
+        lobby: "lobby3",
+        lega: "AMA",
+      }
+    }
   }
+
+  return null
+}
 
   function hasMissingPilotRows(rowsToCheck: DisplayRow[]) {
   return rowsToCheck.some((row) => {
@@ -5333,6 +5362,43 @@ function confirmRoundChange() {
   if (pendingRoundChange == null) return
 
   setCurrentRound(pendingRoundChange)
+
+  // reset area di lavoro sprint quando cambio round
+  setSavedSprintPreviews({
+    sprint1: null,
+    sprint2: null,
+  })
+
+  setCurrentSprint(1)
+  setFiles([])
+  setCsv("")
+  setRows([])
+  setUnionMeta({ gara: "", lobby: "", lega: "" })
+
+  setManualGaraOverride("")
+  setManualLegaOverride("")
+  setPenalties({})
+  setLapOverrides({})
+  setDnfOverrides({})
+  setManualPilotOverrides({})
+  setManualAutoOverrides({})
+  setManualDistaccoOverrides({})
+  setManualPilotDraft({})
+  setManualDistaccoDraft({})
+  setPilotModalRows([])
+
+  setShowPilotModal(false)
+  setShowDistaccoModal(false)
+  setShowDgTable(false)
+  setShowSprintInfo(false)
+  setShowSprint2UploadConfirm(false)
+  setShowSprint2DoneInfo(false)
+  setShowSprintResetConfirm(false)
+  setSprint2Ready(false)
+  setPendingSprint2Upload(false)
+  setIsReopenedSavedSprint(false)
+  setReopenedSprintKey(null)
+
   setPendingRoundChange(null)
   setShowRoundChangeConfirmModal(false)
 }
