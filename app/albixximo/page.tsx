@@ -9641,65 +9641,98 @@ if (!authorized) {
               </pre>
             )}
 
-            {displayRows.length > 0 && (matchSummary.fields.gara === "warn" || matchSummary.fields.lega === "warn") && (
+            {displayRows.length > 0 && (
   <div
     style={{
-      borderRadius: 14,
-      border: "1px solid rgba(255,215,0,0.28)",
-      background: "rgba(255,215,0,0.08)",
-      padding: 12,
-      display: "flex",
-      gap: 12,
-      flexWrap: "wrap",
-      alignItems: "center",
+      display: "grid",
+      gap: 10,
+      padding: "12px 14px",
+      borderRadius: 12,
+      border: "1px solid rgba(255,255,255,0.10)",
+      background: "rgba(255,255,255,0.04)",
     }}
   >
-    {matchSummary.fields.gara === "warn" && (
-      <>
-        <div style={{ fontSize: 13, fontWeight: 800 }}>
-          Numero gara mancante:
-        </div>
-        <input
-          type="text"
-          inputMode="numeric"
-          value={manualGaraOverride}
-          onChange={(e) => setManualGaraOverride(e.target.value.replace(/[^\d]/g, ""))}
-          placeholder="Es. 5"
-          style={{
-            width: 90,
-            padding: "10px 12px",
-            borderRadius: 10,
-            border: "1px solid rgba(255,255,255,0.16)",
-            background: "rgba(0,0,0,0.22)",
-            color: "white",
-            fontWeight: 800,
-          }}
-        />
-      </>
-    )}
+    <div style={{ fontWeight: 900, fontSize: 13, opacity: 0.9 }}>
+      Correzioni Manuali
+    </div>
 
-    {matchSummary.fields.lega === "warn" && (
-      <>
-        <div style={{ fontSize: 13, fontWeight: 800 }}>
-          Lega mancante:
-        </div>
-        <input
-          type="text"
-          value={manualLegaOverride}
-          onChange={(e) => setManualLegaOverride(e.target.value.toUpperCase())}
-          placeholder="Es. PRO"
+    <div
+      style={{
+        display: "flex",
+        gap: 10,
+        flexWrap: "wrap",
+        alignItems: "center",
+      }}
+    >
+      {/* === NUMERO GARA SEMPRE VISIBILE === */}
+      <div style={{ display: "grid", gap: 4 }}>
+        <label
           style={{
-            width: 140,
-            padding: "10px 12px",
+            fontSize: 11,
+            opacity: 0.7,
+            fontWeight: 800,
+            textTransform: "uppercase",
+          }}
+        >
+          Numero Gara
+        </label>
+
+        <input
+          value={manualGaraOverride ?? ""}
+          onChange={(e) => setManualGaraOverride(e.target.value)}
+          placeholder={`Rilevato: ${normalizedGaraForOutput || "-"}`}
+          style={{
+            width: 120,
+            padding: "8px 10px",
             borderRadius: 10,
-            border: "1px solid rgba(255,255,255,0.16)",
-            background: "rgba(0,0,0,0.22)",
+            border: "1px solid rgba(255,255,255,0.14)",
+            background: "rgba(0,0,0,0.26)",
             color: "white",
             fontWeight: 800,
+            textAlign: "center",
           }}
         />
-      </>
-    )}
+      </div>
+
+      {/* === LEGA (rimane condizionale, ma puoi farla sempre visibile se vuoi) === */}
+      {matchSummary.fields.lega === "warn" && (
+        <div style={{ display: "grid", gap: 4 }}>
+          <label
+            style={{
+              fontSize: 11,
+              opacity: 0.7,
+              fontWeight: 800,
+              textTransform: "uppercase",
+            }}
+          >
+            Lega
+          </label>
+
+          <select
+            value={manualLegaOverride ?? ""}
+            onChange={(e) => setManualLegaOverride(e.target.value)}
+            style={{
+              width: 140,
+              padding: "8px 10px",
+              borderRadius: 10,
+              border: "1px solid rgba(255,255,255,0.14)",
+              background: "rgba(0,0,0,0.26)",
+              color: "white",
+              fontWeight: 800,
+            }}
+          >
+            <option value="">Seleziona</option>
+            <option value="PRO">PRO</option>
+            <option value="PRO-AMA">PRO-AMA</option>
+            <option value="AMA">AMA</option>
+          </select>
+        </div>
+      )}
+    </div>
+
+    <div style={{ fontSize: 11, opacity: 0.65 }}>
+      Se inserisci un valore manuale, sovrascriverà quello rilevato automaticamente.
+    </div>
   </div>
 )}
 
