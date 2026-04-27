@@ -7568,10 +7568,13 @@ body::before {
   </div>
 
   <div class="bmw-mobile-slashes">
-    <span>///</span>
-    <span>//</span>
-    <span>///</span>
-  </div>
+  <span>///</span>
+  <span>//</span>
+  <span>///</span>
+  <span>//</span>
+  <span>///</span>
+  <span>//</span>
+</div>
 </div>
 </div>
 
