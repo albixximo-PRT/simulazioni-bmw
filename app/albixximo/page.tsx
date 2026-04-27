@@ -7484,6 +7484,21 @@ body::before {
 
     @media (max-width: 700px) {
   #bmwExportSplash {
+    position: relative !important;
+    inset: auto !important;
+    z-index: 1 !important;
+    width: 100% !important;
+    min-height: 100vh !important;
+    background: #05070b !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+    transform: none !important;
+    will-change: auto !important;
+  }
+
+  #bmwExportSplash.splash-hide {
     display: none !important;
   }
 }
