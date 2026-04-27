@@ -7482,6 +7482,51 @@ body::before {
       }
     }
 
+    .bmw-mobile-slashes {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.bmw-mobile-slashes span {
+  font-size: 14px;
+  font-weight: 900;
+  letter-spacing: -1px;
+  opacity: 0.35;
+  animation: bmwMobileSlashSoft 1.4s ease-in-out infinite;
+}
+
+.bmw-mobile-slashes span:nth-child(1) {
+  color: #6fd3ff;
+  animation-delay: 0s;
+}
+
+.bmw-mobile-slashes span:nth-child(2) {
+  color: #6a3dff;
+  animation-delay: 0.18s;
+}
+
+.bmw-mobile-slashes span:nth-child(3) {
+  color: #ff3b3b;
+  animation-delay: 0.36s;
+}
+
+@keyframes bmwMobileSlashSoft {
+  0% {
+    opacity: 0.25;
+    transform: translateY(0);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(-1px);
+  }
+  100% {
+    opacity: 0.25;
+    transform: translateY(0);
+  }
+}
+    
     @media (max-width: 700px) {
   #bmwExportSplash {
     position: relative !important;
