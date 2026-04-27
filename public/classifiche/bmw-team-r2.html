@@ -25,8 +25,9 @@
 
 #bmwExportSplash.splash-hide {
   opacity: 0;
+  visibility: hidden;
   pointer-events: none;
-  transition: opacity 900ms ease;
+  transition: opacity 900ms ease, visibility 900ms ease;
 }
 
 .bmw-splash-card,
@@ -932,6 +933,73 @@ body::before {
         padding: 14px;
       }
     }
+
+    .bmw-mobile-slashes {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.bmw-mobile-slashes span {
+  font-size: 24px;
+  font-weight: 900;
+  letter-spacing: 4px;
+  opacity: 0.35;
+  animation: bmwMobileSlashSoft 1.4s ease-in-out infinite;
+}
+
+.bmw-mobile-slashes span:nth-child(1) {
+  color: #6fd3ff;
+  animation-delay: 0s;
+}
+
+.bmw-mobile-slashes span:nth-child(2) {
+  color: #6a3dff;
+  animation-delay: 0.18s;
+}
+
+.bmw-mobile-slashes span:nth-child(3) {
+  color: #ff3b3b;
+  animation-delay: 0.36s;
+}
+
+@keyframes bmwMobileSlashSoft {
+  0% {
+    opacity: 0.25;
+    transform: translateY(0);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(-1px);
+  }
+  100% {
+    opacity: 0.25;
+    transform: translateY(0);
+  }
+}
+    
+    @media (max-width: 700px) {
+  #bmwExportSplash {
+    position: relative !important;
+    inset: auto !important;
+    z-index: 1 !important;
+    width: 100% !important;
+    min-height: 100vh !important;
+    background: #05070b !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+    transform: none !important;
+    will-change: auto !important;
+  }
+
+  #bmwExportSplash.splash-hide {
+    display: none !important;
+  }
+}
+
   </style>
 </head>
 <body>
@@ -941,27 +1009,32 @@ body::before {
   </div>
 
   <div class="bmw-splash-loader">
-    <div class="bmw-splash-loading-text">Caricamento</div>
-    <div class="bmw-splash-slashes">
-      <span style="animation-delay:0s">///</span><span style="animation-delay:0.07s">///</span><span style="animation-delay:0.14s">///</span><span style="animation-delay:0.21000000000000002s">///</span><span style="animation-delay:0.28s">///</span><span style="animation-delay:0.35000000000000003s">///</span><span style="animation-delay:0.42000000000000004s">///</span><span style="animation-delay:0.49000000000000005s">///</span><span style="animation-delay:0.56s">///</span><span style="animation-delay:0.6300000000000001s">///</span><span style="animation-delay:0.7000000000000001s">///</span><span style="animation-delay:0.77s">///</span><span style="animation-delay:0.8400000000000001s">///</span><span style="animation-delay:0.9100000000000001s">///</span><span style="animation-delay:0.9800000000000001s">///</span><span style="animation-delay:1.05s">///</span><span style="animation-delay:1.12s">///</span><span style="animation-delay:1.1900000000000002s">///</span><span style="animation-delay:1.2600000000000002s">///</span><span style="animation-delay:1.33s">///</span><span style="animation-delay:1.4000000000000001s">///</span><span style="animation-delay:1.4700000000000002s">///</span><span style="animation-delay:1.54s">///</span><span style="animation-delay:1.61s">///</span>
-    </div>
+  <div class="bmw-splash-loading-text">Caricamento</div>
+
+  <div class="bmw-mobile-progress">
+    <span></span>
   </div>
+
+  <div class="bmw-mobile-slashes">
+    <span>///</span>
+    <span>//</span>
+    <span>///</span>
+  </div>
+</div>
 </div>
 
 <script>
-  window.addEventListener("load", function () {
-    setTimeout(function () {
-      var splash = document.getElementById("bmwExportSplash");
-      if (splash) splash.classList.add("splash-hide");
-    }, 8000);
-  });
+  setTimeout(function () {
+    var splash = document.getElementById("bmwExportSplash");
+    if (splash) splash.classList.add("splash-hide");
+  }, 8000);
 </script>
 
   <div class="page">
     <div class="card header">
       <div class="header-left">
         <div class="title-line">
-          <div class="main-title">BMW M2 TEAM CUP - Classifica Team</div>
+          <div class="main-title">BMW M2 TEAM CUP</div>
           <span class="side-label">Official Timing System</span>
         </div>
         <div class="subtitle">Powered by Albixximo</div>
