@@ -7516,8 +7516,11 @@ body::before {
   </div>
 
   <div class="bmw-splash-loader">
-    <div class="bmw-splash-loading-text">Caricamento</div>
+  <div class="bmw-splash-loading-text">Caricamento</div>
+  <div class="bmw-mobile-progress">
+    <span></span>
   </div>
+</div>
 </div>
 
 <script>
