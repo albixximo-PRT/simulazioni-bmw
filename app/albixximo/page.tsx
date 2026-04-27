@@ -6412,6 +6412,8 @@ try {
   splashDataUrl = ""
 }
 
+const splashImgSrc = splashDataUrl || logoDataUrl
+
     const currentLeader = championshipTeams[0]?.team || "-"
     const currentLeaderPoints = String(championshipTeams[0]?.total ?? 0)
 
@@ -6562,7 +6564,14 @@ try {
   display: flex;
   align-items: center;
   justify-content: center;
-  animation: fadeOutSplash 8s ease forwards;
+  overflow: hidden;
+}
+
+#bmwExportSplash.splash-hide {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 900ms ease, visibility 900ms ease;
 }
 
 #bmwExportSplash img {
@@ -6571,10 +6580,12 @@ try {
   object-fit: cover;
 }
 
-@keyframes fadeOutSplash {
-  0% { opacity: 1; }
-  90% { opacity: 1; }
-  100% { opacity: 0; visibility: hidden; pointer-events: none; }
+#bmwExportSplashFallback {
+  color: white;
+  font-size: 34px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  text-transform: uppercase;
 }
 
     body {
@@ -7341,13 +7352,22 @@ body::before {
   </style>
 </head>
 <body>
+  <div id="bmwExportSplash">
   ${
-    splashDataUrl
-      ? `<div id="bmwExportSplash">
-           <img src="${escapeHtml(splashDataUrl)}" alt="BMW M2 TEAM CUP" />
-         </div>`
-      : ""
+    splashImgSrc
+      ? `<img src="${escapeHtml(splashImgSrc)}" alt="BMW M2 TEAM CUP" />`
+      : `<div id="bmwExportSplashFallback">BMW M2 TEAM CUP</div>`
   }
+</div>
+
+<script>
+  window.addEventListener("load", function () {
+    setTimeout(function () {
+      var splash = document.getElementById("bmwExportSplash");
+      if (splash) splash.classList.add("splash-hide");
+    }, 8000);
+  });
+</script>
 
   <div class="page">
     <div class="card header">
