@@ -7490,9 +7490,9 @@ body::before {
 }
 
 .bmw-mobile-slashes span {
-  font-size: 14px;
+  font-size: 24px;
   font-weight: 900;
-  letter-spacing: -1px;
+  letter-spacing: 4px;
   opacity: 0.35;
   animation: bmwMobileSlashSoft 1.4s ease-in-out infinite;
 }
