@@ -6560,19 +6560,28 @@ const splashImgSrc = splashDataUrl || logoDataUrl
   position: fixed;
   inset: 0;
   z-index: 999999;
-  background: #05070b;
+  background: radial-gradient(circle at center, #0b0d12, #05070b);
   display: flex;
-  flex-direction: column; /* 🔥 AGGIUNGI QUESTA */
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   overflow: hidden;
+
+  transform: translateZ(0);
+  will-change: opacity;
 }
 
 #bmwExportSplash.splash-hide {
   opacity: 0;
-  visibility: hidden;
   pointer-events: none;
-  transition: opacity 900ms ease, visibility 900ms ease;
+  transition: opacity 900ms ease;
+}
+
+.bmw-splash-card,
+.bmw-splash-card img,
+.bmw-splash-loader {
+  backface-visibility: hidden;
+  transform: translateZ(0);
 }
 
 .bmw-splash-card {
