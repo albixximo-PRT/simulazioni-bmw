@@ -6573,8 +6573,9 @@ const splashImgSrc = splashDataUrl || logoDataUrl
 
 #bmwExportSplash.splash-hide {
   opacity: 0;
+  visibility: hidden;
   pointer-events: none;
-  transition: opacity 900ms ease;
+  transition: opacity 900ms ease, visibility 900ms ease;
 }
 
 .bmw-splash-card,
@@ -7480,6 +7481,47 @@ body::before {
         padding: 14px;
       }
     }
+
+    @media (max-width: 700px) {
+  #bmwExportSplash {
+    background: #05070b !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+  }
+
+  .bmw-splash-card {
+    width: 86vw !important;
+    max-width: 420px !important;
+    border-radius: 22px !important;
+    animation: none !important;
+    box-shadow: none !important;
+    transform: none !important;
+  }
+
+  .bmw-splash-card img {
+    width: 100% !important;
+    height: auto !important;
+    border-radius: 22px !important;
+    display: block !important;
+    object-fit: contain !important;
+    transform: none !important;
+  }
+
+  .bmw-splash-loader {
+    display: none !important;
+  }
+
+  .bmw-splash-card,
+  .bmw-splash-card img,
+  .bmw-splash-loader {
+    backface-visibility: visible !important;
+    transform: none !important;
+    will-change: auto !important;
+  }
+}
+
   </style>
 </head>
 <body>
@@ -7503,12 +7545,10 @@ body::before {
 </div>
 
 <script>
-  window.addEventListener("load", function () {
-    setTimeout(function () {
-      var splash = document.getElementById("bmwExportSplash");
-      if (splash) splash.classList.add("splash-hide");
-    }, 8000);
-  });
+  setTimeout(function () {
+    var splash = document.getElementById("bmwExportSplash");
+    if (splash) splash.classList.add("splash-hide");
+  }, 8000);
 </script>
 
   <div class="page">
