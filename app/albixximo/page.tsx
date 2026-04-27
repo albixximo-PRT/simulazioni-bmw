@@ -6693,31 +6693,6 @@ const splashImgSrc = splashDataUrl || logoDataUrl
   }
 }
 
-.bmw-mobile-slashes {
-  display: flex;
-  gap: 6px;
-  margin-top: 8px;
-  justify-content: center;
-  flex-wrap: nowrap;
-}
-
-.bmw-mobile-slashes span {
-  font-size: 12px;
-  font-weight: 900;
-  opacity: 0.3;
-  animation: bmwMobileSlashFade 1.2s ease-in-out infinite;
-}
-
-.bmw-mobile-slashes span:nth-child(3n+1) { color: #6fd3ff; }
-.bmw-mobile-slashes span:nth-child(3n+2) { color: #6a3dff; }
-.bmw-mobile-slashes span:nth-child(3n)   { color: #ff3b3b; }
-
-@keyframes bmwMobileSlashFade {
-  0% { opacity: 0.2; transform: translateY(0px); }
-  50% { opacity: 1; transform: translateY(-1px); }
-  100% { opacity: 0.2; transform: translateY(0px); }
-}
-
 @keyframes bmwExportTextGlow {
   0% {
     text-shadow:
@@ -7542,16 +7517,10 @@ body::before {
 
   <div class="bmw-splash-loader">
   <div class="bmw-splash-loading-text">Caricamento</div>
-
   <div class="bmw-mobile-progress">
     <span></span>
   </div>
-
-  <div class="bmw-mobile-slashes">
-    ${Array.from({ length: 12 })
-      .map((_, i) => `<span style="animation-delay:${i * 0.08}s">///</span>`)
-      .join("")}
-  </div>
+</div>
 </div>
 
 <script>
