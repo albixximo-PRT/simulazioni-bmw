@@ -7527,12 +7527,8 @@ body::before {
 <body>
   <div id="bmwExportSplash">
   <div class="bmw-splash-card">
-    ${
-      splashImgSrc
-        ? `<img src="${escapeHtml(splashImgSrc)}" alt="BMW M2 TEAM CUP" />`
-        : `<div id="bmwExportSplashFallback">BMW M2 TEAM CUP</div>`
-    }
-  </div>
+  <div id="bmwExportSplashFallback">BMW M2 TEAM CUP</div>
+</div>
 
   <div class="bmw-splash-loader">
     <div class="bmw-splash-loading-text">Caricamento</div>
