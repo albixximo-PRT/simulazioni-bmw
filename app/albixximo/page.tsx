@@ -7489,6 +7489,9 @@ body::before {
     align-items: center !important;
     justify-content: center !important;
     overflow: hidden !important;
+    transform: none !important;
+    will-change: auto !important;
+    min-height: 100vh !important;
   }
 
   .bmw-splash-card {
