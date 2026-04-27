@@ -7514,6 +7514,10 @@ body::before {
         : `<div id="bmwExportSplashFallback">BMW M2 TEAM CUP</div>`
     }
   </div>
+
+  <div class="bmw-splash-loader">
+    <div class="bmw-splash-loading-text">Caricamento</div>
+  </div>
 </div>
 
 <script>
