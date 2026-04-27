@@ -5610,21 +5610,13 @@ async function downloadExtendedHtmlExport(customTexts?: {
     const texts = customTexts ?? exportTexts
 
     const logoUrl = `${window.location.origin}/bmw-m2-team-cup.png`
-const splashUrl = `${window.location.origin}/bmw-splash.png`
 
-let logoDataUrl = ""
-try {
-  logoDataUrl = await urlToDataUrl(logoUrl)
-} catch {
-  logoDataUrl = ""
-}
-
-let splashDataUrl = ""
-try {
-  splashDataUrl = await urlToDataUrl(splashUrl)
-} catch {
-  splashDataUrl = ""
-}
+    let logoDataUrl = ""
+    try {
+      logoDataUrl = await urlToDataUrl(logoUrl)
+    } catch {
+      logoDataUrl = ""
+    }
 
     const summaryHtml = [
       renderHeaderBadgeHtml("WINNER", winner || "-", "silver"),
@@ -5728,29 +5720,6 @@ try {
   <style>
     * { box-sizing: border-box; }
     html, body { margin: 0; padding: 0; }
-
-    #bmwExportSplash {
-  position: fixed;
-  inset: 0;
-  z-index: 999999;
-  background: #05070b;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  animation: fadeOutSplash 8s ease forwards;
-}
-
-#bmwExportSplash img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-@keyframes fadeOutSplash {
-  0% { opacity: 1; }
-  90% { opacity: 1; }
-  100% { opacity: 0; visibility: hidden; }
-}
 
     body {
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
@@ -6347,14 +6316,6 @@ try {
   </style>
 </head>
 <body>
-  ${
-    splashDataUrl
-      ? `<div id="bmwExportSplash">
-           <img src="${splashDataUrl}" />
-         </div>`
-      : ""
-  }
-
   <div class="page">
     <div class="card header">
       <div class="header-left">
@@ -6435,13 +6396,21 @@ async function downloadGeneralTeamsHtmlExport(customTexts?: {
     const texts = customTexts ?? exportTexts
 
     const logoUrl = `${window.location.origin}/bmw-m2-team-cup.png`
+const splashUrl = `${window.location.origin}/bmw-splash.png`
 
-    let logoDataUrl = ""
-    try {
-      logoDataUrl = await urlToDataUrl(logoUrl)
-    } catch {
-      logoDataUrl = ""
-    }
+let logoDataUrl = ""
+try {
+  logoDataUrl = await urlToDataUrl(logoUrl)
+} catch {
+  logoDataUrl = ""
+}
+
+let splashDataUrl = ""
+try {
+  splashDataUrl = await urlToDataUrl(splashUrl)
+} catch {
+  splashDataUrl = ""
+}
 
     const currentLeader = championshipTeams[0]?.team || "-"
     const currentLeaderPoints = String(championshipTeams[0]?.total ?? 0)
@@ -6584,6 +6553,29 @@ async function downloadGeneralTeamsHtmlExport(customTexts?: {
   <style>
     * { box-sizing: border-box; }
     html, body { margin: 0; padding: 0; }
+
+    #bmwExportSplash {
+  position: fixed;
+  inset: 0;
+  z-index: 999999;
+  background: #05070b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeOutSplash 8s ease forwards;
+}
+
+#bmwExportSplash img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+@keyframes fadeOutSplash {
+  0% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { opacity: 0; visibility: hidden; pointer-events: none; }
+}
 
     body {
   font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
@@ -7349,6 +7341,14 @@ body::before {
   </style>
 </head>
 <body>
+  ${
+    splashDataUrl
+      ? `<div id="bmwExportSplash">
+           <img src="${escapeHtml(splashDataUrl)}" alt="BMW M2 TEAM CUP" />
+         </div>`
+      : ""
+  }
+
   <div class="page">
     <div class="card header">
       <div class="header-left">
