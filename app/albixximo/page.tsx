@@ -7484,44 +7484,7 @@ body::before {
 
     @media (max-width: 700px) {
   #bmwExportSplash {
-    background: #05070b !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    overflow: hidden !important;
-    transform: none !important;
-    will-change: auto !important;
-    min-height: 100vh !important;
-  }
-
-  .bmw-splash-card {
-    width: 86vw !important;
-    max-width: 420px !important;
-    border-radius: 22px !important;
-    animation: none !important;
-    box-shadow: none !important;
-    transform: none !important;
-  }
-
-  .bmw-splash-card img {
-    width: 100% !important;
-    height: auto !important;
-    border-radius: 22px !important;
-    display: block !important;
-    object-fit: contain !important;
-    transform: none !important;
-  }
-
-  .bmw-splash-loader {
     display: none !important;
-  }
-
-  .bmw-splash-card,
-  .bmw-splash-card img,
-  .bmw-splash-loader {
-    backface-visibility: visible !important;
-    transform: none !important;
-    will-change: auto !important;
   }
 }
 
