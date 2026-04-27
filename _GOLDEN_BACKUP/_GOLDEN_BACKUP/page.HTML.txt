@@ -6396,13 +6396,23 @@ async function downloadGeneralTeamsHtmlExport(customTexts?: {
     const texts = customTexts ?? exportTexts
 
     const logoUrl = `${window.location.origin}/bmw-m2-team-cup.png`
+const splashUrl = `${window.location.origin}/bmw-splash.png`
 
-    let logoDataUrl = ""
-    try {
-      logoDataUrl = await urlToDataUrl(logoUrl)
-    } catch {
-      logoDataUrl = ""
-    }
+let logoDataUrl = ""
+try {
+  logoDataUrl = await urlToDataUrl(logoUrl)
+} catch {
+  logoDataUrl = ""
+}
+
+let splashDataUrl = ""
+try {
+  splashDataUrl = await urlToDataUrl(splashUrl)
+} catch {
+  splashDataUrl = ""
+}
+
+const splashImgSrc = splashDataUrl || logoDataUrl
 
     const currentLeader = championshipTeams[0]?.team || "-"
     const currentLeaderPoints = String(championshipTeams[0]?.total ?? 0)
@@ -6545,6 +6555,170 @@ async function downloadGeneralTeamsHtmlExport(customTexts?: {
   <style>
     * { box-sizing: border-box; }
     html, body { margin: 0; padding: 0; }
+
+    #bmwExportSplash {
+  position: fixed;
+  inset: 0;
+  z-index: 999999;
+  background: radial-gradient(circle at center, #0b0d12, #05070b);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+
+  transform: translateZ(0);
+  will-change: opacity;
+}
+
+#bmwExportSplash.splash-hide {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 900ms ease, visibility 900ms ease;
+}
+
+.bmw-splash-card,
+.bmw-splash-card img,
+.bmw-splash-loader {
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}
+
+.bmw-splash-card {
+  width: min(74vw, 960px);
+  border-radius: 28px;
+  overflow: hidden;
+  display: block;
+  line-height: 0;
+  animation: bmwExportGlowCycle 4s ease-in-out infinite;
+}
+
+.bmw-splash-card img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 28px;
+}
+
+.bmw-splash-loader {
+  position: static; /* 🔥 CAMBIO QUI */
+  transform: none;
+  margin-top: 20px;
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+  width: min(74vw, 720px);
+}
+
+.bmw-splash-loading-text {
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: #ffffff;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.18);
+  animation: bmwExportTextGlow 3s ease-in-out infinite;
+  box-shadow: 0 0 20px rgba(0,0,0,0.35);
+}
+
+.bmw-splash-slashes {
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: center;
+  gap: 6px;
+  overflow: hidden;
+}
+
+.bmw-splash-slashes span {
+  font-size: 18px;
+  font-weight: 900;
+  letter-spacing: -1px;
+  animation: bmwExportSlashPulse 1.15s ease-in-out infinite;
+}
+
+.bmw-splash-slashes span:nth-child(3n + 1) {
+  color: #6fd3ff;
+  text-shadow: 0 0 10px rgba(111,211,255,0.35);
+}
+
+.bmw-splash-slashes span:nth-child(3n + 2) {
+  color: #6a3dff;
+  text-shadow: 0 0 10px rgba(106,61,255,0.35);
+}
+
+.bmw-splash-slashes span:nth-child(3n) {
+  color: #ff3b3b;
+  text-shadow: 0 0 10px rgba(255,59,59,0.35);
+}
+
+#bmwExportSplashFallback {
+  color: white;
+  font-size: 34px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 40px;
+}
+
+@keyframes bmwExportSlashPulse {
+  0% { opacity: 0.22; transform: translateY(0px) scale(0.96); }
+  50% { opacity: 1; transform: translateY(-1px) scale(1); }
+  100% { opacity: 0.22; transform: translateY(0px) scale(0.96); }
+}
+
+@keyframes bmwExportGlowCycle {
+  0% {
+    box-shadow:
+      0 0 40px rgba(111,211,255,0.35),
+      0 0 80px rgba(111,211,255,0.18);
+  }
+  33% {
+    box-shadow:
+      0 0 40px rgba(106,61,255,0.35),
+      0 0 80px rgba(106,61,255,0.18);
+  }
+  66% {
+    box-shadow:
+      0 0 40px rgba(255,59,59,0.35),
+      0 0 80px rgba(255,59,59,0.18);
+  }
+  100% {
+    box-shadow:
+      0 0 40px rgba(111,211,255,0.35),
+      0 0 80px rgba(111,211,255,0.18);
+  }
+}
+
+@keyframes bmwExportTextGlow {
+  0% {
+    text-shadow:
+      0 0 6px rgba(111,211,255,0.6),
+      0 0 12px rgba(111,211,255,0.3);
+    opacity: 0.85;
+  }
+  33% {
+    text-shadow:
+      0 0 6px rgba(106,61,255,0.6),
+      0 0 12px rgba(106,61,255,0.3);
+    opacity: 1;
+  }
+  66% {
+    text-shadow:
+      0 0 6px rgba(255,59,59,0.6),
+      0 0 12px rgba(255,59,59,0.3);
+    opacity: 0.9;
+  }
+  100% {
+    text-shadow:
+      0 0 6px rgba(111,211,255,0.6),
+      0 0 12px rgba(111,211,255,0.3);
+    opacity: 0.85;
+  }
+}
 
     body {
   font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
@@ -7307,9 +7481,107 @@ body::before {
         padding: 14px;
       }
     }
+
+    .bmw-mobile-slashes {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.bmw-mobile-slashes span {
+  font-size: 24px;
+  font-weight: 900;
+  letter-spacing: 4px;
+  opacity: 0.35;
+  animation: bmwMobileSlashSoft 1.4s ease-in-out infinite;
+}
+
+.bmw-mobile-slashes span:nth-child(1) {
+  color: #6fd3ff;
+  animation-delay: 0s;
+}
+
+.bmw-mobile-slashes span:nth-child(2) {
+  color: #6a3dff;
+  animation-delay: 0.18s;
+}
+
+.bmw-mobile-slashes span:nth-child(3) {
+  color: #ff3b3b;
+  animation-delay: 0.36s;
+}
+
+@keyframes bmwMobileSlashSoft {
+  0% {
+    opacity: 0.25;
+    transform: translateY(0);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(-1px);
+  }
+  100% {
+    opacity: 0.25;
+    transform: translateY(0);
+  }
+}
+    
+    @media (max-width: 700px) {
+  #bmwExportSplash {
+    position: relative !important;
+    inset: auto !important;
+    z-index: 1 !important;
+    width: 100% !important;
+    min-height: 100vh !important;
+    background: #05070b !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+    transform: none !important;
+    will-change: auto !important;
+  }
+
+  #bmwExportSplash.splash-hide {
+    display: none !important;
+  }
+}
+
   </style>
 </head>
 <body>
+  <div id="bmwExportSplash">
+  <div class="bmw-splash-card">
+    ${
+      splashImgSrc
+        ? `<img src="${escapeHtml(splashImgSrc)}" alt="BMW M2 TEAM CUP" />`
+        : `<div id="bmwExportSplashFallback">BMW M2 TEAM CUP</div>`
+    }
+  </div>
+
+  <div class="bmw-splash-loader">
+  <div class="bmw-splash-loading-text">Caricamento</div>
+
+  <div class="bmw-mobile-progress">
+    <span></span>
+  </div>
+
+  <div class="bmw-mobile-slashes">
+    <span>///</span>
+    <span>//</span>
+    <span>///</span>
+  </div>
+</div>
+</div>
+
+<script>
+  setTimeout(function () {
+    var splash = document.getElementById("bmwExportSplash");
+    if (splash) splash.classList.add("splash-hide");
+  }, 8000);
+</script>
+
   <div class="page">
     <div class="card header">
       <div class="header-left">
