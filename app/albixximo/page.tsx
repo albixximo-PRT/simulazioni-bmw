@@ -6562,6 +6562,7 @@ const splashImgSrc = splashDataUrl || logoDataUrl
   z-index: 999999;
   background: #05070b;
   display: flex;
+  flex-direction: column; /* 🔥 AGGIUNGI QUESTA */
   align-items: center;
   justify-content: center;
   overflow: hidden;
@@ -6574,10 +6575,74 @@ const splashImgSrc = splashDataUrl || logoDataUrl
   transition: opacity 900ms ease, visibility 900ms ease;
 }
 
-#bmwExportSplash img {
+.bmw-splash-card {
+  width: min(74vw, 960px);
+  border-radius: 28px;
+  overflow: hidden;
+  display: block;
+  line-height: 0;
+  animation: bmwExportGlowCycle 4s ease-in-out infinite;
+}
+
+.bmw-splash-card img {
+  display: block;
   width: 100%;
-  height: 100%;
-  object-fit: cover;
+  height: auto;
+  border-radius: 28px;
+}
+
+.bmw-splash-loader {
+  position: static; /* 🔥 CAMBIO QUI */
+  transform: none;
+  margin-top: 20px;
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+  width: min(74vw, 720px);
+}
+
+.bmw-splash-loading-text {
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: #ffffff;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.18);
+  animation: bmwExportTextGlow 3s ease-in-out infinite;
+  box-shadow: 0 0 20px rgba(0,0,0,0.35);
+}
+
+.bmw-splash-slashes {
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: center;
+  gap: 6px;
+  overflow: hidden;
+}
+
+.bmw-splash-slashes span {
+  font-size: 18px;
+  font-weight: 900;
+  letter-spacing: -1px;
+  animation: bmwExportSlashPulse 1.15s ease-in-out infinite;
+}
+
+.bmw-splash-slashes span:nth-child(3n + 1) {
+  color: #6fd3ff;
+  text-shadow: 0 0 10px rgba(111,211,255,0.35);
+}
+
+.bmw-splash-slashes span:nth-child(3n + 2) {
+  color: #6a3dff;
+  text-shadow: 0 0 10px rgba(106,61,255,0.35);
+}
+
+.bmw-splash-slashes span:nth-child(3n) {
+  color: #ff3b3b;
+  text-shadow: 0 0 10px rgba(255,59,59,0.35);
 }
 
 #bmwExportSplashFallback {
@@ -6586,6 +6651,63 @@ const splashImgSrc = splashDataUrl || logoDataUrl
   font-weight: 900;
   letter-spacing: 1px;
   text-transform: uppercase;
+  padding: 40px;
+}
+
+@keyframes bmwExportSlashPulse {
+  0% { opacity: 0.22; transform: translateY(0px) scale(0.96); }
+  50% { opacity: 1; transform: translateY(-1px) scale(1); }
+  100% { opacity: 0.22; transform: translateY(0px) scale(0.96); }
+}
+
+@keyframes bmwExportGlowCycle {
+  0% {
+    box-shadow:
+      0 0 40px rgba(111,211,255,0.35),
+      0 0 80px rgba(111,211,255,0.18);
+  }
+  33% {
+    box-shadow:
+      0 0 40px rgba(106,61,255,0.35),
+      0 0 80px rgba(106,61,255,0.18);
+  }
+  66% {
+    box-shadow:
+      0 0 40px rgba(255,59,59,0.35),
+      0 0 80px rgba(255,59,59,0.18);
+  }
+  100% {
+    box-shadow:
+      0 0 40px rgba(111,211,255,0.35),
+      0 0 80px rgba(111,211,255,0.18);
+  }
+}
+
+@keyframes bmwExportTextGlow {
+  0% {
+    text-shadow:
+      0 0 6px rgba(111,211,255,0.6),
+      0 0 12px rgba(111,211,255,0.3);
+    opacity: 0.85;
+  }
+  33% {
+    text-shadow:
+      0 0 6px rgba(106,61,255,0.6),
+      0 0 12px rgba(106,61,255,0.3);
+    opacity: 1;
+  }
+  66% {
+    text-shadow:
+      0 0 6px rgba(255,59,59,0.6),
+      0 0 12px rgba(255,59,59,0.3);
+    opacity: 0.9;
+  }
+  100% {
+    text-shadow:
+      0 0 6px rgba(111,211,255,0.6),
+      0 0 12px rgba(111,211,255,0.3);
+    opacity: 0.85;
+  }
 }
 
     body {
@@ -7353,11 +7475,22 @@ body::before {
 </head>
 <body>
   <div id="bmwExportSplash">
-  ${
-    splashImgSrc
-      ? `<img src="${escapeHtml(splashImgSrc)}" alt="BMW M2 TEAM CUP" />`
-      : `<div id="bmwExportSplashFallback">BMW M2 TEAM CUP</div>`
-  }
+  <div class="bmw-splash-card">
+    ${
+      splashImgSrc
+        ? `<img src="${escapeHtml(splashImgSrc)}" alt="BMW M2 TEAM CUP" />`
+        : `<div id="bmwExportSplashFallback">BMW M2 TEAM CUP</div>`
+    }
+  </div>
+
+  <div class="bmw-splash-loader">
+    <div class="bmw-splash-loading-text">Caricamento</div>
+    <div class="bmw-splash-slashes">
+      ${Array.from({ length: 24 })
+        .map((_, i) => `<span style="animation-delay:${i * 0.07}s">///</span>`)
+        .join("")}
+    </div>
+  </div>
 </div>
 
 <script>
