@@ -7526,19 +7526,20 @@ body::before {
 </head>
 <body>
   <div id="bmwExportSplash">
-  <div class="bmw-splash-card">
-  <div id="bmwExportSplashFallback">BMW M2 TEAM CUP</div>
-</div>
-
-  <div class="bmw-splash-loader">
-    <div class="bmw-splash-loading-text">Caricamento</div>
-    <div class="bmw-splash-slashes">
-      ${Array.from({ length: 24 })
-        .map((_, i) => `<span style="animation-delay:${i * 0.07}s">///</span>`)
-        .join("")}
+    <div style="
+      color: white;
+      font-size: 32px;
+      font-weight: 900;
+      text-align: center;
+      padding: 30px;
+      border: 2px solid white;
+      border-radius: 20px;
+      background: rgba(255,255,255,0.12);
+      z-index: 1000000;
+    ">
+      BMW M2 TEAM CUP
     </div>
   </div>
-</div>
 
 <script>
   setTimeout(function () {
