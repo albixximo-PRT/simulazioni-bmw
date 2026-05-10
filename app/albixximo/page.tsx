@@ -3684,12 +3684,19 @@ useEffect(() => {
 
   r3: {
     "PRT-Jaiss84": "Sbrizio72",
+
+    JM_focuss_71: "Sulimanov",
+    dev_ferio: "Rekkia-Speed",
+
+    Margotone: "Frederik2905",
   },
 
   r4: {
     "PRT-Jaiss84": "Sbrizio72",
+
+    Margotone: "Frederik2905",
   },
-} 
+}
 
 function findTeamByPilot(pilotName: string): TeamLookupResult {
   const normalized = normalizeTeamPilotName(pilotName)
