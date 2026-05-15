@@ -1998,7 +1998,7 @@ const resolvedTeamName = showTeamInsteadOfAuto
                         const entry = penaltyEntries[0]
                         const rule = getPenaltyRule(entry.code)
 
-                        if (exportHasMultiPenalty) {
+                        if (exporting && exportHasHeavyPenalty) {
   const compactRule = getPenaltyRule(entry.code)
 
   return (
