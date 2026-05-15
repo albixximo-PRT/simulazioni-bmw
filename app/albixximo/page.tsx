@@ -3754,6 +3754,15 @@ useEffect(() => {
   v = v.replace(/[_\-.]/g, "")
   v = v.replace(/\s+/g, "")
 
+  // Alias manuali
+  if (v === "tommyxtommyx") {
+    return "tommyxtommyx"
+  }
+
+  if (v === "tommytommyx") {
+    return "tommyxtommyx"
+  }
+
   return v
 }
 
