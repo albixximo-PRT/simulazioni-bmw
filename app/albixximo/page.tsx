@@ -3673,6 +3673,23 @@ useEffect(() => {
   return v
 }
 
+function getEffectiveTeamsForRound(round: 1 | 2 | 3 | 4): TeamEntry[] {
+  return teams.map((team) => {
+    if (team.team !== "Tic Tac Team") return team
+
+    if (round >= 3) {
+      return {
+        ...team,
+        lobby1: "N_spec2",
+        lobby2: "Extremeden",
+        lobby3: "Maverickblaze",
+      }
+    }
+
+    return team
+  })
+}
+
  const BMW_ROUND_SUBSTITUTES: Partial<Record<RoundKey, Record<string, string>>> = {
   r2: {
     Margotone: "Gioski",
@@ -3713,7 +3730,9 @@ function findTeamByPilot(pilotName: string): TeamLookupResult {
 
   const normalizedOfficial = normalizeTeamPilotName(officialPilotName)
 
-  for (const teamEntry of teams) {
+  const effectiveTeams = getEffectiveTeamsForRound(currentRound)
+
+for (const teamEntry of effectiveTeams) {
     if (normalizeTeamPilotName(teamEntry.lobby1) === normalizedOfficial) {
       return {
         team: teamEntry.team,
@@ -4618,7 +4637,7 @@ const normalizedGaraForOutput = useMemo(() => {
 
   return ensureLeagueDriversFromTeams(
   mappedRows,
-  teams,
+  getEffectiveTeamsForRound(currentRound),
   currentLegaForCompletion,
   BMW_ROUND_SUBSTITUTES[getRoundKey(currentRound)] || {}
 )
