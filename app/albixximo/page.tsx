@@ -1586,15 +1586,20 @@ function ResultsTable({
   const carOrTeamLabel = showTeamInsteadOfAuto ? "Team" : "Auto"
 
   const exportHasMultiPenalty = exporting && previewRows.some((row) => {
-    const key = getPrtRowStableKey(row.sourcePosGara)
-    return (penalties[key] || []).length > 1
-  })
+  const key = getPrtRowStableKey(row.sourcePosGara)
+  return (penalties[key] || []).length > 1
+})
+
+const exportHasHeavyPenalty = exporting && previewRows.some((row) => {
+  const key = getPrtRowStableKey(row.sourcePosGara)
+  return (penalties[key] || []).length > 4
+})
 
   const exportPenaltyTimeTextStyle: React.CSSProperties = {
     color: "#ff2d2d",
     fontWeight: 900,
     fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
-    fontSize: exporting ? 17 : 14,
+    fontSize: exporting && exportHasHeavyPenalty ? 13 : exporting ? 17 : 14,
     lineHeight: 1,
     whiteSpace: "nowrap",
     textAlign: "right",
@@ -2317,18 +2322,18 @@ const resolvedTeamName = showTeamInsteadOfAuto
       key={entry.id}
       style={{
         fontSize:
-          exporting && penaltyEntries.length > 4
-            ? 11
-            : exporting
-              ? 13
-              : 12,
+  exporting && exportHasHeavyPenalty
+    ? 10
+    : exporting
+      ? 13
+      : 12,
 
-        lineHeight:
-          exporting && penaltyEntries.length > 4
-            ? 1.05
-            : exporting
-              ? 1.18
-              : 1.15,
+lineHeight:
+  exporting && exportHasHeavyPenalty
+    ? 1
+    : exporting
+      ? 1.18
+      : 1.15,
 
         whiteSpace: "nowrap",
         overflow: "hidden",
@@ -2338,9 +2343,9 @@ const resolvedTeamName = showTeamInsteadOfAuto
         alignItems: "center",
 
         gap:
-          exporting && penaltyEntries.length > 4
-            ? 4
-            : 6,
+  exporting && exportHasHeavyPenalty
+    ? 3
+    : 6,
 
         minWidth: 0,
       }}
@@ -2352,19 +2357,19 @@ const resolvedTeamName = showTeamInsteadOfAuto
           justifyContent: "center",
 
           padding:
-            exporting && penaltyEntries.length > 4
-              ? "1px 5px"
-              : "2px 6px",
+  exporting && exportHasHeavyPenalty
+    ? "1px 4px"
+    : "2px 6px",
 
           borderRadius: 6,
           fontWeight: 900,
 
           fontSize:
-            exporting && penaltyEntries.length > 4
-              ? 11
-              : exporting
-                ? 13
-                : 12,
+  exporting && exportHasHeavyPenalty
+    ? 10
+    : exporting
+      ? 13
+      : 12,
 
           letterSpacing: 0.2,
           color: "white",
@@ -2404,8 +2409,8 @@ const resolvedTeamName = showTeamInsteadOfAuto
             display: "inline-block",
 
             minWidth:
-              exporting && penaltyEntries.length > 4
-                ? 12
+  exporting && exportHasHeavyPenalty
+    ? 10
                 : exporting
                   ? 16
                   : 12,
@@ -2424,8 +2429,8 @@ const resolvedTeamName = showTeamInsteadOfAuto
           display: "inline-block",
 
           minWidth:
-            exporting && penaltyEntries.length > 4
-              ? 34
+  exporting && exportHasHeavyPenalty
+    ? 28
               : exporting
                 ? 40
                 : 34,
