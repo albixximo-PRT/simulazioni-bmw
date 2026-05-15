@@ -2042,80 +2042,113 @@ const resolvedTeamName = showTeamInsteadOfAuto
                                 }}
                               >
                                 <div
-                                  style={{
-                                    fontSize: exporting ? 14 : 12,
-                                    lineHeight: exporting ? 1.18 : 1.15,
-                                    whiteSpace: "nowrap",
-                                    overflow: "hidden",
-                                    textOverflow: "ellipsis",
-                                    letterSpacing: exporting ? 0.1 : undefined,
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: exporting ? 8 : 6,
-                                    minWidth: 0,
-                                  }}
-                                >
-                                  <span
-                                    style={{
-                                      display: "inline-flex",
-                                      alignItems: "center",
-                                      justifyContent: "center",
-                                      padding: exporting ? "4px 9px" : "2px 6px",
-                                      borderRadius: 6,
-                                      fontWeight: 900,
-                                      fontSize: exporting ? 15 : 12,
-                                      letterSpacing: 0.2,
-                                      color: "white",
-                                      background:
-                                        rule.effect === "ammonition"
-                                          ? "#f59e0b"
-                                          : rule.effect === "dsq"
-                                            ? "#ff4dff"
-                                            : "#ff2d2d",
-                                      boxShadow:
-                                        rule.effect === "ammonition"
-                                          ? "0 0 10px rgba(245,158,11,0.35)"
-                                          : rule.effect === "dsq"
-                                            ? "0 0 10px rgba(255,77,255,0.35)"
-                                            : "0 0 10px rgba(255,45,45,0.35)",
-                                      flexShrink: 0,
-                                    }}
-                                  >
-                                    {entry.code}
-                                  </span>
+  style={{
+    fontSize:
+      exporting && exportHasHeavyPenalty
+        ? 10
+        : exporting
+          ? 13
+          : 12,
+    lineHeight:
+      exporting && exportHasHeavyPenalty
+        ? 1
+        : exporting
+          ? 1.18
+          : 1.15,
+    whiteSpace: "nowrap",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    letterSpacing: exporting ? 0.1 : undefined,
+    display: "flex",
+    alignItems: "center",
+    gap:
+      exporting && exportHasHeavyPenalty
+        ? 3
+        : exporting
+          ? 6
+          : 6,
+    minWidth: 0,
+  }}
+>
+  <span
+    style={{
+      display: "inline-flex",
+      alignItems: "center",
+      justifyContent: "center",
+      padding:
+        exporting && exportHasHeavyPenalty
+          ? "1px 4px"
+          : "2px 6px",
+      borderRadius: 6,
+      fontWeight: 900,
+      fontSize:
+        exporting && exportHasHeavyPenalty
+          ? 10
+          : exporting
+            ? 13
+            : 12,
+      letterSpacing: 0.2,
+      color: "white",
+      background:
+        rule.effect === "ammonition"
+          ? "#f59e0b"
+          : rule.effect === "dsq"
+            ? "#ff4dff"
+            : "#ff2d2d",
+      boxShadow:
+        rule.effect === "ammonition"
+          ? "0 0 10px rgba(245,158,11,0.35)"
+          : rule.effect === "dsq"
+            ? "0 0 10px rgba(255,77,255,0.35)"
+            : "0 0 10px rgba(255,45,45,0.35)",
+      flexShrink: 0,
+    }}
+  >
+    {entry.code}
+  </span>
 
-                                  <span
-                                    style={{
-                                      display: "inline-flex",
-                                      alignItems: "center",
-                                      gap: 2,
-                                      minWidth: 0,
-                                    }}
-                                  >
-                                    <span>Lap</span>
-                                    <span
-                                      style={{
-                                        display: "inline-block",
-                                        minWidth: exporting ? 16 : 12,
-                                        textAlign: "right",
-                                      }}
-                                    >
-                                      {entry.lap === "Lap -" ? "-" : entry.lap.replace("Lap ", "").replace("Lap", "")}
-                                    </span>
-                                  </span>
+  <span
+    style={{
+      display: "inline-flex",
+      alignItems: "center",
+      gap: 2,
+      minWidth: 0,
+    }}
+  >
+    <span>Lap</span>
+    <span
+      style={{
+        display: "inline-block",
+        minWidth:
+          exporting && exportHasHeavyPenalty
+            ? 10
+            : exporting
+              ? 16
+              : 12,
+        textAlign: "right",
+      }}
+    >
+      {entry.lap === "Lap -" ? "-" : entry.lap.replace("Lap ", "").replace("Lap", "")}
+    </span>
+  </span>
 
-                                  <span
-                                    style={{
-                                      display: "inline-block",
-                                      minWidth: exporting ? 40 : 34,
-                                      textAlign: "right",
-                                      fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
-                                      flexShrink: 0,
-                                    }}
-                                  >
-                                    {entry.lap === "Lap -" ? "--:--" : `${entry.minute}:${entry.second}`}
-                                  </span>
-                                </div>
+  <span
+    style={{
+      display: "inline-block",
+      minWidth:
+        exporting && exportHasHeavyPenalty
+          ? 28
+          : exporting
+            ? 40
+            : 34,
+      textAlign: "right",
+      fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+      flexShrink: 0,
+    }}
+  >
+    {entry.lap === "Lap -" ? "--:--" : `${entry.minute}:${entry.second}`}
+  </span>
+</div>
                               </div>
                             </div>
                           )
