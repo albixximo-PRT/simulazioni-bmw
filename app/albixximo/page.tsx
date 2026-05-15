@@ -1984,6 +1984,8 @@ const resolvedTeamName = showTeamInsteadOfAuto
                         const rule = getPenaltyRule(entry.code)
 
                         if (exportHasMultiPenalty) {
+  const compactRule = getPenaltyRule(entry.code)
+
   return (
     <div
       style={{
@@ -2004,7 +2006,7 @@ const resolvedTeamName = showTeamInsteadOfAuto
         }}
       >
         {(() => {
-          if (rule.effect === "ammonition") {
+          if (compactRule.effect === "ammonition") {
             return (
               <div
                 style={{
@@ -2017,11 +2019,11 @@ const resolvedTeamName = showTeamInsteadOfAuto
             )
           }
 
-          if (rule.effect === "dsq") {
+          if (compactRule.effect === "dsq") {
             return <Pill left="DSQ" variant="dsq" />
           }
 
-          if (rule.effect === "time") {
+          if (compactRule.effect === "time") {
             return <div style={exportPenaltyTimeTextStyle}>{penaltyMain.text}</div>
           }
 
@@ -2043,7 +2045,7 @@ const resolvedTeamName = showTeamInsteadOfAuto
       >
         <div
           style={{
-            fontSize: exporting && exportHasHeavyPenalty ? 10 : exporting ? 14 : 12,
+            fontSize: exporting && exportHasHeavyPenalty ? 10 : exporting ? 11 : 12,
             lineHeight: exporting && exportHasHeavyPenalty ? 1.02 : exporting ? 1.18 : 1.15,
             whiteSpace: "nowrap",
             overflow: "hidden",
@@ -2051,7 +2053,7 @@ const resolvedTeamName = showTeamInsteadOfAuto
             letterSpacing: exporting ? 0.1 : undefined,
             display: "flex",
             alignItems: "center",
-            gap: exporting && exportHasHeavyPenalty ? 3 : exporting ? 8 : 6,
+            gap: exporting && exportHasHeavyPenalty ? 3 : exporting ? 4 : 6,
             minWidth: 0,
           }}
         >
@@ -2064,7 +2066,7 @@ const resolvedTeamName = showTeamInsteadOfAuto
                 exporting && exportHasHeavyPenalty
                   ? "1px 4px"
                   : exporting
-                    ? "4px 9px"
+                    ? "2px 6px"
                     : "2px 6px",
               borderRadius: 6,
               fontWeight: 900,
@@ -2072,20 +2074,20 @@ const resolvedTeamName = showTeamInsteadOfAuto
                 exporting && exportHasHeavyPenalty
                   ? 10
                   : exporting
-                    ? 15
+                    ? 11
                     : 12,
               letterSpacing: 0.2,
               color: "white",
               background:
-                rule.effect === "ammonition"
+                compactRule.effect === "ammonition"
                   ? "#f59e0b"
-                  : rule.effect === "dsq"
+                  : compactRule.effect === "dsq"
                     ? "#ff4dff"
                     : "#ff2d2d",
               boxShadow:
-                rule.effect === "ammonition"
+                compactRule.effect === "ammonition"
                   ? "0 0 10px rgba(245,158,11,0.35)"
-                  : rule.effect === "dsq"
+                  : compactRule.effect === "dsq"
                     ? "0 0 10px rgba(255,77,255,0.35)"
                     : "0 0 10px rgba(255,45,45,0.35)",
               flexShrink: 0,
@@ -2111,7 +2113,7 @@ const resolvedTeamName = showTeamInsteadOfAuto
                   exporting && exportHasHeavyPenalty
                     ? 10
                     : exporting
-                      ? 16
+                      ? 14
                       : 12,
                 textAlign: "right",
               }}
@@ -2129,7 +2131,7 @@ const resolvedTeamName = showTeamInsteadOfAuto
                 exporting && exportHasHeavyPenalty
                   ? 28
                   : exporting
-                    ? 40
+                    ? 34
                     : 34,
               textAlign: "right",
               fontFamily:
