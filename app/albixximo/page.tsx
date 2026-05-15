@@ -1991,11 +1991,11 @@ const resolvedTeamName = showTeamInsteadOfAuto
   style={{
     display: "grid",
     gridTemplateColumns:
-      exporting && exportHasHeavyPenalty
-        ? "78px 1px 1fr"
-        : exporting
-          ? "108px 1px 1fr"
-          : "92px 1px 1fr",
+  exporting && exportHasHeavyPenalty
+    ? "92px 1px 1fr"
+    : exporting
+      ? "108px 1px 1fr"
+      : "92px 1px 1fr",
     alignItems: "center",
     columnGap: exporting && exportHasHeavyPenalty ? 8 : exporting ? 14 : 12,
     minHeight: exporting ? 34 : 28,
