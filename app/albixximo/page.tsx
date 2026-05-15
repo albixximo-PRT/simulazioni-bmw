@@ -1596,29 +1596,14 @@ const exportHasHeavyPenalty = exporting && previewRows.some((row) => {
 })
 
   const exportPenaltyTimeTextStyle: React.CSSProperties = {
-  color: "#ff2d2d",
-  fontWeight: 900,
-  fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
-
-  fontSize:
-    exporting && exportHasHeavyPenalty
-      ? 10
-      : exporting
-        ? 17
-        : 14,
-
-  lineHeight: 1,
-  whiteSpace: "nowrap",
-
-  textAlign: "right",
-
-  width:
-    exporting && exportHasHeavyPenalty
-      ? 92
-      : undefined,
-
-  display: "inline-block",
-}
+    color: "#ff2d2d",
+    fontWeight: 900,
+    fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+    fontSize: exporting && exportHasHeavyPenalty ? 13 : exporting ? 17 : 14,
+    lineHeight: 1,
+    whiteSpace: "nowrap",
+    textAlign: "right",
+  }
 
   return (
     <div
@@ -1998,182 +1983,143 @@ const resolvedTeamName = showTeamInsteadOfAuto
                         const entry = penaltyEntries[0]
                         const rule = getPenaltyRule(entry.code)
 
-                        if (exporting && exportHasHeavyPenalty) {
-  const compactRule = getPenaltyRule(entry.code)
+                        if (exportHasMultiPenalty) {
+                          return (
+                            <div
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                gap: exporting ? 18 : 16,
+                                minHeight: exporting ? 34 : 28,
+                                width: "100%",
+                              }}
+                            >
+                              <div
+                                style={{
+                                  whiteSpace: "nowrap",
+                                  minWidth: exporting ? 108 : 92,
+                                  textAlign: "right",
+                                  flexShrink: 0,
+                                }}
+                              >
+                                {(() => {
+                                  if (rule.effect === "ammonition") {
+                                    return (
+                                      <div
+                                        style={{
+                                          ...exportPenaltyTimeTextStyle,
+                                          color: "#f59e0b",
+                                        }}
+                                      >
+                                        00:00.000
+                                      </div>
+                                    )
+                                  }
 
-  return (
-    <div
-  style={{
-    display: "grid",
-    gridTemplateColumns:
-  exporting && exportHasHeavyPenalty
-    ? "92px 1px 1fr"
-    : exporting
-      ? "108px 1px 1fr"
-      : "92px 1px 1fr",
-    alignItems: "center",
-    columnGap: exporting && exportHasHeavyPenalty ? 8 : exporting ? 14 : 12,
-    minHeight: exporting ? 34 : 28,
-    width: "100%",
-  }}
->
-      <div
-  style={{
-    whiteSpace: "nowrap",
-    minWidth: 0,
-    textAlign: "right",
-    flexShrink: 0,
-  }}
->
-  {(() => {
-    if (compactRule.effect === "ammonition") {
-      return (
-        <div
-          style={{
-            ...exportPenaltyTimeTextStyle,
-            color: "#f59e0b",
-          }}
-        >
-          00:00.000
-        </div>
-      )
-    }
+                                  if (rule.effect === "dsq") {
+                                    return <Pill left="DSQ" variant="dsq" />
+                                  }
 
-    if (compactRule.effect === "dsq") {
-      return <Pill left="DSQ" variant="dsq" />
-    }
+                                  if (rule.effect === "time") {
+                                    return <div style={exportPenaltyTimeTextStyle}>{penaltyMain.text}</div>
+                                  }
 
-    if (compactRule.effect === "time") {
-      return <div style={exportPenaltyTimeTextStyle}>{penaltyMain.text}</div>
-    }
+                                  return "-"
+                                })()}
+                              </div>
 
-    return "-"
-  })()}
-</div>
+                              <div
+                                style={{
+                                  borderLeft: "1px solid rgba(255,255,255,0.18)",
+                                  paddingLeft: exporting ? 14 : 12,
+                                  minWidth: 0,
+                                  width: "100%",
+                                  display: "grid",
+                                  gridTemplateColumns: exporting ? "repeat(2, minmax(0, 1fr))" : "1fr",
+                                  gap: exporting ? "6px 12px" : 4,
+                                  alignItems: "start",
+                                }}
+                              >
+                                <div
+                                  style={{
+                                    fontSize: exporting ? 14 : 12,
+                                    lineHeight: exporting ? 1.18 : 1.15,
+                                    whiteSpace: "nowrap",
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                    letterSpacing: exporting ? 0.1 : undefined,
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: exporting ? 8 : 6,
+                                    minWidth: 0,
+                                  }}
+                                >
+                                  <span
+                                    style={{
+                                      display: "inline-flex",
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                      padding: exporting ? "4px 9px" : "2px 6px",
+                                      borderRadius: 6,
+                                      fontWeight: 900,
+                                      fontSize: exporting ? 15 : 12,
+                                      letterSpacing: 0.2,
+                                      color: "white",
+                                      background:
+                                        rule.effect === "ammonition"
+                                          ? "#f59e0b"
+                                          : rule.effect === "dsq"
+                                            ? "#ff4dff"
+                                            : "#ff2d2d",
+                                      boxShadow:
+                                        rule.effect === "ammonition"
+                                          ? "0 0 10px rgba(245,158,11,0.35)"
+                                          : rule.effect === "dsq"
+                                            ? "0 0 10px rgba(255,77,255,0.35)"
+                                            : "0 0 10px rgba(255,45,45,0.35)",
+                                      flexShrink: 0,
+                                    }}
+                                  >
+                                    {entry.code}
+                                  </span>
 
-<div
-  style={{
-    width: 1,
-    height: exporting && exportHasHeavyPenalty ? 18 : 24,
-    background: "rgba(255,255,255,0.18)",
-  }}
-/>
+                                  <span
+                                    style={{
+                                      display: "inline-flex",
+                                      alignItems: "center",
+                                      gap: 2,
+                                      minWidth: 0,
+                                    }}
+                                  >
+                                    <span>Lap</span>
+                                    <span
+                                      style={{
+                                        display: "inline-block",
+                                        minWidth: exporting ? 16 : 12,
+                                        textAlign: "right",
+                                      }}
+                                    >
+                                      {entry.lap === "Lap -" ? "-" : entry.lap.replace("Lap ", "").replace("Lap", "")}
+                                    </span>
+                                  </span>
 
-<div
-  style={{
-    minWidth: 0,
-    width: "100%",
-    display: "grid",
-    gridTemplateColumns: exporting ? "repeat(2, minmax(0, 1fr))" : "1fr",
-    gap: exporting && exportHasHeavyPenalty ? "3px 6px" : exporting ? "6px 12px" : 4,
-    alignItems: "start",
-  }}
->
-  <div
-    style={{
-      fontSize: exporting && exportHasHeavyPenalty ? 10 : exporting ? 11 : 12,
-      lineHeight: exporting && exportHasHeavyPenalty ? 1.02 : exporting ? 1.18 : 1.15,
-      whiteSpace: "nowrap",
-      overflow: "hidden",
-      textOverflow: "ellipsis",
-      letterSpacing: exporting ? 0.1 : undefined,
-      display: "flex",
-      alignItems: "center",
-      gap: exporting && exportHasHeavyPenalty ? 3 : exporting ? 4 : 6,
-      minWidth: 0,
-    }}
-        >
-          <span
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              padding:
-                exporting && exportHasHeavyPenalty
-                  ? "1px 4px"
-                  : exporting
-                    ? "2px 6px"
-                    : "2px 6px",
-              borderRadius: 6,
-              fontWeight: 900,
-              fontSize:
-                exporting && exportHasHeavyPenalty
-                  ? 10
-                  : exporting
-                    ? 11
-                    : 12,
-              letterSpacing: 0.2,
-              color: "white",
-              background:
-                compactRule.effect === "ammonition"
-                  ? "#f59e0b"
-                  : compactRule.effect === "dsq"
-                    ? "#ff4dff"
-                    : "#ff2d2d",
-              boxShadow:
-                compactRule.effect === "ammonition"
-                  ? "0 0 10px rgba(245,158,11,0.35)"
-                  : compactRule.effect === "dsq"
-                    ? "0 0 10px rgba(255,77,255,0.35)"
-                    : "0 0 10px rgba(255,45,45,0.35)",
-              flexShrink: 0,
-            }}
-          >
-            {entry.code}
-          </span>
-
-          <span
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 2,
-              minWidth: 0,
-            }}
-          >
-            <span>Lap</span>
-
-            <span
-              style={{
-                display: "inline-block",
-                minWidth:
-                  exporting && exportHasHeavyPenalty
-                    ? 10
-                    : exporting
-                      ? 14
-                      : 12,
-                textAlign: "right",
-              }}
-            >
-              {entry.lap === "Lap -"
-                ? "-"
-                : entry.lap.replace("Lap ", "").replace("Lap", "")}
-            </span>
-          </span>
-
-          <span
-            style={{
-              display: "inline-block",
-              minWidth:
-                exporting && exportHasHeavyPenalty
-                  ? 28
-                  : exporting
-                    ? 34
-                    : 34,
-              textAlign: "right",
-              fontFamily:
-                "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
-              flexShrink: 0,
-            }}
-          >
-            {entry.lap === "Lap -"
-              ? "--:--"
-              : `${entry.minute}:${entry.second}`}
-          </span>
-        </div>
-      </div>
-    </div>
-  )
-}
+                                  <span
+                                    style={{
+                                      display: "inline-block",
+                                      minWidth: exporting ? 40 : 34,
+                                      textAlign: "right",
+                                      fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+                                      flexShrink: 0,
+                                    }}
+                                  >
+                                    {entry.lap === "Lap -" ? "--:--" : `${entry.minute}:${entry.second}`}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          )
+                        }
 
                         return (
                           <div
