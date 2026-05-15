@@ -1988,74 +1988,85 @@ const resolvedTeamName = showTeamInsteadOfAuto
 
   return (
     <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: exporting && exportHasHeavyPenalty ? 8 : exporting ? 18 : 16,
-        minHeight: exporting ? 34 : 28,
-        width: "100%",
-      }}
-    >
+  style={{
+    display: "grid",
+    gridTemplateColumns:
+      exporting && exportHasHeavyPenalty
+        ? "78px 1px 1fr"
+        : exporting
+          ? "108px 1px 1fr"
+          : "92px 1px 1fr",
+    alignItems: "center",
+    columnGap: exporting && exportHasHeavyPenalty ? 8 : exporting ? 14 : 12,
+    minHeight: exporting ? 34 : 28,
+    width: "100%",
+  }}
+>
       <div
-        style={{
-          whiteSpace: "nowrap",
-          minWidth: exporting && exportHasHeavyPenalty ? 78 : exporting ? 108 : 92,
-          textAlign: "right",
-          flexShrink: 0,
-        }}
-      >
-        {(() => {
-          if (compactRule.effect === "ammonition") {
-            return (
-              <div
-                style={{
-                  ...exportPenaltyTimeTextStyle,
-                  color: "#f59e0b",
-                }}
-              >
-                00:00.000
-              </div>
-            )
-          }
-
-          if (compactRule.effect === "dsq") {
-            return <Pill left="DSQ" variant="dsq" />
-          }
-
-          if (compactRule.effect === "time") {
-            return <div style={exportPenaltyTimeTextStyle}>{penaltyMain.text}</div>
-          }
-
-          return "-"
-        })()}
-      </div>
-
-      <div
-        style={{
-          borderLeft: "1px solid rgba(255,255,255,0.18)",
-          paddingLeft: exporting && exportHasHeavyPenalty ? 8 : exporting ? 14 : 12,
-          minWidth: 0,
-          width: "100%",
-          display: "grid",
-          gridTemplateColumns: exporting ? "repeat(2, minmax(0, 1fr))" : "1fr",
-          gap: exporting && exportHasHeavyPenalty ? "3px 6px" : exporting ? "6px 12px" : 4,
-          alignItems: "start",
-        }}
-      >
+  style={{
+    whiteSpace: "nowrap",
+    minWidth: 0,
+    textAlign: "right",
+    flexShrink: 0,
+  }}
+>
+  {(() => {
+    if (compactRule.effect === "ammonition") {
+      return (
         <div
           style={{
-            fontSize: exporting && exportHasHeavyPenalty ? 10 : exporting ? 11 : 12,
-            lineHeight: exporting && exportHasHeavyPenalty ? 1.02 : exporting ? 1.18 : 1.15,
-            whiteSpace: "nowrap",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            letterSpacing: exporting ? 0.1 : undefined,
-            display: "flex",
-            alignItems: "center",
-            gap: exporting && exportHasHeavyPenalty ? 3 : exporting ? 4 : 6,
-            minWidth: 0,
+            ...exportPenaltyTimeTextStyle,
+            color: "#f59e0b",
           }}
+        >
+          00:00.000
+        </div>
+      )
+    }
+
+    if (compactRule.effect === "dsq") {
+      return <Pill left="DSQ" variant="dsq" />
+    }
+
+    if (compactRule.effect === "time") {
+      return <div style={exportPenaltyTimeTextStyle}>{penaltyMain.text}</div>
+    }
+
+    return "-"
+  })()}
+</div>
+
+<div
+  style={{
+    width: 1,
+    height: exporting && exportHasHeavyPenalty ? 18 : 24,
+    background: "rgba(255,255,255,0.18)",
+  }}
+/>
+
+<div
+  style={{
+    minWidth: 0,
+    width: "100%",
+    display: "grid",
+    gridTemplateColumns: exporting ? "repeat(2, minmax(0, 1fr))" : "1fr",
+    gap: exporting && exportHasHeavyPenalty ? "3px 6px" : exporting ? "6px 12px" : 4,
+    alignItems: "start",
+  }}
+>
+  <div
+    style={{
+      fontSize: exporting && exportHasHeavyPenalty ? 10 : exporting ? 11 : 12,
+      lineHeight: exporting && exportHasHeavyPenalty ? 1.02 : exporting ? 1.18 : 1.15,
+      whiteSpace: "nowrap",
+      overflow: "hidden",
+      textOverflow: "ellipsis",
+      letterSpacing: exporting ? 0.1 : undefined,
+      display: "flex",
+      alignItems: "center",
+      gap: exporting && exportHasHeavyPenalty ? 3 : exporting ? 4 : 6,
+      minWidth: 0,
+    }}
         >
           <span
             style={{
