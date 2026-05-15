@@ -3736,7 +3736,7 @@ useEffect(() => {
       { team: "DTC Team M2", lobby1: "Prt_Danielex84", lobby2: "Tcarlisi", lobby3: "Conradveron59" },
       { team: "KIBOY TEAM", lobby1: "Sulimanov", lobby2: "Snoop", lobby3: "Frederik2905" },
       { team: "KZM Racing", lobby1: "MaxLukex", lobby2: "The-Knipex", lobby3: "Zio_zero7" },
-      { team: "STS CORSE", lobby1: "Senpai_Zen", lobby2: "xSamueLx", lobby3: "Tommyx_tommyx" },
+      { team: "STS CORSE", lobby1: "Senpai_Zen", lobby2: "xSamueLx", lobby3: "Tommyx_Tommyx" },
       { team: "ATS - Asphalt Titans Squad", lobby1: "Bumbumpenny", lobby2: "Karl_55_", lobby3: "Muffo007" },
       { team: "MFF Racing", lobby1: "M_ApeX_", lobby2: "Fedemastro", lobby3: "Perseo_1975" },
       { team: "RMS Team", lobby1: "Rekkia-Speed", lobby2: "Martina-2008", lobby3: "Stephan1187" },
@@ -3753,15 +3753,6 @@ useEffect(() => {
   v = v.replace(/^prt[\s._-]*/i, "")
   v = v.replace(/[_\-.]/g, "")
   v = v.replace(/\s+/g, "")
-
-  // Alias manuali
-  if (v === "tommyxtommyx") {
-    return "tommyxtommyx"
-  }
-
-  if (v === "tommytommyx") {
-    return "tommyxtommyx"
-  }
 
   return v
 }
