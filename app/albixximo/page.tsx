@@ -1596,14 +1596,29 @@ const exportHasHeavyPenalty = exporting && previewRows.some((row) => {
 })
 
   const exportPenaltyTimeTextStyle: React.CSSProperties = {
-    color: "#ff2d2d",
-    fontWeight: 900,
-    fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
-    fontSize: exporting && exportHasHeavyPenalty ? 13 : exporting ? 17 : 14,
-    lineHeight: 1,
-    whiteSpace: "nowrap",
-    textAlign: "right",
-  }
+  color: "#ff2d2d",
+  fontWeight: 900,
+  fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+
+  fontSize:
+    exporting && exportHasHeavyPenalty
+      ? 10
+      : exporting
+        ? 17
+        : 14,
+
+  lineHeight: 1,
+  whiteSpace: "nowrap",
+
+  textAlign: "right",
+
+  width:
+    exporting && exportHasHeavyPenalty
+      ? 92
+      : undefined,
+
+  display: "inline-block",
+}
 
   return (
     <div
