@@ -4718,6 +4718,26 @@ const normalizedGaraForOutput = useMemo(() => {
     distaccoDalPrimo: (manualDistaccoOverrides[r.sourcePosGara] ?? r.distaccoDalPrimo ?? "").trim(),
     tempoQualifica: (manualQualificaOverrides[r.sourcePosGara] ?? r.tempoQualifica ?? "").trim(),
   }))
+  if (currentSprint === 1) {
+  let bestQualificaMs: number | null = null
+  let bestQualificaSourcePos: number | null = null
+
+  for (const row of mappedRows) {
+    const ms = parseMmSsMmm((row.tempoQualifica || "").trim())
+    if (ms == null) continue
+
+    if (bestQualificaMs == null || ms < bestQualificaMs) {
+      bestQualificaMs = ms
+      bestQualificaSourcePos = row.sourcePosGara
+    }
+  }
+
+  if (bestQualificaSourcePos != null) {
+    mappedRows.forEach((row) => {
+      row.pole = row.sourcePosGara === bestQualificaSourcePos ? "POLE" : ""
+    })
+  }
+}
 
   const detectedLegaFromMappedRows = getBmwLeagueFromRows(mappedRows)
   const currentLegaForCompletion =
@@ -4733,6 +4753,7 @@ const normalizedGaraForOutput = useMemo(() => {
 )
 }, [
   previewRows,
+  currentSprint,
   manualPilotOverrides,
   manualAutoOverrides,
   manualDistaccoOverrides,
