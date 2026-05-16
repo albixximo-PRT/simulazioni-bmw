@@ -1625,7 +1625,7 @@ const compactAmaSprint1Export =
     >
       <div
         style={{
-          padding: exporting ? "11px 14px" : "12px 14px",
+          padding: compactAmaSprint1Export ? "3px 14px" : exporting ? "11px 14px" : "12px 14px",
           borderBottom: "1px solid rgba(255,255,255,0.10)",
           display: "flex",
           justifyContent: "space-between",
