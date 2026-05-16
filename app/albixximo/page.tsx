@@ -2792,6 +2792,20 @@ function renderMiniRoundDetail(
     )
   }
 
+  if (upper === "DSQ") {
+  return (
+    <span
+      style={miniPillStyle(
+        "rgba(255,0,255,0.92)",
+        "1px solid rgba(255,0,255,0.60)",
+        "rgba(0,0,0,0.92)"
+      )}
+    >
+      DSQ
+    </span>
+  )
+}
+
   if (upper === "DNP") {
     return (
       <span
@@ -7392,6 +7406,13 @@ body::before {
       color: rgba(0,0,0,0.92);
     }
 
+    .mini-dsq {
+  background: rgba(255,0,255,0.92);
+  border: 1px solid rgba(255,0,255,0.60);
+  color: rgba(0,0,0,0.92);
+  box-shadow: 0 0 12px rgba(255,0,255,0.24);
+}
+
     .mini-pos {
   position: relative;
   display: inline-flex;
@@ -7937,6 +7958,10 @@ function renderMiniRoundDetailHtml(
   if (upper === "DNF-V") {
     return `<span class="mini-pill mini-teal">DNF-V</span>`
   }
+
+  if (upper === "DSQ") {
+  return `<span class="mini-pill mini-dsq">DSQ</span>`
+}
 
   if (upper === "DNP") {
     return `<span class="mini-pill mini-teal">DNP</span>`
