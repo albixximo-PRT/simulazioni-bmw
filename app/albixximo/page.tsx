@@ -1597,11 +1597,10 @@ const exportHasHeavyPenalty = exporting && previewRows.some((row) => {
   const key = getPrtRowStableKey(row.sourcePosGara)
   return (penalties[key] || []).length > 4
 })
-const compactAmaSprint1Export =
+const compactAmaSprintExport =
   exporting &&
   String(unionMeta.lega || "").trim().toUpperCase() === "AMA" &&
-  String(unionMeta.gara || "").trim() === "3" &&
-  currentSprint === 1
+  String(unionMeta.gara || "").trim() === "3"
 
   const exportPenaltyTimeTextStyle: React.CSSProperties = {
     color: "#ff2d2d",
@@ -1625,7 +1624,7 @@ const compactAmaSprint1Export =
     >
       <div
         style={{
-          padding: compactAmaSprint1Export ? "3px 14px" : exporting ? "11px 14px" : "12px 14px",
+          padding: compactAmaSprintExport ? "3px 14px" : exporting ? "11px 14px" : "12px 14px",
           borderBottom: "1px solid rgba(255,255,255,0.10)",
           display: "flex",
           justifyContent: "space-between",
@@ -2362,7 +2361,7 @@ const resolvedTeamName = showTeamInsteadOfAuto
     <div
       key={entry.id}
       style={{
-        transform: compactAmaSprint1Export ? "scale(0.96)" : undefined,
+        transform: compactAmaSprintExport ? "scale(0.96)" : undefined,
 transformOrigin: "left center",
         fontSize:
   exporting && exportHasHeavyPenalty
