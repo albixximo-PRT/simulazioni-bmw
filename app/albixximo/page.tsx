@@ -4320,6 +4320,10 @@ function getTeamRoundDetail(
       return { text: "DNF-V" }
     }
 
+    if (status === "dsq") {
+  return { text: "DSQ" }
+}
+
     if (status === "dnp") {
       return { text: "DNP" }
     }
@@ -4442,14 +4446,18 @@ function buildLiveBmwTeamStandings(
   if (rawTempo === "DNF" || rawTempo === "DNF-I") return "dnf-i"
   if (rawTempo === "DNP") return "dnp"
   if (rawTempo === "BOX") return "dnf-v"
-  if (rawTempo === "DSQ") return "dnf-v"
+  if (rawTempo === "DSQ") return "dsq"
 
   return "finish"
 }
 
   function isBmwZeroPointStatus(status: BmwRaceStatus) {
-    return status === "dnf-v" || status === "dnp"
-  }
+  return (
+    status === "dnf-v" ||
+    status === "dnp" ||
+    status === "dsq"
+  )
+}
 
   function isBmwEligibleForCompletionBonus(status: BmwRaceStatus) {
     return status === "finish" || status === "dnf-i"
