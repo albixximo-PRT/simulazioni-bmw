@@ -3960,7 +3960,7 @@ function getBmwDriverStatusFromRow(row: DisplayRow): BmwDriverStatus {
 }
 
 function isBmwZeroPointStatusNew(status: BmwDriverStatus) {
-  return status === "dnf-v" || status === "dnp" || status === "box"
+  return status === "dnf-v" || status === "dnp" || status === "box" || status === "dsq"
 }
 
 function isBmwCompletionBonusEligibleStatus(status: BmwDriverStatus) {
@@ -3992,12 +3992,20 @@ function buildBmwSprintDrivers(rows: DisplayRow[], bestRaceLap: string): BmwSpri
   const bestLapTime = (bestRaceLap.split("  ").pop() || "").trim()
 
   const finishRows = rows.filter((row) => getBmwDriverStatusFromRow(row) === "finish")
-  const dnfIRows = rows.filter((row) => getBmwDriverStatusFromRow(row) === "dnf-i")
-  const dnfVRows = rows.filter((row) => getBmwDriverStatusFromRow(row) === "dnf-v")
-  const dnpRows = rows.filter((row) => getBmwDriverStatusFromRow(row) === "dnp")
-  const boxRows = rows.filter((row) => getBmwDriverStatusFromRow(row) === "box")
+const dnfIRows = rows.filter((row) => getBmwDriverStatusFromRow(row) === "dnf-i")
+const dnfVRows = rows.filter((row) => getBmwDriverStatusFromRow(row) === "dnf-v")
+const dsqRows = rows.filter((row) => getBmwDriverStatusFromRow(row) === "dsq")
+const dnpRows = rows.filter((row) => getBmwDriverStatusFromRow(row) === "dnp")
+const boxRows = rows.filter((row) => getBmwDriverStatusFromRow(row) === "box")
 
-  const orderedRows = [...finishRows, ...dnfIRows, ...dnfVRows, ...dnpRows, ...boxRows]
+const orderedRows = [
+  ...finishRows,
+  ...dnfIRows,
+  ...dnfVRows,
+  ...dsqRows,
+  ...dnpRows,
+  ...boxRows,
+]
 
   return orderedRows.map((row, index) => {
     const found = findTeamByPilot(row.pilota)
