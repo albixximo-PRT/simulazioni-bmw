@@ -95,6 +95,7 @@ type BmwDriverStatus =
   | "dnf-v"
   | "dnp"
   | "box"
+  | "dsq"
 
 type RoundKey = "r1" | "r2" | "r3" | "r4"
 
@@ -3939,7 +3940,7 @@ function getBmwDriverStatusFromRow(row: DisplayRow): BmwDriverStatus {
   if (rawTempo === "DNFV" || rawTempo === "DNF-V") return "dnf-v"
   if (rawTempo === "DNP") return "dnp"
   if (rawTempo === "BOX") return "box"
-  if (rawTempo === "DSQ") return "dnf-v"
+  if (rawTempo === "DSQ") return "dsq"
 
   return "finish"
 }
