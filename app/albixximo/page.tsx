@@ -141,6 +141,7 @@ type BmwSprintSnapshot = {
   manualPilotOverrides: Record<number, string>
   manualAutoOverrides: Record<number, string>
   manualDistaccoOverrides: Record<number, string>
+  manualQualificaOverrides: Record<number, string>
 }
 
 type BmwRoundDriver = {
@@ -251,6 +252,7 @@ type BmwPortableBackup = {
     manualPilotOverrides: Record<number, string>
     manualAutoOverrides: Record<number, string>
     manualDistaccoOverrides: Record<number, string>
+    manualQualificaOverrides: Record<number, string>
   }
 }
 
@@ -3607,6 +3609,9 @@ const [pendingSaveLeagueMode, setPendingSaveLeagueMode] = useState<"save" | "ove
   const [manualPilotOverrides, setManualPilotOverrides] = useState<Record<number, string>>({})
   const [manualAutoOverrides, setManualAutoOverrides] = useState<Record<number, string>>({})
   const [manualDistaccoOverrides, setManualDistaccoOverrides] = useState<Record<number, string>>({})
+  const [manualQualificaOverrides, setManualQualificaOverrides] = useState<Record<number, string>>({})
+const [manualQualificaDraft, setManualQualificaDraft] = useState<Record<number, string>>({})
+const [showQualificaModal, setShowQualificaModal] = useState(false)
   const [pilotModalRows, setPilotModalRows] = useState<DisplayRow[]>([])
 
   const [showPilotModal, setShowPilotModal] = useState(false)
@@ -4711,6 +4716,7 @@ const normalizedGaraForOutput = useMemo(() => {
     pilota: (manualPilotOverrides[r.sourcePosGara] ?? r.pilota ?? "").trim(),
     auto: (manualAutoOverrides[r.sourcePosGara] ?? r.auto ?? "").trim(),
     distaccoDalPrimo: (manualDistaccoOverrides[r.sourcePosGara] ?? r.distaccoDalPrimo ?? "").trim(),
+    tempoQualifica: (manualQualificaOverrides[r.sourcePosGara] ?? r.tempoQualifica ?? "").trim(),
   }))
 
   const detectedLegaFromMappedRows = getBmwLeagueFromRows(mappedRows)
@@ -4730,6 +4736,7 @@ const normalizedGaraForOutput = useMemo(() => {
   manualPilotOverrides,
   manualAutoOverrides,
   manualDistaccoOverrides,
+  manualQualificaOverrides,
   manualLegaOverride,
   unionMeta.lega,
   teams,
@@ -5343,6 +5350,7 @@ const currentBmwSprintSnapshot = useMemo<BmwSprintSnapshot | null>(() => {
     manualPilotOverrides,
     manualAutoOverrides,
     manualDistaccoOverrides,
+    manualQualificaOverrides,
   }
 }, [
   currentSprint,
@@ -5361,6 +5369,7 @@ const currentBmwSprintSnapshot = useMemo<BmwSprintSnapshot | null>(() => {
   manualPilotOverrides,
   manualAutoOverrides,
   manualDistaccoOverrides,
+  manualQualificaOverrides,
 ])
 
 const bmwLeagueDriversPreview = useMemo(() => {
@@ -5464,6 +5473,7 @@ const currentRoundHasUnsavedWork = useMemo(() => {
   manualPilotOverrides,
   manualAutoOverrides,
   manualDistaccoOverrides,
+  manualQualificaOverrides,
   roundSnapshots,
   currentRound,
 ])
@@ -8157,6 +8167,7 @@ function handleLogout() {
         manualPilotOverrides,
         manualAutoOverrides,
         manualDistaccoOverrides,
+        manualQualificaOverrides,
       },
     }
 
@@ -8996,6 +9007,20 @@ function resetPilotCorrections() {
   setManualAutoOverrides({})
   setPilotModalRows([])
   setShowPilotModal(false)
+}
+
+function openQualificaCorrectionModal() {
+  const cleaned: Record<number, string> = {}
+
+  for (const row of displayRows) {
+    cleaned[row.sourcePosGara] =
+      manualQualificaOverrides[row.sourcePosGara] ??
+      row.tempoQualifica ??
+      ""
+  }
+
+  setManualQualificaDraft(cleaned)
+  setShowQualificaModal(true)
 }
 
 function openDistaccoCorrectionModal() {
@@ -10167,6 +10192,25 @@ if (!authorized) {
         >
           Modifica Pilota
         </button>
+
+        {currentSprint === 1 && (
+  <button
+    onClick={openQualificaCorrectionModal}
+    style={{
+      padding: "10px 12px",
+      borderRadius: 10,
+      border: "1px solid rgba(255,255,255,0.16)",
+      background: "rgba(255,255,255,0.08)",
+      color: "white",
+      cursor: "pointer",
+      fontWeight: 800,
+      textTransform: "uppercase",
+      fontSize: 12,
+    }}
+  >
+    Modifica Qualifica
+  </button>
+)}
 
         <button
           onClick={openDistaccoCorrectionModal}
@@ -12098,6 +12142,125 @@ if (!authorized) {
           }}
         >
           Applica correzioni
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+{showQualificaModal && (
+  <div
+    style={{
+      position: "fixed",
+      inset: 0,
+      zIndex: 9999,
+      background: "rgba(0,0,0,0.72)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: 20,
+    }}
+  >
+    <div
+      style={{
+        width: "min(980px, 96vw)",
+        maxHeight: "86vh",
+        overflow: "auto",
+        borderRadius: 18,
+        border: "1px solid rgba(255,255,255,0.16)",
+        background: "#10131d",
+        padding: 18,
+        boxShadow: "0 24px 80px rgba(0,0,0,0.55)",
+      }}
+    >
+      <div style={{ fontSize: 18, fontWeight: 900, marginBottom: 12 }}>
+        Modifica tempi qualifica
+      </div>
+
+      <div style={{ display: "grid", gap: 8 }}>
+        {displayRows.map((row) => (
+          <div
+            key={`qualifica-${row.sourcePosGara}`}
+            style={{
+              display: "grid",
+              gridTemplateColumns: "60px 1fr 180px",
+              gap: 10,
+              alignItems: "center",
+              padding: "8px 10px",
+              borderRadius: 12,
+              background: "rgba(255,255,255,0.05)",
+            }}
+          >
+            <div style={{ fontWeight: 900 }}>P{row.posGara}</div>
+
+            <div style={{ fontWeight: 800 }}>
+              {row.pilota}
+            </div>
+
+            <input
+              value={manualQualificaDraft[row.sourcePosGara] ?? ""}
+              onChange={(e) =>
+                setManualQualificaDraft((prev) => ({
+                  ...prev,
+                  [row.sourcePosGara]: e.target.value,
+                }))
+              }
+              placeholder="es. 1:52.345"
+              style={{
+                width: "100%",
+                padding: "9px 10px",
+                borderRadius: 10,
+                border: "1px solid rgba(255,255,255,0.18)",
+                background: "rgba(0,0,0,0.28)",
+                color: "white",
+                fontWeight: 800,
+                fontFamily:
+                  "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+              }}
+            />
+          </div>
+        ))}
+      </div>
+
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "flex-end",
+          gap: 10,
+          marginTop: 16,
+        }}
+      >
+        <button
+          onClick={() => setShowQualificaModal(false)}
+          style={{
+            padding: "10px 14px",
+            borderRadius: 10,
+            border: "1px solid rgba(255,255,255,0.16)",
+            background: "rgba(255,255,255,0.08)",
+            color: "white",
+            fontWeight: 800,
+            cursor: "pointer",
+          }}
+        >
+          Annulla
+        </button>
+
+        <button
+          onClick={() => {
+            setManualQualificaOverrides(manualQualificaDraft)
+            setShowQualificaModal(false)
+          }}
+          style={{
+            padding: "10px 14px",
+            borderRadius: 10,
+            border: "1px solid rgba(255,215,0,0.45)",
+            background: "rgba(255,215,0,0.18)",
+            color: "white",
+            fontWeight: 900,
+            cursor: "pointer",
+          }}
+        >
+          Applica modifiche
         </button>
       </div>
     </div>
