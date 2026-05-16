@@ -1623,15 +1623,15 @@ const compactAmaSprintExport =
       }}
     >
       <div
-        style={{
-          padding: compactAmaSprintExport ? "3px 14px" : exporting ? "11px 14px" : "12px 14px",
-          borderBottom: "1px solid rgba(255,255,255,0.10)",
-          display: "flex",
-          justifyContent: "space-between",
-          gap: 12,
-          flexWrap: "wrap",
-        }}
-      >
+  style={{
+    padding: compactAmaSprintExport ? "3px 14px" : exporting ? "11px 14px" : "12px 14px",
+    borderBottom: "1px solid rgba(255,255,255,0.10)",
+    display: compactAmaSprintExport ? "none" : "flex",
+    justifyContent: "space-between",
+    gap: 12,
+    flexWrap: "wrap",
+  }}
+>
         <div style={{ fontWeight: 900, fontSize: exporting ? 15 : undefined }}>{tableTitle}</div>
         <div style={{ fontSize: exporting ? 13 : 12, opacity: 0.88, fontWeight: exporting ? 800 : undefined }}>
   {exporting ? `Partecipanti: ${previewRows.length}` : `${previewRows.length} partecipanti`}
