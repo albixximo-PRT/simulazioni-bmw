@@ -4856,6 +4856,7 @@ const normalizedGaraForOutput = useMemo(() => {
 }, [
   previewRows,
   currentSprint,
+  currentRound,
   manualPilotOverrides,
   manualAutoOverrides,
   manualDistaccoOverrides,
