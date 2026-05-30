@@ -399,6 +399,46 @@ const PENALTY_RULES: Record<string, PenaltyRule> = {
 
 const AMMONITION_CODES = new Set(["P01", "P25", "P31"])
 const DSQ_CODES = new Set(["P16", "P27", "P35", "DSQ"])
+
+const NEW_BMW_PENALTY_RULES: Record<string, PenaltyRule> = {
+  P01: { seconds: 0, effect: "ammonition", shortLabel: "00:00.000" },
+  P02: { seconds: 3, effect: "time", shortLabel: "+3s" },
+  P03: { seconds: 6, effect: "time", shortLabel: "+6s" },
+  P04: { seconds: 9, effect: "time", shortLabel: "+9s" },
+  P05: { seconds: 12, effect: "time", shortLabel: "+12s" },
+  P06: { seconds: 15, effect: "time", shortLabel: "+15s" },
+  P07: { seconds: 20, effect: "time", shortLabel: "+20s" },
+  P08: { seconds: 5, effect: "time", shortLabel: "+5s" },
+  P09: { seconds: 15, effect: "time", shortLabel: "+15s" },
+  P10: { seconds: 10, effect: "time", shortLabel: "+10s" },
+  P11: { seconds: 0, effect: "dsq", shortLabel: "DSQ" },
+  P12: { seconds: 20, effect: "time", shortLabel: "+20s" },
+  P13: { seconds: 3, effect: "time", shortLabel: "+3s" },
+  P14: { seconds: 5, effect: "time", shortLabel: "+5s" },
+  P15: { seconds: 5, effect: "time", shortLabel: "+5s" },
+  P16: { seconds: 7, effect: "time", shortLabel: "+7s" },
+  P17: { seconds: 10, effect: "time", shortLabel: "+10s" },
+  P18: { seconds: 10, effect: "time", shortLabel: "+10s" },
+  P19: { seconds: 20, effect: "time", shortLabel: "+20s" },
+  P20: { seconds: 10, effect: "time", shortLabel: "+10s" },
+  P21: { seconds: 0, effect: "other", shortLabel: "DSQ" },
+  P22: { seconds: 10, effect: "time", shortLabel: "+10s" },
+  P23: { seconds: 0, effect: "ammonition", shortLabel: "00:00.000" },
+  P24: { seconds: 5, effect: "time", shortLabel: "+5s" },
+  P25: { seconds: 0, effect: "dsq", shortLabel: "DSQ" },
+  P26: { seconds: 0, effect: "ammonition", shortLabel: "00:00.000" },
+  P27: { seconds: 30, effect: "time", shortLabel: "+30s" },
+  P28: { seconds: 10, effect: "time", shortLabel: "+10s" },
+  P29: { seconds: 0, effect: "ammonition", shortLabel: "00:00.000" },
+  P30: { seconds: 5, effect: "time", shortLabel: "+5s" },
+  P31: { seconds: 0, effect: "dsq", shortLabel: "DSQ" },
+  P32: { seconds: 10, effect: "time", shortLabel: "+10s" },
+  DSQ: { seconds: 0, effect: "dsq", shortLabel: "DSQ" },
+}
+
+const NEW_BMW_AMMONITION_CODES = new Set(["P01", "P23", "P26", "P29"])
+const NEW_BMW_DSQ_CODES = new Set(["P11", "P25", "P31", "DSQ"])
+
 const BMW_POINTS_BY_POSITION: Record<number, number> = {
   1: 25,
   2: 22,
@@ -690,24 +730,39 @@ function formatPenaltyOptionLabel(seconds: number): string {
   return `${mm} minuti e ${ss} secondi`
 }
 
-function getPenaltyRule(code: string): PenaltyRule {
-  return PENALTY_RULES[code] || { seconds: 0, effect: "other", shortLabel: "-" }
+function getPenaltyRulesForRound(roundNumber: number) {
+  return roundNumber >= 4 ? NEW_BMW_PENALTY_RULES : PENALTY_RULES
 }
 
-function penaltySecondsFromCode(code: string): number {
-  return getPenaltyRule(code).seconds
+function getAmmonitionCodesForRound(roundNumber: number) {
+  return roundNumber >= 4 ? NEW_BMW_AMMONITION_CODES : AMMONITION_CODES
 }
 
-function hasDsqPenalty(entries: PenaltyEntry[] = []): boolean {
-  return entries.some((entry) => DSQ_CODES.has(entry.code))
+function getDsqCodesForRound(roundNumber: number) {
+  return roundNumber >= 4 ? NEW_BMW_DSQ_CODES : DSQ_CODES
 }
 
-function hasAmmonitionPenalty(entries: PenaltyEntry[] = []): boolean {
-  return entries.some((entry) => AMMONITION_CODES.has(entry.code))
+function getPenaltyRule(code: string, roundNumber: number): PenaltyRule {
+  const rules = getPenaltyRulesForRound(roundNumber)
+  return rules[code] || { seconds: 0, effect: "other", shortLabel: "-" }
 }
 
-function totalPenaltySeconds(entries: PenaltyEntry[] = []): number {
-  return entries.reduce((sum, entry) => sum + penaltySecondsFromCode(entry.code), 0)
+function penaltySecondsFromCode(code: string, roundNumber: number): number {
+  return getPenaltyRule(code, roundNumber).seconds
+}
+
+function hasDsqPenalty(entries: PenaltyEntry[] = [], roundNumber: number): boolean {
+  const dsqCodes = getDsqCodesForRound(roundNumber)
+  return entries.some((entry) => dsqCodes.has(entry.code))
+}
+
+function hasAmmonitionPenalty(entries: PenaltyEntry[] = [], roundNumber: number): boolean {
+  const ammonitionCodes = getAmmonitionCodesForRound(roundNumber)
+  return entries.some((entry) => ammonitionCodes.has(entry.code))
+}
+
+function totalPenaltySeconds(entries: PenaltyEntry[] = [], roundNumber: number): number {
+  return entries.reduce((sum, entry) => sum + penaltySecondsFromCode(entry.code, roundNumber), 0)
 }
 
 function createPenaltyEntry(): PenaltyEntry {
@@ -728,27 +783,29 @@ function formatPenaltyDetail(entry: PenaltyEntry): string {
   return `${entry.code} ${entry.lap} ${entry.minute}:${entry.second}`
 }
 
-function getPenaltyOptionText(code: string): string {
-  const rule = getPenaltyRule(code)
+function getPenaltyOptionText(code: string, roundNumber: number): string {
+  const rule = getPenaltyRule(code, roundNumber)
 
   if (rule.effect === "ammonition") return `${code} (Ammonizione)`
-  if (rule.effect === "dsq") return `${code} (DSQ)`
-  if (rule.effect === "other") return `${code} (-)`
+  if (rule.effect === "dsq") return `${code} (${rule.shortLabel})`
+  if (rule.effect === "other") return `${code} (${rule.shortLabel})`
 
   return `${code} (${formatPenaltyOptionLabel(rule.seconds)})`
 }
 
-function getPenaltyMainDisplay(entries: PenaltyEntry[] = []): {
+function getPenaltyMainDisplay(entries: PenaltyEntry[] = [], roundNumber: number): {
   kind: "none" | "time" | "ammonition" | "dsq"
   text: string
 } {
   if (!entries.length) return { kind: "none", text: "-" }
-  if (hasDsqPenalty(entries)) return { kind: "dsq", text: "DSQ" }
+  if (hasDsqPenalty(entries, roundNumber)) return { kind: "dsq", text: "DSQ" }
 
-  const total = totalPenaltySeconds(entries)
+  const total = totalPenaltySeconds(entries, roundNumber)
   if (total > 0) return { kind: "time", text: formatPenaltyDisplay(total) }
 
-  if (hasAmmonitionPenalty(entries)) return { kind: "ammonition", text: "00:00.000" }
+  if (hasAmmonitionPenalty(entries, roundNumber)) {
+    return { kind: "ammonition", text: "00:00.000" }
+  }
 
   return { kind: "none", text: "-" }
 }
@@ -1732,7 +1789,8 @@ const compactAmaSprintExport =
               const fallbackBg = i % 2 === 0 ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.10)"
               const key = getPrtRowStableKey(r.sourcePosGara)
               const penaltyEntries = penalties[key] || []
-              const penaltyMain = getPenaltyMainDisplay(penaltyEntries)
+              const penaltyRoundNumber = Number(String(unionMeta.gara || "").trim()) || 1
+const penaltyMain = getPenaltyMainDisplay(penaltyEntries, penaltyRoundNumber)
               const isDsqRow = (r.tempoTotaleGara || "").trim().toUpperCase() === "DSQ"
               const showPenaltyDetail = !(exporting && unionMode)
               const rawTempo = tempoLikeGt7(r).trim().toUpperCase()
@@ -1988,7 +2046,7 @@ const resolvedTeamName = showTeamInsteadOfAuto
 
                       if (penaltyEntries.length === 1) {
                         const entry = penaltyEntries[0]
-                        const rule = getPenaltyRule(entry.code)
+                        const rule = getPenaltyRule(entry.code, penaltyRoundNumber)
 
                         if (exportHasMultiPenalty) {
                           return (
@@ -2330,7 +2388,7 @@ const resolvedTeamName = showTeamInsteadOfAuto
                                 )
                               }
 
-                              if (hasDsqPenalty(penaltyEntries)) {
+                              if (hasDsqPenalty(penaltyEntries, penaltyRoundNumber)) {
                                 return <Pill left="DSQ" variant="dsq" />
                               }
 
@@ -2355,7 +2413,7 @@ const resolvedTeamName = showTeamInsteadOfAuto
                             }}
                           >
                             {penaltyEntries.map((entry) => {
-  const rule = getPenaltyRule(entry.code)
+  const rule = getPenaltyRule(entry.code, penaltyRoundNumber)
 
   return (
     <div
@@ -4558,7 +4616,7 @@ const normalizedGaraForOutput = useMemo(() => {
         const code = `P${String(n).padStart(2, "0")}`
         return {
           value: code,
-          label: getPenaltyOptionText(code),
+          label: getPenaltyOptionText(code, currentRound),
         }
       }),
     ],
@@ -4947,7 +5005,10 @@ const hasManualPilotOverrides = useMemo(() => {
         const rawTempo = tempoLikeGt7(r)
         const isBaseDnf = /^(DNF|DNFV|DNF-I|DNF-V)$/i.test(rawTempo.trim())
         const dnfValue = isBaseDnf ? dnfOverrides[key] || "DNF-I" : null
-        const rowHasDsqPenalty = hasDsqPenalty(penalties[key] || [])
+        const rowHasDsqPenalty = hasDsqPenalty(
+  penalties[key] || [],
+  Number(String(unionMeta.gara || "").trim()) || 1
+)
 
         if (rowHasDsqPenalty) {
           return {
@@ -5022,7 +5083,10 @@ const hasManualPilotOverrides = useMemo(() => {
     for (let i = 0; i < orderedRows.length; i++) {
       const row = orderedRows[i]
       const key = getPrtRowStableKey(row.sourcePosGara)
-      const rowHasDsqPenalty = hasDsqPenalty(penalties[key] || [])
+      const rowHasDsqPenalty = hasDsqPenalty(
+  penalties[key] || [],
+  Number(String(unionMeta.gara || "").trim()) || 1
+)
       const isDsq =
         (row.tempoTotaleGara || "").trim().toUpperCase() === "DSQ" || rowHasDsqPenalty
 
@@ -5037,7 +5101,10 @@ const hasManualPilotOverrides = useMemo(() => {
         continue
       }
 
-      const penaltySec = totalPenaltySeconds(penalties[key] || [])
+      const penaltySec = totalPenaltySeconds(
+  penalties[key] || [],
+  Number(String(unionMeta.gara || "").trim()) || 1
+)
 
       comparable.push({
         orderedIndex: i,
@@ -7857,7 +7924,10 @@ body::before {
 function renderPenaltyHtmlForExport(row: DisplayRow, penalties: PenaltyMap) {
   const key = getPrtRowStableKey(row.sourcePosGara)
   const entries = penalties[key] || []
-  const penaltyMain = getPenaltyMainDisplay(entries)
+  const penaltyMain = getPenaltyMainDisplay(
+  entries,
+  Number(String(unionMeta.gara || "").trim()) || 1
+)
   const isDsqRow = (row.tempoTotaleGara || "").trim().toUpperCase() === "DSQ"
 
   if (isDsqRow || penaltyMain.kind === "dsq") {
@@ -10476,7 +10546,10 @@ if (!authorized) {
                 {dgInfo.map(({ row, isDoppiato, isDnf, key, manualGap, manualGapValid }, idx) => {
                   const dnfValue = dnfOverrides[key] || "DNF-I"
                   const entries = penalties[key] || []
-                  const penaltyMain = getPenaltyMainDisplay(entries)
+                  const penaltyMain = getPenaltyMainDisplay(
+  entries,
+  Number(String(unionMeta.gara || "").trim()) || 1
+)
                   const penaltyDisabled = false
 
                   return (
