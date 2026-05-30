@@ -3895,11 +3895,21 @@ function findTeamByPilot(pilotName: string): TeamLookupResult {
   const roundKey = getRoundKey(currentRound)
   const substitutes = BMW_ROUND_SUBSTITUTES[roundKey] || {}
 
-  const officialPilotName =
-    Object.entries(substitutes).find(
-      ([substituteName]) =>
-        normalizeTeamPilotName(substituteName) === normalized
-    )?.[1] || pilotName
+  let officialPilotName =
+  Object.entries(substitutes).find(
+    ([substituteName]) =>
+      normalizeTeamPilotName(substituteName) === normalized
+  )?.[1] || pilotName
+
+if (currentRound === 4) {
+  if (normalizeTeamPilotName(pilotName) === normalizeTeamPilotName("JM_focuss_71")) {
+    officialPilotName = "Snoop"
+  }
+
+  if (normalizeTeamPilotName(pilotName) === normalizeTeamPilotName("Theblackcorsair1")) {
+    officialPilotName = "Maverickblaze"
+  }
+}
 
   const normalizedOfficial = normalizeTeamPilotName(officialPilotName)
 
