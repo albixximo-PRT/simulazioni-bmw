@@ -3879,12 +3879,13 @@ function getEffectiveTeamsForRound(round: 1 | 2 | 3 | 4): TeamEntry[] {
   },
 
   r4: {
-    "PRT-Jaiss84": "Sbrizio72",
+  "PRT-Jaiss84": "Sbrizio72",
 
-    Margotone: "Frederik2905",
-    JM_focuss_71: "Snoop",
-    Theblackcorsair1: "Maverickblaze"
-  },
+  Margotone: "Frederik2905",
+
+  JM_focuss_71: "Snoop",
+  Theblackcorsair1: "Maverickblaze",
+},
 }
 
 function findTeamByPilot(pilotName: string): TeamLookupResult {
