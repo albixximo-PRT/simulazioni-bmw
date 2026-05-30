@@ -4610,20 +4610,22 @@ const normalizedGaraForOutput = useMemo(() => {
   return raw
 }, [effectiveGara])
 
-  const penaltyCodeOptions = useMemo(
-    () => [
-      { value: "DSQ", label: "DSQ (Squalifica)" },
-      ...Array.from({ length: 39 }, (_, i) => {
-        const n = i + 1
-        const code = `P${String(n).padStart(2, "0")}`
-        return {
-          value: code,
-          label: getPenaltyOptionText(code, currentRound),
-        }
-      }),
-    ],
-    []
-  )
+  const penaltyCodeOptions = useMemo(() => {
+  const maxPenaltyCode = currentRound >= 4 ? 32 : 39
+
+  return [
+    { value: "DSQ", label: "DSQ (Squalifica)" },
+    ...Array.from({ length: maxPenaltyCode }, (_, i) => {
+      const n = i + 1
+      const code = `P${String(n).padStart(2, "0")}`
+
+      return {
+        value: code,
+        label: getPenaltyOptionText(code, currentRound),
+      }
+    }),
+  ]
+}, [currentRound])
 
   const lapOptions = useMemo(
     () => [
