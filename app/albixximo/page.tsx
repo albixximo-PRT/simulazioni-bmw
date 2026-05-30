@@ -1618,6 +1618,7 @@ function ResultsTable({
   unionMeta,
   prtMode,
   unionMode,
+  currentRound,
   currentSprint,
   exporting = false,
   penalties,
@@ -1632,6 +1633,7 @@ function ResultsTable({
   unionMeta: UnionMeta
   prtMode: boolean
   unionMode: boolean
+  currentRound: 1 | 2 | 3 | 4
   currentSprint: 1 | 2
   exporting?: boolean
   penalties: PenaltyMap
@@ -1789,7 +1791,7 @@ const compactAmaSprintExport =
               const fallbackBg = i % 2 === 0 ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.10)"
               const key = getPrtRowStableKey(r.sourcePosGara)
               const penaltyEntries = penalties[key] || []
-              const penaltyRoundNumber = Number(String(unionMeta.gara || "").trim()) || 1
+              const penaltyRoundNumber = currentRound
 const penaltyMain = getPenaltyMainDisplay(penaltyEntries, penaltyRoundNumber)
               const isDsqRow = (r.tempoTotaleGara || "").trim().toUpperCase() === "DSQ"
               const showPenaltyDetail = !(exporting && unionMode)
@@ -10290,6 +10292,7 @@ if (!authorized) {
   unionMeta={{ ...unionMeta, gara: normalizedGaraForOutput, lega: effectiveLegaResolved }}
   prtMode={prtMode}
   unionMode={unionMode}
+  currentRound={currentRound}
   currentSprint={currentSprint}
   penalties={penalties}
   tableTitle={`Classifica Sprint ${currentSprint} (output)`}
@@ -14016,6 +14019,7 @@ if (!authorized) {
   unionMeta={{ ...unionMeta, gara: normalizedGaraForOutput, lega: effectiveLegaResolved }}
   prtMode={prtMode}
   unionMode={unionMode}
+  currentRound={currentRound}
   currentSprint={currentSprint}
   exporting={true}
   penalties={penalties}
