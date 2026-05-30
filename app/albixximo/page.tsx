@@ -3882,6 +3882,8 @@ function getEffectiveTeamsForRound(round: 1 | 2 | 3 | 4): TeamEntry[] {
     "PRT-Jaiss84": "Sbrizio72",
 
     Margotone: "Frederik2905",
+    JM_focuss_71: "PRT-SNOOP",
+    Theblackcorsair1: "Maverickblaze"
   },
 }
 
